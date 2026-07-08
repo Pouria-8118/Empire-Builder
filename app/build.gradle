@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'civgame'
+version = '1.0-phase1'
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClass = 'civgame.Main'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+dependencies {
+}
