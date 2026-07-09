@@ -64,6 +64,5 @@ public abstract class Unit {
         return currentActionPoints > 0;
     }
 
-    // TODO : add a move(HexCoordinate destination, int movementCost) method here
     // TODO : apply the starvation action point penalty here
 }
