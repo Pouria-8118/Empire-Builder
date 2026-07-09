@@ -2,9 +2,9 @@ package civgame.controller.menu;
 
 import civgame.audio.MusicPlayer;
 import civgame.controller.game.GameController;
-import civgame.model.map.HexCoordinate;
-import civgame.model.map.HexMap;
-import civgame.model.map.HexMapGenerator;
+import civgame.model.game.FogOfWarCalculator;
+import civgame.model.game.GameInitializer;
+import civgame.model.game.GameSession;
 import civgame.util.Constants;
 import civgame.view.game.GameFrame;
 import civgame.view.menu.ExitConfirmationDialog;
@@ -47,23 +47,21 @@ public class MainMenuController {
     private class StartButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            HexCoordinate townHallCoordinate = new HexCoordinate(0, 0);
-            HexMap hexMap = new HexMap(Constants.DEFAULT_MAP_RADIUS);
+            GameInitializer gameInitializer = new GameInitializer();
+            GameSession gameSession = gameInitializer.createNewGame();
 
-            HexMapGenerator mapGenerator = new HexMapGenerator();
-            mapGenerator.generate(hexMap, townHallCoordinate);
+            FogOfWarCalculator fogOfWarCalculator = new FogOfWarCalculator();
+            fogOfWarCalculator.updateVisibility(gameSession);
 
-            GameFrame gameFrame = new GameFrame(hexMap);
-            GameController gameController = new GameController(gameFrame);
+            GameFrame gameFrame = new GameFrame(gameSession);
+            GameController gameController = new GameController(gameFrame, gameSession);
 
             gameFrame.setVisible(true);
             mainMenuFrame.dispose();
 
-            // TODO : replace direct HexMap creation with a proper GameSession
-            // that also spawns the Town Hall and the 5 starting units
+            // TODO : re-run fogOfWarCalculator.updateVisibility() at the start of every turn as well
         }
     }
-
     private class SettingsButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
