@@ -1,6 +1,8 @@
 package civgame.controller.game;
 
 import civgame.model.game.GameSession;
+import civgame.model.game.HexPathFinder;
+import civgame.model.game.MovementPlan;
 import civgame.model.map.HexCoordinate;
 import civgame.model.unit.Unit;
 import civgame.util.HexGeometry;
@@ -8,6 +10,7 @@ import civgame.view.game.CameraState;
 import civgame.view.game.GameFrame;
 import civgame.view.game.MapPanel;
 import civgame.view.game.SelectionState;
+import civgame.view.game.UnitMovementAnimator;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -20,15 +23,20 @@ public class GameController {
     private final MapPanel mapPanel;
     private final CameraState cameraState;
     private final SelectionState selectionState;
+    private final UnitMovementAnimator movementAnimator;
     private final GameSession gameSession;
+    private final HexPathFinder pathFinder;
     private int lastDragX;
     private int lastDragY;
+    private boolean wasDragged;
 
     public GameController(GameFrame gameFrame, GameSession gameSession) {
         this.mapPanel = gameFrame.getMapPanel();
         this.cameraState = gameFrame.getCameraState();
         this.selectionState = gameFrame.getSelectionState();
+        this.movementAnimator = gameFrame.getMovementAnimator();
         this.gameSession = gameSession;
+        this.pathFinder = new HexPathFinder();
         registerListeners();
     }
 
@@ -39,7 +47,25 @@ public class GameController {
         mapPanel.addMouseWheelListener(new ZoomListener());
     }
 
-    private void selectUnitAtScreenPosition(int screenX, int screenY) {
+    private void handleTileClick(int screenX, int screenY) {
+        HexCoordinate clickedCoordinate = resolveClickedCoordinate(screenX, screenY);
+
+        if (!gameSession.getHexMap().containsCoordinate(clickedCoordinate)) {
+            return;
+        }
+
+        Unit clickedUnit = findUnitAtCoordinate(clickedCoordinate);
+
+        if (clickedUnit != null) {
+            selectionState.setSelectedUnit(clickedUnit);
+            mapPanel.repaint();
+            return;
+        }
+
+        attemptMoveSelectedUnit(clickedCoordinate);
+    }
+
+    private HexCoordinate resolveClickedCoordinate(int screenX, int screenY) {
         double hexSize = mapPanel.getCurrentHexSize();
         double centerX = mapPanel.getPanelCenterX();
         double centerY = mapPanel.getPanelCenterY();
@@ -47,16 +73,36 @@ public class GameController {
         double relativeX = screenX - centerX;
         double relativeY = screenY - centerY;
 
-        HexCoordinate clickedCoordinate = HexGeometry.pixelToAxial(relativeX, relativeY, hexSize);
-        Unit clickedUnit = findUnitAtCoordinate(clickedCoordinate);
+        return HexGeometry.pixelToAxial(relativeX, relativeY, hexSize);
+    }
 
-        if (clickedUnit != null) {
-            selectionState.setSelectedUnit(clickedUnit);
-        } else {
-            selectionState.clearSelection();
+    private void attemptMoveSelectedUnit(HexCoordinate destination) {
+        if (!selectionState.hasSelection()) {
+            return;
+        }
+        if (movementAnimator.isAnimating()) {
+            return;
         }
 
-        mapPanel.repaint();
+        Unit selectedUnit = selectionState.getSelectedUnit();
+        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination);
+
+        if (fullPath == null || fullPath.isEmpty()) {
+            return;
+        }
+
+        MovementPlan movementPlan = pathFinder.truncateToAffordablePath(
+                gameSession.getHexMap(),
+                fullPath,
+                selectedUnit.getCurrentActionPoints()
+        );
+
+        if (movementPlan.getPath().isEmpty()) {
+            return;
+        }
+
+        selectedUnit.consumeActionPoints(movementPlan.getTotalCost());
+        movementAnimator.startMovement(selectedUnit, movementPlan.getPath(), null);
     }
 
     private Unit findUnitAtCoordinate(HexCoordinate coordinate) {
@@ -78,6 +124,7 @@ public class GameController {
         public void mousePressed(MouseEvent mouseEvent) {
             lastDragX = mouseEvent.getX();
             lastDragY = mouseEvent.getY();
+            wasDragged = false;
         }
 
         @Override
@@ -89,13 +136,16 @@ public class GameController {
 
             lastDragX = mouseEvent.getX();
             lastDragY = mouseEvent.getY();
+            wasDragged = true;
 
             mapPanel.repaint();
         }
 
         @Override
-        public void mouseClicked(MouseEvent mouseEvent) {
-            selectUnitAtScreenPosition(mouseEvent.getX(), mouseEvent.getY());
+        public void mouseReleased(MouseEvent mouseEvent) {
+            if (!wasDragged) {
+                handleTileClick(mouseEvent.getX(), mouseEvent.getY());
+            }
         }
     }
 
@@ -113,6 +163,6 @@ public class GameController {
         }
     }
 
-    // TODO : after selecting a unit, clicking a destination tile should trigger movement
     // TODO : add a construction click-mode for builders placing buildings
+    // TODO : add a "station worker in building" click-mode
 }
