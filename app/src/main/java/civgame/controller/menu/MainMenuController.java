@@ -1,13 +1,17 @@
 package civgame.controller.menu;
 
 import civgame.audio.MusicPlayer;
+import civgame.controller.game.GameController;
+import civgame.model.map.HexCoordinate;
+import civgame.model.map.HexMap;
+import civgame.model.map.HexMapGenerator;
 import civgame.util.Constants;
+import civgame.view.game.GameFrame;
 import civgame.view.menu.ExitConfirmationDialog;
 import civgame.view.menu.MainMenuFrame;
 import civgame.view.menu.MainMenuPanel;
 import civgame.view.menu.SettingsPanel;
 
-import javax.swing.JOptionPane;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
@@ -43,7 +47,20 @@ public class MainMenuController {
     private class StartButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            JOptionPane.showMessageDialog(mainMenuFrame, "Game will start here in a future phase.");
+            HexCoordinate townHallCoordinate = new HexCoordinate(0, 0);
+            HexMap hexMap = new HexMap(Constants.DEFAULT_MAP_RADIUS);
+
+            HexMapGenerator mapGenerator = new HexMapGenerator();
+            mapGenerator.generate(hexMap, townHallCoordinate);
+
+            GameFrame gameFrame = new GameFrame(hexMap);
+            GameController gameController = new GameController(gameFrame);
+
+            gameFrame.setVisible(true);
+            mainMenuFrame.dispose();
+
+            // TODO : replace direct HexMap creation with a proper GameSession
+            // that also spawns the Town Hall and the 5 starting units
         }
     }
 

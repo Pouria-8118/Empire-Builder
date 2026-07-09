@@ -1,6 +1,8 @@
 package civgame.model.map;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HexMap {
@@ -11,12 +13,12 @@ public class HexMap {
     public HexMap(int mapRadius) {
         this.mapRadius = mapRadius;
         this.tiles = new HashMap<HexCoordinate, HexTile>();
-        buildPlaceholderTiles();
+        buildBaseTiles();
     }
 
-    // TODO : replace this placeholder generation with the real procedural
-    // map generator (mountain ranges, dense forests, forest within 2 hexes of Town Hall)
-    private void buildPlaceholderTiles() {
+    // Builds only the grid structure (which coordinates exist). Actual terrain
+    // and resource assignment is handled separately by HexMapGenerator.
+    private void buildBaseTiles() {
         for (int q = -mapRadius; q <= mapRadius; q++) {
             int rStart = Math.max(-mapRadius, -q - mapRadius);
             int rEnd = Math.min(mapRadius, -q + mapRadius);
@@ -49,6 +51,19 @@ public class HexMap {
         return mapRadius;
     }
 
-    // TODO : add a method to query which tiles are currently visible
-    // to the player, based on fog of war state
+    public List<HexTile> getTilesInRange(HexCoordinate center, int range) {
+        List<HexTile> tilesInRange = new ArrayList<HexTile>();
+
+        for (Map.Entry<HexCoordinate, HexTile> entry : tiles.entrySet()) {
+            HexCoordinate coordinate = entry.getKey();
+            if (center.distanceTo(coordinate) <= range) {
+                tilesInRange.add(entry.getValue());
+            }
+        }
+
+        return tilesInRange;
+    }
+
+    // TODO : add a method that recalculates VISIBLE/EXPLORED/UNSEEN
+    // state for every tile based on the vision radius of all player units and buildings
 }
