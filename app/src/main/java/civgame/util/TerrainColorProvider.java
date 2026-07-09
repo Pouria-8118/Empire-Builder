@@ -6,6 +6,8 @@ import java.awt.Color;
 
 public class TerrainColorProvider {
 
+    private static final double EXPLORED_DARKEN_FACTOR = 0.5;
+
     private TerrainColorProvider() {
     }
 
@@ -22,5 +24,11 @@ public class TerrainColorProvider {
         return new Color(140, 200, 100);
     }
 
-    // TODO : add a darker/desaturated variant for tiles hidden behind fog of war
+    public static Color getExploredColor(TerrainType terrainType) {
+        Color baseColor = getColorForTerrain(terrainType);
+        int red = (int) (baseColor.getRed() * EXPLORED_DARKEN_FACTOR);
+        int green = (int) (baseColor.getGreen() * EXPLORED_DARKEN_FACTOR);
+        int blue = (int) (baseColor.getBlue() * EXPLORED_DARKEN_FACTOR);
+        return new Color(red, green, blue);
+    }
 }
