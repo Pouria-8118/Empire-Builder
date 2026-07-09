@@ -29,11 +29,13 @@ public class MapPanel extends JPanel {
     private final GameSession gameSession;
     private final CameraState cameraState;
     private final SelectionState selectionState;
+    private final UnitMovementAnimator movementAnimator;
 
-    public MapPanel(GameSession gameSession, CameraState cameraState, SelectionState selectionState) {
+    public MapPanel(GameSession gameSession, CameraState cameraState, SelectionState selectionState, UnitMovementAnimator movementAnimator) {
         this.gameSession = gameSession;
         this.cameraState = cameraState;
         this.selectionState = selectionState;
+        this.movementAnimator = movementAnimator;
         setBackground(Color.BLACK);
     }
 
@@ -111,7 +113,7 @@ public class MapPanel extends JPanel {
                 (int) (markerRadius * 2)
         );
 
-        // TODO (bonus - visual polish): replace this generic white dot with a
+        // TODO (bonus - visual): replace this generic white dot with a
         // specific icon per resource type (wood, stone, iron, wheat, rice, cattle, sheep)
     }
 
@@ -141,9 +143,18 @@ public class MapPanel extends JPanel {
     }
 
     private void drawUnit(Graphics2D graphics2D, Unit unit, double hexSize, double centerX, double centerY) {
-        Point2D pixelPosition = HexGeometry.axialToPixel(unit.getCoordinate(), hexSize);
-        double drawX = centerX + pixelPosition.getX();
-        double drawY = centerY + pixelPosition.getY();
+        double drawX;
+        double drawY;
+
+        if (movementAnimator.isAnimating() && movementAnimator.getAnimatingUnit() == unit) {
+            Point2D interpolatedPixel = movementAnimator.getInterpolatedPixelPosition(hexSize);
+            drawX = centerX + interpolatedPixel.getX();
+            drawY = centerY + interpolatedPixel.getY();
+        } else {
+            Point2D pixelPosition = HexGeometry.axialToPixel(unit.getCoordinate(), hexSize);
+            drawX = centerX + pixelPosition.getX();
+            drawY = centerY + pixelPosition.getY();
+        }
 
         graphics2D.setColor(UnitColorProvider.getColorForUnitType(unit.getUnitType()));
         graphics2D.fillOval(
@@ -164,8 +175,6 @@ public class MapPanel extends JPanel {
         if (selectionState.getSelectedUnit() == unit) {
             drawSelectionHighlight(graphics2D, drawX, drawY);
         }
-
-        // TODO : animate unit position changes here instead of snapping instantly
     }
 
     private void drawSelectionHighlight(Graphics2D graphics2D, double centerX, double centerY) {
@@ -191,6 +200,6 @@ public class MapPanel extends JPanel {
         return getHeight() / 2.0 + cameraState.getOffsetY();
     }
 
-    // TODO (later phase, per your future redesign): once hex tiles get an image-based
+    // TODO : once hex tiles get an image-based
     // background instead of flat colors, replace fillPolygon calls here with a clipped drawImage
 }

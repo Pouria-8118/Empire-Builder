@@ -10,13 +10,25 @@ public class GameFrame extends JFrame {
     private final MapPanel mapPanel;
     private final CameraState cameraState;
     private final SelectionState selectionState;
+    private final UnitMovementAnimator movementAnimator;
 
     public GameFrame(GameSession gameSession) {
         super(Constants.WINDOW_TITLE + " - Game");
         this.cameraState = new CameraState();
         this.selectionState = new SelectionState();
-        this.mapPanel = new MapPanel(gameSession, cameraState, selectionState);
+        this.movementAnimator = new UnitMovementAnimator();
+        this.mapPanel = new MapPanel(gameSession, cameraState, selectionState, movementAnimator);
+        this.movementAnimator.setRepaintCallback(createRepaintCallback());
         setupFrame();
+    }
+
+    private Runnable createRepaintCallback() {
+        return new Runnable() {
+            @Override
+            public void run() {
+                mapPanel.repaint();
+            }
+        };
     }
 
     private void setupFrame() {
@@ -37,6 +49,10 @@ public class GameFrame extends JFrame {
 
     public SelectionState getSelectionState() {
         return selectionState;
+    }
+
+    public UnitMovementAnimator getMovementAnimator() {
+        return movementAnimator;
     }
 
     // TODO : host the HUD panel alongside the map panel here
