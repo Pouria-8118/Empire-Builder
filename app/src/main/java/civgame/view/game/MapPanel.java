@@ -1,11 +1,16 @@
 package civgame.view.game;
 
+import civgame.model.building.TownHall;
+import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
+import civgame.model.map.TileVisibility;
+import civgame.model.unit.Unit;
 import civgame.util.Constants;
 import civgame.util.HexGeometry;
 import civgame.util.TerrainColorProvider;
+import civgame.util.UnitColorProvider;
 
 import javax.swing.JPanel;
 import java.awt.Color;
@@ -13,16 +18,22 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.geom.Point2D;
+import java.util.List;
 import java.util.Map;
 
 public class MapPanel extends JPanel {
 
-    private final HexMap hexMap;
-    private final CameraState cameraState;
+    private static final int UNIT_MARKER_RADIUS = 10;
+    private static final int TOWN_HALL_MARKER_RADIUS = 14;
 
-    public MapPanel(HexMap hexMap, CameraState cameraState) {
-        this.hexMap = hexMap;
+    private final GameSession gameSession;
+    private final CameraState cameraState;
+    private final SelectionState selectionState;
+
+    public MapPanel(GameSession gameSession, CameraState cameraState, SelectionState selectionState) {
+        this.gameSession = gameSession;
         this.cameraState = cameraState;
+        this.selectionState = selectionState;
         setBackground(Color.BLACK);
     }
 
@@ -31,34 +42,36 @@ public class MapPanel extends JPanel {
         super.paintComponent(graphics);
         Graphics2D graphics2D = (Graphics2D) graphics;
 
-        double zoom = cameraState.getCurrentZoom();
-        double hexSize = Constants.HEX_SIZE * zoom;
-        double centerX = getWidth() / 2.0 + cameraState.getOffsetX();
-        double centerY = getHeight() / 2.0 + cameraState.getOffsetY();
+        double hexSize = getCurrentHexSize();
+        double centerX = getPanelCenterX();
+        double centerY = getPanelCenterY();
 
+        drawAllTiles(graphics2D, hexSize, centerX, centerY);
+        drawTownHall(graphics2D, hexSize, centerX, centerY);
+        drawAllUnits(graphics2D, hexSize, centerX, centerY);
+    }
+
+    private void drawAllTiles(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        HexMap hexMap = gameSession.getHexMap();
         Map<HexCoordinate, HexTile> allTiles = hexMap.getAllTiles();
 
-        for (Map.Entry<HexCoordinate, HexTile> entry : allTiles.entrySet()) {
-            HexTile tile = entry.getValue();
+        for (HexTile tile : allTiles.values()) {
             drawTile(graphics2D, tile, hexSize, centerX, centerY);
         }
     }
 
     private void drawTile(Graphics2D graphics2D, HexTile tile, double hexSize, double centerX, double centerY) {
+        if (tile.getVisibility() == TileVisibility.UNSEEN) {
+            return;
+        }
+
         Point2D pixelPosition = HexGeometry.axialToPixel(tile.getCoordinate(), hexSize);
         double tileCenterX = centerX + pixelPosition.getX();
         double tileCenterY = centerY + pixelPosition.getY();
 
-        double[] xPoints = HexGeometry.buildHexagonXPoints(tileCenterX, tileCenterY, hexSize);
-        double[] yPoints = HexGeometry.buildHexagonYPoints(tileCenterX, tileCenterY, hexSize);
+        Polygon hexagonPolygon = buildHexagonPolygon(tileCenterX, tileCenterY, hexSize);
 
-        Polygon hexagonPolygon = new Polygon();
-        for (int i = 0; i < xPoints.length; i++) {
-            hexagonPolygon.addPoint((int) xPoints[i], (int) yPoints[i]);
-        }
-
-        Color fillColor = TerrainColorProvider.getColorForTerrain(tile.getTerrainType());
-        graphics2D.setColor(fillColor);
+        graphics2D.setColor(resolveTileColor(tile));
         graphics2D.fillPolygon(hexagonPolygon);
 
         graphics2D.setColor(Color.BLACK);
@@ -67,6 +80,25 @@ public class MapPanel extends JPanel {
         if (tile.hasResource()) {
             drawResourceMarker(graphics2D, tileCenterX, tileCenterY, hexSize);
         }
+    }
+
+    private Color resolveTileColor(HexTile tile) {
+        if (tile.getVisibility() == TileVisibility.EXPLORED) {
+            return TerrainColorProvider.getExploredColor(tile.getTerrainType());
+        }
+        return TerrainColorProvider.getColorForTerrain(tile.getTerrainType());
+    }
+
+    private Polygon buildHexagonPolygon(double centerX, double centerY, double hexSize) {
+        double[] xPoints = HexGeometry.buildHexagonXPoints(centerX, centerY, hexSize);
+        double[] yPoints = HexGeometry.buildHexagonYPoints(centerX, centerY, hexSize);
+
+        Polygon hexagonPolygon = new Polygon();
+        for (int i = 0; i < xPoints.length; i++) {
+            hexagonPolygon.addPoint((int) xPoints[i], (int) yPoints[i]);
+        }
+
+        return hexagonPolygon;
     }
 
     private void drawResourceMarker(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
@@ -83,6 +115,82 @@ public class MapPanel extends JPanel {
         // specific icon per resource type (wood, stone, iron, wheat, rice, cattle, sheep)
     }
 
-    // TODO : skip/darken tiles based on tile.getVisibility()
-    // TODO : draw units on top of tiles here
+    private void drawTownHall(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        TownHall townHall = gameSession.getTownHall();
+        Point2D pixelPosition = HexGeometry.axialToPixel(townHall.getCoordinate(), hexSize);
+        double drawX = centerX + pixelPosition.getX();
+        double drawY = centerY + pixelPosition.getY();
+
+        graphics2D.setColor(new Color(200, 40, 40));
+        graphics2D.fillRect(
+                (int) (drawX - TOWN_HALL_MARKER_RADIUS),
+                (int) (drawY - TOWN_HALL_MARKER_RADIUS),
+                TOWN_HALL_MARKER_RADIUS * 2,
+                TOWN_HALL_MARKER_RADIUS * 2
+        );
+
+        // TODO (bonus - visual polish): replace this red square with a proper town hall sprite
+    }
+
+    private void drawAllUnits(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        List<Unit> units = gameSession.getUnits();
+
+        for (Unit unit : units) {
+            drawUnit(graphics2D, unit, hexSize, centerX, centerY);
+        }
+    }
+
+    private void drawUnit(Graphics2D graphics2D, Unit unit, double hexSize, double centerX, double centerY) {
+        Point2D pixelPosition = HexGeometry.axialToPixel(unit.getCoordinate(), hexSize);
+        double drawX = centerX + pixelPosition.getX();
+        double drawY = centerY + pixelPosition.getY();
+
+        graphics2D.setColor(UnitColorProvider.getColorForUnitType(unit.getUnitType()));
+        graphics2D.fillOval(
+                (int) (drawX - UNIT_MARKER_RADIUS),
+                (int) (drawY - UNIT_MARKER_RADIUS),
+                UNIT_MARKER_RADIUS * 2,
+                UNIT_MARKER_RADIUS * 2
+        );
+
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawOval(
+                (int) (drawX - UNIT_MARKER_RADIUS),
+                (int) (drawY - UNIT_MARKER_RADIUS),
+                UNIT_MARKER_RADIUS * 2,
+                UNIT_MARKER_RADIUS * 2
+        );
+
+        if (selectionState.getSelectedUnit() == unit) {
+            drawSelectionHighlight(graphics2D, drawX, drawY);
+        }
+
+        // TODO : animate unit position changes here instead of snapping instantly
+    }
+
+    private void drawSelectionHighlight(Graphics2D graphics2D, double centerX, double centerY) {
+        int highlightRadius = UNIT_MARKER_RADIUS + 5;
+        graphics2D.setColor(Color.YELLOW);
+        graphics2D.drawOval(
+                (int) (centerX - highlightRadius),
+                (int) (centerY - highlightRadius),
+                highlightRadius * 2,
+                highlightRadius * 2
+        );
+    }
+
+    public double getCurrentHexSize() {
+        return Constants.HEX_SIZE * cameraState.getCurrentZoom();
+    }
+
+    public double getPanelCenterX() {
+        return getWidth() / 2.0 + cameraState.getOffsetX();
+    }
+
+    public double getPanelCenterY() {
+        return getHeight() / 2.0 + cameraState.getOffsetY();
+    }
+
+    // TODO (later phase, per your future redesign): once hex tiles get an image-based
+    // background instead of flat colors, replace fillPolygon calls here with a clipped drawImage
 }
