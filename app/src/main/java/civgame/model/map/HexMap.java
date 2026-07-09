@@ -16,8 +16,6 @@ public class HexMap {
         buildBaseTiles();
     }
 
-    // Builds only the grid structure (which coordinates exist). Actual terrain
-    // and resource assignment is handled separately by HexMapGenerator.
     private void buildBaseTiles() {
         for (int q = -mapRadius; q <= mapRadius; q++) {
             int rStart = Math.max(-mapRadius, -q - mapRadius);
@@ -63,7 +61,4 @@ public class HexMap {
 
         return tilesInRange;
     }
-
-    // TODO : add a method that recalculates VISIBLE/EXPLORED/UNSEEN
-    // state for every tile based on the vision radius of all player units and buildings
 }

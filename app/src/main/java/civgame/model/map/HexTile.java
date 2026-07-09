@@ -57,6 +57,4 @@ public class HexTile {
     public void setVisibility(TileVisibility visibility) {
         this.visibility = visibility;
     }
-
-    // TODO (Phase 6): use getVisibility() in MapPanel to darken/hide unseen and explored tiles
 }

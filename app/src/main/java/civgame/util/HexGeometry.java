@@ -33,5 +33,33 @@ public class HexGeometry {
         return yPoints;
     }
 
-    // TODO : add a pixelToAxial method for click-based tile selection and movement
+    public static HexCoordinate pixelToAxial(double pixelX, double pixelY, double hexSize) {
+        double fractionalQ = (Math.sqrt(3) / 3 * pixelX - 1.0 / 3 * pixelY) / hexSize;
+        double fractionalR = (2.0 / 3 * pixelY) / hexSize;
+        return roundToNearestHex(fractionalQ, fractionalR);
+    }
+
+    private static HexCoordinate roundToNearestHex(double fractionalQ, double fractionalR) {
+        double fractionalX = fractionalQ;
+        double fractionalZ = fractionalR;
+        double fractionalY = -fractionalX - fractionalZ;
+
+        long roundedX = Math.round(fractionalX);
+        long roundedY = Math.round(fractionalY);
+        long roundedZ = Math.round(fractionalZ);
+
+        double xDifference = Math.abs(roundedX - fractionalX);
+        double yDifference = Math.abs(roundedY - fractionalY);
+        double zDifference = Math.abs(roundedZ - fractionalZ);
+
+        if (xDifference > yDifference && xDifference > zDifference) {
+            roundedX = -roundedY - roundedZ;
+        } else if (yDifference > zDifference) {
+            roundedY = -roundedX - roundedZ;
+        } else {
+            roundedZ = -roundedX - roundedY;
+        }
+
+        return new HexCoordinate((int) roundedX, (int) roundedZ);
+    }
 }
