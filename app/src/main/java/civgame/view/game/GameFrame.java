@@ -1,6 +1,6 @@
 package civgame.view.game;
 
-import civgame.model.map.HexMap;
+import civgame.model.game.GameSession;
 import civgame.util.Constants;
 
 import javax.swing.JFrame;
@@ -9,11 +9,13 @@ public class GameFrame extends JFrame {
 
     private final MapPanel mapPanel;
     private final CameraState cameraState;
+    private final SelectionState selectionState;
 
-    public GameFrame(HexMap hexMap) {
+    public GameFrame(GameSession gameSession) {
         super(Constants.WINDOW_TITLE + " - Game");
         this.cameraState = new CameraState();
-        this.mapPanel = new MapPanel(hexMap, cameraState);
+        this.selectionState = new SelectionState();
+        this.mapPanel = new MapPanel(gameSession, cameraState, selectionState);
         setupFrame();
     }
 
@@ -31,6 +33,10 @@ public class GameFrame extends JFrame {
 
     public CameraState getCameraState() {
         return cameraState;
+    }
+
+    public SelectionState getSelectionState() {
+        return selectionState;
     }
 
     // TODO : host the HUD panel alongside the map panel here
