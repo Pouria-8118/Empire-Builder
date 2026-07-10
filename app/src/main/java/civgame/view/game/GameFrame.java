@@ -4,6 +4,7 @@ import civgame.model.game.GameSession;
 import civgame.util.Constants;
 
 import javax.swing.JFrame;
+import java.awt.BorderLayout;
 
 public class GameFrame extends JFrame {
 
@@ -11,6 +12,7 @@ public class GameFrame extends JFrame {
     private final CameraState cameraState;
     private final SelectionState selectionState;
     private final UnitMovementAnimator movementAnimator;
+    private final EndTurnPanel endTurnPanel;
 
     public GameFrame(GameSession gameSession) {
         super(Constants.WINDOW_TITLE + " - Game");
@@ -18,6 +20,7 @@ public class GameFrame extends JFrame {
         this.selectionState = new SelectionState();
         this.movementAnimator = new UnitMovementAnimator();
         this.mapPanel = new MapPanel(gameSession, cameraState, selectionState, movementAnimator);
+        this.endTurnPanel = new EndTurnPanel();
         this.movementAnimator.setRepaintCallback(createRepaintCallback());
         setupFrame();
     }
@@ -36,7 +39,9 @@ public class GameFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
-        add(mapPanel);
+        setLayout(new BorderLayout());
+        add(mapPanel, BorderLayout.CENTER);
+        add(endTurnPanel, BorderLayout.SOUTH);
     }
 
     public MapPanel getMapPanel() {
@@ -55,5 +60,10 @@ public class GameFrame extends JFrame {
         return movementAnimator;
     }
 
-    // TODO : host the HUD panel alongside the map panel here
+    public EndTurnPanel getEndTurnPanel() {
+        return endTurnPanel;
+    }
+
+    // TODO : host the full HUD panel here (resources/units/production queue),
+    // replacing or wrapping this temporary EndTurnPanel
 }
