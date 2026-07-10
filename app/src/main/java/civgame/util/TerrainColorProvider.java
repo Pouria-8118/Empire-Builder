@@ -7,6 +7,7 @@ import java.awt.Color;
 public class TerrainColorProvider {
 
     private static final double EXPLORED_DARKEN_FACTOR = 0.5;
+    private static final Color UNSEEN_TILE_COLOR = new Color(15, 15, 20);
 
     private TerrainColorProvider() {
     }
@@ -30,5 +31,9 @@ public class TerrainColorProvider {
         int green = (int) (baseColor.getGreen() * EXPLORED_DARKEN_FACTOR);
         int blue = (int) (baseColor.getBlue() * EXPLORED_DARKEN_FACTOR);
         return new Color(red, green, blue);
+    }
+
+    public static Color getUnseenColor() {
+        return UNSEEN_TILE_COLOR;
     }
 }

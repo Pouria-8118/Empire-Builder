@@ -15,6 +15,8 @@ import civgame.util.TerrainColorProvider;
 import civgame.util.UnitColorProvider;
 
 import javax.swing.JPanel;
+import javax.swing.ToolTipManager;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -39,6 +41,9 @@ public class MapPanel extends JPanel {
         this.selectionState = selectionState;
         this.movementAnimator = movementAnimator;
         setBackground(Color.BLACK);
+        setToolTipText("");
+        ToolTipManager.sharedInstance().registerComponent(this);
+    
     }
 
     @Override
