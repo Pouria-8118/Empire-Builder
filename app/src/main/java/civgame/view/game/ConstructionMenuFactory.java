@@ -3,10 +3,12 @@ package civgame.view.game;
 import civgame.model.building.BuildingCostProvider;
 import civgame.model.building.BuildingPlacementValidator;
 import civgame.model.building.BuildingType;
+import civgame.model.building.TownHallUpgradeType;
 import civgame.model.game.ConstructionService;
 import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
+import civgame.model.resource.ResourceType;
 import civgame.model.unit.Builder;
 
 import javax.swing.JMenuItem;
@@ -36,8 +38,7 @@ public class ConstructionMenuFactory {
         }
 
         for (int i = 0; i < availableTypes.size(); i++) {
-            BuildingType buildingType = availableTypes.get(i);
-            popupMenu.add(createMenuItem(gameSession, builder, buildingType, onBuildSuccess));
+            popupMenu.add(createMenuItem(gameSession, builder, availableTypes.get(i), onBuildSuccess));
         }
 
         return popupMenu;
@@ -46,13 +47,13 @@ public class ConstructionMenuFactory {
     private JMenuItem createMenuItem(GameSession gameSession, Builder builder, BuildingType buildingType, Runnable onBuildSuccess) {
         int woodCost = BuildingCostProvider.getWoodCost(buildingType);
         int actionPointCost = BuildingCostProvider.getConstructionActionPointCost(buildingType);
-        String label = buildingType.name() + " (Wood: " + woodCost + ", AP: " + actionPointCost + ")";
-
-        JMenuItem menuItem = new JMenuItem(label);
         HexCoordinate targetCoordinate = builder.getCoordinate();
 
-        boolean canBuild = constructionService.canBuild(gameSession, builder, buildingType, targetCoordinate);
-        menuItem.setEnabled(canBuild);
+        String label = buildingType.name() + " (Wood: " + woodCost + ", AP: " + actionPointCost + ")";
+        String reason = buildUnavailabilityReason(gameSession, builder, buildingType, targetCoordinate);
+
+        JMenuItem menuItem = new JMenuItem(label + reason);
+        menuItem.setEnabled(reason.isEmpty());
 
         menuItem.addActionListener(new ActionListener() {
             @Override
@@ -65,5 +66,42 @@ public class ConstructionMenuFactory {
         });
 
         return menuItem;
+    }
+
+    private String buildUnavailabilityReason(GameSession gameSession, Builder builder, BuildingType buildingType, HexCoordinate targetCoordinate) {
+        if (builder.isOutOfCharges()) {
+            return " [No charges left]";
+        }
+        if (gameSession.getBuildingAt(targetCoordinate) != null) {
+            return " [Tile occupied]";
+        }
+        if (!gameSession.isWithinBorder(targetCoordinate)) {
+            return " [Outside border]";
+        }
+        if (isTechLocked(gameSession, buildingType)) {
+            return " [Locked - needs tech]";
+        }
+
+        int actionPointCost = BuildingCostProvider.getConstructionActionPointCost(buildingType);
+        if (!builder.hasEnoughActionPoints(actionPointCost)) {
+            return " [Not enough AP]";
+        }
+
+        int woodCost = BuildingCostProvider.getWoodCost(buildingType);
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, woodCost)) {
+            return " [Not enough Wood]";
+        }
+
+        return "";
+    }
+
+    private boolean isTechLocked(GameSession gameSession, BuildingType buildingType) {
+        if (buildingType == BuildingType.STONE_MINE) {
+            return !gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.STONE_MINE_TECH);
+        }
+        if (buildingType == BuildingType.IRON_MINE) {
+            return !gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.IRON_MINE_TECH);
+        }
+        return false;
     }
 }
