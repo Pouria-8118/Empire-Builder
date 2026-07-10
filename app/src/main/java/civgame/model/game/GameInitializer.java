@@ -5,15 +5,20 @@ import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexMapGenerator;
 import civgame.model.resource.ResourceType;
-import civgame.model.unit.Builder;
-import civgame.model.unit.Explorer;
-import civgame.model.unit.Worker;
+import civgame.model.unit.Unit;
+import civgame.model.unit.UnitFactory;
+import civgame.model.unit.UnitType;
 import civgame.util.Constants;
-import civgame.util.UnitIdGenerator;
 
 import java.util.List;
 
 public class GameInitializer {
+
+    private final UnitFactory unitFactory;
+
+    public GameInitializer() {
+        this.unitFactory = new UnitFactory();
+    }
 
     public GameSession createNewGame() {
         HexCoordinate townHallCoordinate = new HexCoordinate(0, 0);
@@ -38,56 +43,27 @@ public class GameInitializer {
         gameSession.getResourceStorage().addResource(ResourceType.IRON, Constants.STARTING_IRON);
     }
 
-    // Spawns each starting unit on a distinct neighboring hex of the Town Hall,
-    // instead of stacking every unit on the exact same tile.
     private void setupInitialUnits(GameSession gameSession, HexCoordinate townHallCoordinate) {
         List<HexCoordinate> spawnPositions = townHallCoordinate.getNeighbors();
         int nextSpawnIndex = 0;
 
         for (int i = 0; i < Constants.STARTING_BUILDER_COUNT; i++) {
-            HexCoordinate spawnCoordinate = spawnPositions.get(nextSpawnIndex);
-            nextSpawnIndex = nextSpawnIndex + 1;
-
-            String builderId = UnitIdGenerator.generateNextId("BUILDER");
-            Builder builder = new Builder(
-                    builderId,
-                    spawnCoordinate,
-                    Constants.BUILDER_MAX_ACTION_POINTS,
-                    Constants.BUILDER_VISION_RADIUS,
-                    Constants.BUILDER_STARTING_CHARGES
-            );
-            gameSession.addUnit(builder);
+            nextSpawnIndex = spawnUnit(gameSession, UnitType.BUILDER, spawnPositions, nextSpawnIndex);
         }
 
         for (int i = 0; i < Constants.STARTING_WORKER_COUNT; i++) {
-            HexCoordinate spawnCoordinate = spawnPositions.get(nextSpawnIndex);
-            nextSpawnIndex = nextSpawnIndex + 1;
-
-            String workerId = UnitIdGenerator.generateNextId("WORKER");
-            Worker worker = new Worker(
-                    workerId,
-                    spawnCoordinate,
-                    Constants.WORKER_MAX_ACTION_POINTS,
-                    Constants.WORKER_VISION_RADIUS
-            );
-            gameSession.addUnit(worker);
+            nextSpawnIndex = spawnUnit(gameSession, UnitType.WORKER, spawnPositions, nextSpawnIndex);
         }
 
         for (int i = 0; i < Constants.STARTING_EXPLORER_COUNT; i++) {
-            HexCoordinate spawnCoordinate = spawnPositions.get(nextSpawnIndex);
-            nextSpawnIndex = nextSpawnIndex + 1;
-
-            String explorerId = UnitIdGenerator.generateNextId("EXPLORER");
-            Explorer explorer = new Explorer(
-                    explorerId,
-                    spawnCoordinate,
-                    Constants.EXPLORER_MAX_ACTION_POINTS,
-                    Constants.EXPLORER_VISION_RADIUS
-            );
-            gameSession.addUnit(explorer);
+            nextSpawnIndex = spawnUnit(gameSession, UnitType.EXPLORER, spawnPositions, nextSpawnIndex);
         }
     }
 
-    // TODO : Border Expander units are produced later from the Town Hall queue,
-    // not part of the starting 5 units
+    private int spawnUnit(GameSession gameSession, UnitType unitType, List<HexCoordinate> spawnPositions, int spawnIndex) {
+        HexCoordinate spawnCoordinate = spawnPositions.get(spawnIndex);
+        Unit unit = unitFactory.createUnit(unitType, spawnCoordinate);
+        gameSession.addUnit(unit);
+        return spawnIndex + 1;
+    }
 }
