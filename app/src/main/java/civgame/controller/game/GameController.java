@@ -1,25 +1,39 @@
 package civgame.controller.game;
 
+import civgame.model.game.BorderExpansionService;
 import civgame.model.game.ConstructionService;
 import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
 import civgame.model.game.MovementPlan;
 import civgame.model.game.StationingService;
 import civgame.model.map.HexCoordinate;
+import civgame.model.unit.BorderExpander;
 import civgame.model.unit.Builder;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitType;
 import civgame.model.unit.Worker;
 import civgame.util.HexGeometry;
+import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
 import civgame.view.game.ConstructionMenuFactory;
 import civgame.view.game.GameFrame;
 import civgame.view.game.MapPanel;
 import civgame.view.game.SelectionState;
 import civgame.view.game.StationingMenuFactory;
+import civgame.view.game.TownHallMenuFactory;
 import civgame.view.game.UnitMovementAnimator;
+import civgame.view.hud.SelectedUnitPanel;
 
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.KeyStroke;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -36,6 +50,9 @@ public class GameController {
     private final HexPathFinder pathFinder;
     private final ConstructionMenuFactory constructionMenuFactory;
     private final StationingMenuFactory stationingMenuFactory;
+    private final TownHallMenuFactory townHallMenuFactory;
+    private final BorderExpansionMenuFactory borderExpansionMenuFactory;
+    private final SelectedUnitPanel selectedUnitPanel;
     private int lastDragX;
     private int lastDragY;
     private boolean wasDragged;
@@ -49,7 +66,12 @@ public class GameController {
         this.pathFinder = new HexPathFinder();
         this.constructionMenuFactory = new ConstructionMenuFactory(new ConstructionService());
         this.stationingMenuFactory = new StationingMenuFactory(new StationingService());
+        this.townHallMenuFactory = new TownHallMenuFactory();
+        this.borderExpansionMenuFactory = new BorderExpansionMenuFactory(new BorderExpansionService());
+        this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
         registerListeners();
+        registerEscapeKeyBinding();
+        refreshSelectedUnitDisplay();
     }
 
     private void registerListeners() {
@@ -69,18 +91,32 @@ public class GameController {
         Unit clickedUnit = findUnitAtCoordinate(clickedCoordinate);
 
         if (clickedUnit != null) {
-            selectionState.setSelectedUnit(clickedUnit);
-            mapPanel.repaint();
+            selectUnitOrToggleOff(clickedUnit);
             return;
         }
 
         attemptMoveSelectedUnit(clickedCoordinate);
     }
 
+    private void selectUnitOrToggleOff(Unit clickedUnit) {
+        if (selectionState.getSelectedUnit() == clickedUnit) {
+            selectionState.clearSelection();
+        } else {
+            selectionState.setSelectedUnit(clickedUnit);
+        }
+        refreshSelectedUnitDisplay();
+        mapPanel.repaint();
+    }
+
     private void handleRightClick(int screenX, int screenY, MouseEvent mouseEvent) {
         HexCoordinate clickedCoordinate = resolveClickedCoordinate(screenX, screenY);
 
         if (!gameSession.getHexMap().containsCoordinate(clickedCoordinate)) {
+            return;
+        }
+
+        if (clickedCoordinate.equals(gameSession.getTownHall().getCoordinate())) {
+            showTownHallMenu(mouseEvent);
             return;
         }
 
@@ -93,7 +129,32 @@ public class GameController {
             showConstructionMenu((Builder) clickedUnit, mouseEvent);
         } else if (clickedUnit.getUnitType() == UnitType.WORKER) {
             showStationingMenu((Worker) clickedUnit, mouseEvent);
+        } else if (clickedUnit.getUnitType() == UnitType.BORDER_EXPANDER) {
+            showBorderExpansionMenu((BorderExpander) clickedUnit, mouseEvent);
+        } else {
+            showUnitInfoMenu(clickedUnit, mouseEvent);
         }
+    }
+
+    private void showTownHallMenu(MouseEvent mouseEvent) {
+        Runnable onSuccess = createRepaintRunnable();
+        JPopupMenu popupMenu = townHallMenuFactory.buildMenu(gameSession, onSuccess);
+        popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
+    }
+
+    private void showBorderExpansionMenu(BorderExpander expander, MouseEvent mouseEvent) {
+        Runnable onSuccess = createRepaintRunnable();
+        JPopupMenu popupMenu = borderExpansionMenuFactory.buildMenu(gameSession, expander, onSuccess);
+        popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
+    }
+
+    private void showUnitInfoMenu(Unit unit, MouseEvent mouseEvent) {
+        JPopupMenu popupMenu = new JPopupMenu();
+        String apText = unit.getCurrentActionPoints() + "/" + unit.getMaxActionPoints();
+        JMenuItem infoItem = new JMenuItem(unit.getUnitType().name() + " - AP: " + apText);
+        infoItem.setEnabled(false);
+        popupMenu.add(infoItem);
+        popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
     }
 
     private void showConstructionMenu(Builder builder, MouseEvent mouseEvent) {
@@ -112,6 +173,7 @@ public class GameController {
         return new Runnable() {
             @Override
             public void run() {
+                refreshSelectedUnitDisplay();
                 mapPanel.repaint();
             }
         };
@@ -135,6 +197,9 @@ public class GameController {
         if (movementAnimator.isAnimating()) {
             return;
         }
+        if (destination.equals(gameSession.getTownHall().getCoordinate())) {
+            return;
+        }
 
         Unit selectedUnit = selectionState.getSelectedUnit();
         List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination);
@@ -154,6 +219,7 @@ public class GameController {
         }
 
         selectedUnit.consumeActionPoints(movementPlan.getTotalCost());
+        refreshSelectedUnitDisplay();
         movementAnimator.startMovement(selectedUnit, movementPlan.getPath(), null);
     }
 
@@ -205,6 +271,11 @@ public class GameController {
                 handleLeftClick(mouseEvent.getX(), mouseEvent.getY());
             }
         }
+
+        @Override
+        public void mouseMoved(MouseEvent mouseEvent) {
+            mapPanel.updateTooltipForPosition(mouseEvent.getX(), mouseEvent.getY());
+        }
     }
 
     private class ZoomListener implements MouseWheelListener {
@@ -221,6 +292,35 @@ public class GameController {
         }
     }
 
-    // TODO : resource production is calculated from building.calculateProduction()
-    // once per turn inside the turn engine, not here
+    private void refreshSelectedUnitDisplay() {
+        Unit selectedUnit = selectionState.getSelectedUnit();
+
+        if (selectedUnit == null) {
+            selectedUnitPanel.showNothingSelected();
+            return;
+        }
+
+        if (!gameSession.getUnits().contains(selectedUnit)) {
+            selectionState.clearSelection();
+            selectedUnitPanel.showNothingSelected();
+            return;
+        }
+
+        selectedUnitPanel.showUnit(selectedUnit);
+    }
+
+    private void registerEscapeKeyBinding() {
+        InputMap inputMap = mapPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = mapPanel.getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "clearSelection");
+        actionMap.put("clearSelection", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                selectionState.clearSelection();
+                refreshSelectedUnitDisplay();
+                mapPanel.repaint();
+            }
+        });
+    }
 }
