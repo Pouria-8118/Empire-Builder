@@ -89,12 +89,15 @@ public class MapPanel extends JPanel {
     }
 
     private Color resolveTileColor(HexTile tile) {
+        if (tile.getVisibility() == TileVisibility.UNSEEN) {
+            return TerrainColorProvider.getUnseenColor();
+        }
         if (tile.getVisibility() == TileVisibility.EXPLORED) {
             return TerrainColorProvider.getExploredColor(tile.getTerrainType());
         }
         return TerrainColorProvider.getColorForTerrain(tile.getTerrainType());
     }
-
+    
     private Polygon buildHexagonPolygon(double centerX, double centerY, double hexSize) {
         double[] xPoints = HexGeometry.buildHexagonXPoints(centerX, centerY, hexSize);
         double[] yPoints = HexGeometry.buildHexagonYPoints(centerX, centerY, hexSize);
