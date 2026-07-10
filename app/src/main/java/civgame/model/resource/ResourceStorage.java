@@ -66,5 +66,17 @@ public class ResourceStorage {
         capacities.put(resourceType, newCapacity);
     }
 
-    // TODO : decide how negative food / starvation detection is exposed from here
+    // Consumes as much as possible without going below zero, and reports how much
+    // could not be paid (the deficit) so callers can detect a starvation crisis.
+    public int consumeAsMuchAsPossible(ResourceType resourceType, int amount) {
+        int available = getAmount(resourceType);
+
+        if (available >= amount) {
+            currentAmounts.put(resourceType, available - amount);
+            return 0;
+        }
+
+        currentAmounts.put(resourceType, 0);
+        return amount - available;
+    }
 }
