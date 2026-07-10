@@ -1,6 +1,9 @@
 package civgame.model.game;
 
+import civgame.model.map.HexCoordinate;
 import civgame.model.unit.Unit;
+import civgame.model.unit.UnitFactory;
+import civgame.model.unit.UnitType;
 import civgame.util.Constants;
 
 import java.util.List;
@@ -9,16 +12,21 @@ public class TurnEngine {
 
     private final ResourceProductionService resourceProductionService;
     private final UpkeepService upkeepService;
+    private final UnitFactory unitFactory;
+    private final SpawnPositionFinder spawnPositionFinder;
 
     public TurnEngine() {
         this.resourceProductionService = new ResourceProductionService();
         this.upkeepService = new UpkeepService();
+        this.unitFactory = new UnitFactory();
+        this.spawnPositionFinder = new SpawnPositionFinder();
     }
 
     public TurnSummary executeTurn(GameSession gameSession) {
         refreshAllUnitActionPoints(gameSession);
 
         resourceProductionService.applyProduction(gameSession);
+        processProductionQueue(gameSession);
 
         List<String> destroyedBuildingIds = upkeepService.applyBuildingUpkeep(gameSession);
         boolean starvationTriggered = upkeepService.applyUnitFoodConsumption(gameSession);
@@ -47,6 +55,26 @@ public class TurnEngine {
         }
     }
 
-    // TODO : re-run FogOfWarCalculator.updateVisibility() is handled by TurnController,
-    // not here, to keep this class focused only on the economic turn cycle
+    private void processProductionQueue(GameSession gameSession) {
+        ProductionQueueItem completedItem = gameSession.getTownHallProductionQueue().advanceOneTurn();
+        if (completedItem == null) {
+            return;
+        }
+
+        if (completedItem.getCategory() == ProductionQueueItem.QueueItemCategory.UNIT) {
+            completeUnitProduction(gameSession, completedItem.getUnitType());
+        } else {
+            gameSession.getTownHallUpgradeService().applyUpgradeEffects(gameSession, completedItem.getUpgradeType());
+        }
+    }
+
+    private void completeUnitProduction(GameSession gameSession, UnitType unitType) {
+        if (gameSession.hasReachedUnitCap()) {
+            return;
+        }
+
+        HexCoordinate spawnCoordinate = spawnPositionFinder.findFreeNeighbor(gameSession, gameSession.getTownHall().getCoordinate());
+        Unit newUnit = unitFactory.createUnit(unitType, spawnCoordinate);
+        gameSession.addUnit(newUnit);
+    }
 }
