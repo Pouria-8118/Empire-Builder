@@ -22,7 +22,8 @@ public class ResourceProductionService {
                 continue;
             }
 
-            int producedAmount = building.calculateProduction();
+            double multiplier = gameSession.getTownHallUpgradeService().getProductionMultiplier(building.getBuildingType());
+            int producedAmount = (int) (building.calculateProduction() * multiplier);
             gameSession.getResourceStorage().addResource(building.getResourceProduced(), producedAmount);
         }
     }
@@ -31,6 +32,4 @@ public class ResourceProductionService {
         gameSession.getResourceStorage().addResource(ResourceType.FOOD, Constants.TOWN_HALL_SAFEGUARD_FOOD);
         gameSession.getResourceStorage().addResource(ResourceType.WOOD, Constants.TOWN_HALL_SAFEGUARD_WOOD);
     }
-
-    // TODO : advance the Town Hall production queue (unit/upgrade in progress) here as well
 }
