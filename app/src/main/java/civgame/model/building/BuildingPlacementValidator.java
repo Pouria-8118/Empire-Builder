@@ -55,6 +55,4 @@ public class BuildingPlacementValidator {
         return availableTypes;
     }
 
-    // TODO : factor in unlocked technologies here (stone mine / iron
-    // mine tech must be unlocked before they appear as available options)
 }
