@@ -79,6 +79,11 @@ public class Constants {
     public static final int BUILDING_UPKEEP_WOOD_AMOUNT = 1;
     public static final int MAX_MISSED_UPKEEP_TURNS_BEFORE_COLLAPSE = 3;
 
+    public static final int UNIT_FOOD_CONSUMPTION_PER_TURN = 2;
+    public static final int STARVATION_ACTION_POINT_PENALTY = 1;
+    public static final int TOWN_HALL_SAFEGUARD_FOOD = 1;
+    public static final int TOWN_HALL_SAFEGUARD_WOOD = 1;
+    
     // TODO : add Town Hall upgrade costs and tech-unlock constants here
 
     private Constants() {
