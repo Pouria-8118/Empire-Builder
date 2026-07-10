@@ -20,6 +20,9 @@ public class GameSession {
     private final List<Unit> units;
     private final Map<HexCoordinate, Building> buildings;
     private int unitCap;
+    private boolean inStarvation = false;
+    private int currentTurnNumber = 1;
+
 
     public GameSession(HexMap hexMap, TownHall townHall, int initialUnitCap) {
         this.hexMap = hexMap;
@@ -86,5 +89,22 @@ public class GameSession {
         return new ArrayList<Building>(buildings.values());
     }
 
-    // TODO : add a currentTurnNumber field and increment it in the turn engine
+
+
+    public int getCurrentTurnNumber() {
+        return currentTurnNumber;
+    }
+
+    public void incrementTurnNumber() {
+        currentTurnNumber = currentTurnNumber + 1;
+    }
+
+    public boolean isInStarvation() {
+        return inStarvation;
+    }
+
+    public void setInStarvation(boolean inStarvation) {
+        this.inStarvation = inStarvation;
+    }
+
 }
