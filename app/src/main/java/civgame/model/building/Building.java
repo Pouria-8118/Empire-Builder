@@ -87,6 +87,10 @@ public abstract class Building {
         this.destroyed = true;
     }
 
+    public void clearAllStationedWorkers() {
+        stationedWorkers.clear();
+    }
+    
     // TODO : apply the "professional tools" tech multiplier (1.5x) here
     // for StoneMine and IronMine production, once the tech system exists
 }
