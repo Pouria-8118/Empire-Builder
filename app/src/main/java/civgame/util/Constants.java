@@ -84,7 +84,47 @@ public class Constants {
     public static final int TOWN_HALL_SAFEGUARD_FOOD = 1;
     public static final int TOWN_HALL_SAFEGUARD_WOOD = 1;
     
-    // TODO : add Town Hall upgrade costs and tech-unlock constants here
+    public static final int BORDER_EXPAND_ACTION_POINT_COST = 1;
+
+    public static final int STORAGE_UPGRADE_WOOD_COST = 20;
+    public static final int STORAGE_UPGRADE_STONE_COST = 30;
+    public static final int STORAGE_UPGRADE_TURNS = 3;
+    public static final int STORAGE_UPGRADE_CAPACITY_BONUS = 100;
+    public static final int STORAGE_UPGRADE_MAX_COUNT = 2;
+
+    public static final int STONE_MINE_TECH_WOOD_COST = 25;
+    public static final int STONE_MINE_TECH_STONE_COST = 15;
+    public static final int STONE_MINE_TECH_TURNS = 3;
+
+    public static final int IRON_MINE_TECH_WOOD_COST = 30;
+    public static final int IRON_MINE_TECH_STONE_COST = 20;
+    public static final int IRON_MINE_TECH_TURNS = 3;
+
+    public static final int PROFESSIONAL_TOOLS_TECH_STONE_COST = 40;
+    public static final int PROFESSIONAL_TOOLS_TECH_IRON_COST = 20;
+    public static final int PROFESSIONAL_TOOLS_TECH_TURNS = 4;
+    public static final double PROFESSIONAL_TOOLS_PRODUCTION_MULTIPLIER = 1.5;
+
+    public static final int SETTLEMENT_TECH_WOOD_COST = 40;
+    public static final int SETTLEMENT_TECH_STONE_COST = 30;
+    public static final int SETTLEMENT_TECH_TURNS = 4;
+    public static final int SETTLEMENT_UNIT_CAP_BONUS = 5;
+
+    public static final int EXPLORER_PRODUCTION_WOOD_COST = 10;
+    public static final int EXPLORER_PRODUCTION_FOOD_COST = 5;
+    public static final int EXPLORER_PRODUCTION_TURNS = 2;
+
+    public static final int BUILDER_PRODUCTION_WOOD_COST = 15;
+    public static final int BUILDER_PRODUCTION_FOOD_COST = 5;
+    public static final int BUILDER_PRODUCTION_TURNS = 3;
+
+    public static final int WORKER_PRODUCTION_WOOD_COST = 10;
+    public static final int WORKER_PRODUCTION_FOOD_COST = 5;
+    public static final int WORKER_PRODUCTION_TURNS = 2;
+
+    public static final int BORDER_EXPANDER_PRODUCTION_WOOD_COST = 20;
+    public static final int BORDER_EXPANDER_PRODUCTION_FOOD_COST = 10;
+    public static final int BORDER_EXPANDER_PRODUCTION_TURNS = 3;
 
     private Constants() {
     }
