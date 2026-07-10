@@ -2,33 +2,47 @@ package civgame.controller.game;
 
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
+import civgame.model.game.ResourceRateCalculator;
 import civgame.model.game.TurnEngine;
 import civgame.model.game.TurnSummary;
+import civgame.model.resource.ResourceType;
 import civgame.model.unit.Unit;
 import civgame.view.game.EndTurnPanel;
 import civgame.view.game.GameFrame;
 import civgame.view.game.MapPanel;
+import civgame.view.hud.HudPanel;
 
 import javax.swing.JOptionPane;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.Map;
 
 public class TurnController {
 
-    private final GameSession gameSession;
+private final GameSession gameSession;
     private final TurnEngine turnEngine;
     private final FogOfWarCalculator fogOfWarCalculator;
+    private final ResourceRateCalculator resourceRateCalculator;
     private final EndTurnPanel endTurnPanel;
+    private final HudPanel hudPanel;
     private final MapPanel mapPanel;
 
     public TurnController(GameFrame gameFrame, GameSession gameSession, TurnEngine turnEngine, FogOfWarCalculator fogOfWarCalculator) {
         this.gameSession = gameSession;
         this.turnEngine = turnEngine;
         this.fogOfWarCalculator = fogOfWarCalculator;
+        this.resourceRateCalculator = new ResourceRateCalculator();
         this.endTurnPanel = gameFrame.getEndTurnPanel();
+        this.hudPanel = gameFrame.getHudPanel();
         this.mapPanel = gameFrame.getMapPanel();
         registerListeners();
+        refreshHud();
+    }
+
+    private void refreshHud() {
+        Map<ResourceType, Integer> netRates = resourceRateCalculator.calculateNetRates(gameSession);
+        hudPanel.refresh(gameSession, netRates);
     }
 
     private void registerListeners() {
@@ -45,9 +59,8 @@ public class TurnController {
             TurnSummary turnSummary = turnEngine.executeTurn(gameSession);
             fogOfWarCalculator.updateVisibility(gameSession);
 
-            endTurnPanel.updateTurnNumber(turnSummary.getNewTurnNumber());
+            refreshHud();
             endTurnPanel.setStarvationWarningVisible(turnSummary.isStarvationTriggered());
-
             showTurnFeedbackIfNeeded(turnSummary);
 
             mapPanel.repaint();
