@@ -29,7 +29,8 @@ public class MapPanel extends JPanel {
 
     private static final int UNIT_MARKER_RADIUS = 10;
     private static final int TOWN_HALL_MARKER_RADIUS = 14;
-
+    private static final Color OUTSIDE_BORDER_TINT = new Color(0, 0, 0, 110);
+    private static final Color SETTLEMENT_COLOR = new Color(150, 90, 200);
     private final GameSession gameSession;
     private final CameraState cameraState;
     private final SelectionState selectionState;
@@ -58,6 +59,7 @@ public class MapPanel extends JPanel {
         drawAllTiles(graphics2D, hexSize, centerX, centerY);
         drawTownHall(graphics2D, hexSize, centerX, centerY);
         drawAllBuildings(graphics2D, hexSize, centerX, centerY);
+        drawAllSettlements(graphics2D, hexSize, centerX, centerY);
         drawAllUnits(graphics2D, hexSize, centerX, centerY);
     }
 
@@ -85,6 +87,11 @@ public class MapPanel extends JPanel {
 
         if (tile.hasResource() && tile.getVisibility() != TileVisibility.UNSEEN) {
             drawResourceMarker(graphics2D, tileCenterX, tileCenterY, hexSize);
+        }
+
+        if (tile.getVisibility() != TileVisibility.UNSEEN && !gameSession.isWithinBorder(tile.getCoordinate())) {
+            graphics2D.setColor(OUTSIDE_BORDER_TINT);
+            graphics2D.fillPolygon(hexagonPolygon);
         }
     }
 
@@ -173,6 +180,27 @@ public class MapPanel extends JPanel {
 
         // TODO (bonus - visual polish): show a small worker-count badge here,
         // e.g. "2/3" text near the building square
+    }
+
+    private void drawAllSettlements(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        for (HexCoordinate settlementCoordinate : gameSession.getSettlementTiles()) {
+            drawSettlement(graphics2D, settlementCoordinate, hexSize, centerX, centerY);
+        }
+    }
+
+    private void drawSettlement(Graphics2D graphics2D, HexCoordinate coordinate, double hexSize, double centerX, double centerY) {
+        Point2D pixelPosition = HexGeometry.axialToPixel(coordinate, hexSize);
+        double drawX = centerX + pixelPosition.getX();
+        double drawY = centerY + pixelPosition.getY();
+        int markerRadius = (int) (hexSize * 0.35);
+
+        graphics2D.setColor(SETTLEMENT_COLOR);
+        graphics2D.fillOval((int) (drawX - markerRadius), (int) (drawY - markerRadius), markerRadius * 2, markerRadius * 2);
+
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawOval((int) (drawX - markerRadius), (int) (drawY - markerRadius), markerRadius * 2, markerRadius * 2);
+
+        // TODO (bonus - visual polish): replace with a proper settlement/hamlet sprite
     }
 
     private void drawAllUnits(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
