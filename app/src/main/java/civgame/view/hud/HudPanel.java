@@ -1,6 +1,7 @@
 package civgame.view.hud;
 
 import civgame.model.game.GameSession;
+import civgame.model.game.ProductionQueueItem;
 import civgame.model.resource.ResourceStorage;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Unit;
@@ -85,6 +86,16 @@ public class HudPanel extends JPanel {
         updateResourceLabel(ironLabel, "Iron", gameSession.getResourceStorage(), ResourceType.IRON, netRates);
 
         updateUnitCountLabel(gameSession);
+        updateQueueLabel(gameSession);
+    }
+
+    private void updateQueueLabel(GameSession gameSession) {
+        ProductionQueueItem currentItem = gameSession.getTownHallProductionQueue().getCurrentItem();
+        if (currentItem == null) {
+            queueLabel.setText("Queue: Idle");
+        } else {
+            queueLabel.setText("Queue: " + currentItem.describeForHud());
+        }
     }
 
     private void updateResourceLabel(JLabel label, String displayName, ResourceStorage storage, ResourceType resourceType, Map<ResourceType, Integer> netRates) {
