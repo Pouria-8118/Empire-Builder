@@ -39,12 +39,14 @@ public class ResourceRateCalculator {
                 continue;
             }
 
+            double multiplier = gameSession.getTownHallUpgradeService().getProductionMultiplier(building.getBuildingType());
+            int producedAmount = (int) (building.calculateProduction() * multiplier);
+
             ResourceType producedType = building.getResourceProduced();
             int currentValue = netRates.get(producedType);
-            netRates.put(producedType, currentValue + building.calculateProduction());
+            netRates.put(producedType, currentValue + producedAmount);
         }
     }
-
     private void applyTownHallSafeguardRates(Map<ResourceType, Integer> netRates) {
         int currentFood = netRates.get(ResourceType.FOOD);
         netRates.put(ResourceType.FOOD, currentFood + Constants.TOWN_HALL_SAFEGUARD_FOOD);
