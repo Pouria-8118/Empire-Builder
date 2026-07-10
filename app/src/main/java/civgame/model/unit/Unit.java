@@ -64,5 +64,10 @@ public abstract class Unit {
         return currentActionPoints > 0;
     }
 
-    // TODO : apply the starvation action point penalty here
+    public void applyActionPointPenalty(int amount) {
+            currentActionPoints = currentActionPoints - amount;
+            if (currentActionPoints < 0) {
+                currentActionPoints = 0;
+            }
+    }
 }
