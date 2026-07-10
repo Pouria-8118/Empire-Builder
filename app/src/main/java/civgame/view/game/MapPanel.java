@@ -71,10 +71,6 @@ public class MapPanel extends JPanel {
     }
 
     private void drawTile(Graphics2D graphics2D, HexTile tile, double hexSize, double centerX, double centerY) {
-        if (tile.getVisibility() == TileVisibility.UNSEEN) {
-            return;
-        }
-
         Point2D pixelPosition = HexGeometry.axialToPixel(tile.getCoordinate(), hexSize);
         double tileCenterX = centerX + pixelPosition.getX();
         double tileCenterY = centerY + pixelPosition.getY();
@@ -84,10 +80,10 @@ public class MapPanel extends JPanel {
         graphics2D.setColor(resolveTileColor(tile));
         graphics2D.fillPolygon(hexagonPolygon);
 
-        graphics2D.setColor(Color.BLACK);
+        graphics2D.setColor(new Color(0, 0, 0, 80));
         graphics2D.drawPolygon(hexagonPolygon);
 
-        if (tile.hasResource()) {
+        if (tile.hasResource() && tile.getVisibility() != TileVisibility.UNSEEN) {
             drawResourceMarker(graphics2D, tileCenterX, tileCenterY, hexSize);
         }
     }
