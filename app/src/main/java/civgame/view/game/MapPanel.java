@@ -1,5 +1,6 @@
 package civgame.view.game;
 
+import civgame.model.building.Building;
 import civgame.model.building.TownHall;
 import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
@@ -7,6 +8,7 @@ import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
 import civgame.model.map.TileVisibility;
 import civgame.model.unit.Unit;
+import civgame.util.BuildingColorProvider;
 import civgame.util.Constants;
 import civgame.util.HexGeometry;
 import civgame.util.TerrainColorProvider;
@@ -50,6 +52,7 @@ public class MapPanel extends JPanel {
 
         drawAllTiles(graphics2D, hexSize, centerX, centerY);
         drawTownHall(graphics2D, hexSize, centerX, centerY);
+        drawAllBuildings(graphics2D, hexSize, centerX, centerY);
         drawAllUnits(graphics2D, hexSize, centerX, centerY);
     }
 
@@ -132,6 +135,40 @@ public class MapPanel extends JPanel {
         );
 
         // TODO (bonus - visual polish): replace this red square with a proper town hall sprite
+    }
+    private void drawAllBuildings(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        List<Building> allBuildings = gameSession.getAllBuildings();
+
+        for (int i = 0; i < allBuildings.size(); i++) {
+            drawBuilding(graphics2D, allBuildings.get(i), hexSize, centerX, centerY);
+        }
+    }
+
+    private void drawBuilding(Graphics2D graphics2D, Building building, double hexSize, double centerX, double centerY) {
+        Point2D pixelPosition = HexGeometry.axialToPixel(building.getCoordinate(), hexSize);
+        double drawX = centerX + pixelPosition.getX();
+        double drawY = centerY + pixelPosition.getY();
+
+        int squareSize = (int) (hexSize * 0.6);
+
+        graphics2D.setColor(BuildingColorProvider.getColorForBuildingType(building.getBuildingType()));
+        graphics2D.fillRect(
+                (int) (drawX - squareSize / 2.0),
+                (int) (drawY - squareSize / 2.0),
+                squareSize,
+                squareSize
+        );
+
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawRect(
+                (int) (drawX - squareSize / 2.0),
+                (int) (drawY - squareSize / 2.0),
+                squareSize,
+                squareSize
+        );
+
+        // TODO (bonus - visual polish): show a small worker-count badge here,
+        // e.g. "2/3" text near the building square
     }
 
     private void drawAllUnits(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
