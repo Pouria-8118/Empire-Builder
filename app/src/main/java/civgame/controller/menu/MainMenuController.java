@@ -2,9 +2,11 @@ package civgame.controller.menu;
 
 import civgame.audio.MusicPlayer;
 import civgame.controller.game.GameController;
+import civgame.controller.game.TurnController;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameInitializer;
 import civgame.model.game.GameSession;
+import civgame.model.game.TurnEngine;
 import civgame.util.Constants;
 import civgame.view.game.GameFrame;
 import civgame.view.menu.ExitConfirmationDialog;
@@ -59,7 +61,8 @@ public class MainMenuController {
             gameFrame.setVisible(true);
             mainMenuFrame.dispose();
 
-            // TODO : re-run fogOfWarCalculator.updateVisibility() at the start of every turn as well
+            TurnEngine turnEngine = new TurnEngine();
+            TurnController turnController = new TurnController(gameFrame, gameSession, turnEngine, fogOfWarCalculator);
         }
     }
     private class SettingsButtonListener implements ActionListener {
