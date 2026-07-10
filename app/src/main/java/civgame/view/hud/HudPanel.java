@@ -139,6 +139,4 @@ public class HudPanel extends JPanel {
         return count;
     }
 
-    // TODO : replace the static "Queue: Idle" text with the real
-    // Town Hall production queue status once it exists
 }
