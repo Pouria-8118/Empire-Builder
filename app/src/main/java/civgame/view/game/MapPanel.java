@@ -97,7 +97,7 @@ public class MapPanel extends JPanel {
         }
         return TerrainColorProvider.getColorForTerrain(tile.getTerrainType());
     }
-    
+
     private Polygon buildHexagonPolygon(double centerX, double centerY, double hexSize) {
         double[] xPoints = HexGeometry.buildHexagonXPoints(centerX, centerY, hexSize);
         double[] yPoints = HexGeometry.buildHexagonYPoints(centerX, centerY, hexSize);
@@ -239,6 +239,54 @@ public class MapPanel extends JPanel {
 
     public double getPanelCenterY() {
         return getHeight() / 2.0 + cameraState.getOffsetY();
+    }
+    
+    public void updateTooltipForPosition(int screenX, int screenY) {
+        double hexSize = getCurrentHexSize();
+        double centerX = getPanelCenterX();
+        double centerY = getPanelCenterY();
+
+        double relativeX = screenX - centerX;
+        double relativeY = screenY - centerY;
+        HexCoordinate hoveredCoordinate = HexGeometry.pixelToAxial(relativeX, relativeY, hexSize);
+
+        setToolTipText(buildTooltipText(hoveredCoordinate));
+    }
+
+    private String buildTooltipText(HexCoordinate coordinate) {
+        Unit hoveredUnit = findUnitAtCoordinateForTooltip(coordinate);
+        if (hoveredUnit != null) {
+            return buildUnitTooltip(hoveredUnit);
+        }
+
+        Building hoveredBuilding = gameSession.getBuildingAt(coordinate);
+        if (hoveredBuilding != null) {
+            return buildBuildingTooltip(hoveredBuilding);
+        }
+
+        return null;
+    }
+
+    private Unit findUnitAtCoordinateForTooltip(HexCoordinate coordinate) {
+        List<Unit> units = gameSession.getUnits();
+
+        for (int i = 0; i < units.size(); i++) {
+            if (units.get(i).getCoordinate().equals(coordinate)) {
+                return units.get(i);
+            }
+        }
+
+        return null;
+    }
+
+    private String buildUnitTooltip(Unit unit) {
+        String apText = unit.getCurrentActionPoints() + "/" + unit.getMaxActionPoints();
+        return unit.getUnitType().name() + " | AP: " + apText;
+    }
+
+    private String buildBuildingTooltip(Building building) {
+        String workerText = building.getStationedWorkers().size() + "/" + building.getWorkerCapacity();
+        return building.getBuildingType().name() + " | Workers: " + workerText;
     }
 
     // TODO : once hex tiles get an image-based
