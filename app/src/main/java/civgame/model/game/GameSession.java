@@ -9,8 +9,10 @@ import civgame.model.unit.Unit;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class GameSession {
 
@@ -19,10 +21,13 @@ public class GameSession {
     private final ResourceStorage resourceStorage;
     private final List<Unit> units;
     private final Map<HexCoordinate, Building> buildings;
+    private final Set<HexCoordinate> claimedBorderTiles;
+    private final Set<HexCoordinate> settlementTiles;
+    private final TownHallUpgradeService townHallUpgradeService;
+    private final TownHallProductionQueue townHallProductionQueue;
     private int unitCap;
-    private boolean inStarvation = false;
-    private int currentTurnNumber = 1;
-
+    private int currentTurnNumber;
+    private boolean inStarvation;
 
     public GameSession(HexMap hexMap, TownHall townHall, int initialUnitCap) {
         this.hexMap = hexMap;
@@ -30,7 +35,28 @@ public class GameSession {
         this.resourceStorage = new ResourceStorage();
         this.units = new ArrayList<Unit>();
         this.buildings = new HashMap<HexCoordinate, Building>();
+        this.claimedBorderTiles = new HashSet<HexCoordinate>();
+        this.settlementTiles = new HashSet<HexCoordinate>();
+        this.townHallUpgradeService = new TownHallUpgradeService();
+        this.townHallProductionQueue = new TownHallProductionQueue();
         this.unitCap = initialUnitCap;
+        this.currentTurnNumber = 1;
+        this.inStarvation = false;
+        claimInitialBorderAroundTownHall();
+    }
+
+    // The player starts with a small claimed area around the Town Hall so
+    // the starting Builder can construct something before any Border
+    // Expander has been used.
+    private void claimInitialBorderAroundTownHall() {
+        claimedBorderTiles.add(townHall.getCoordinate());
+
+        List<HexCoordinate> neighbors = townHall.getCoordinate().getNeighbors();
+        for (int i = 0; i < neighbors.size(); i++) {
+            if (hexMap.containsCoordinate(neighbors.get(i))) {
+                claimedBorderTiles.add(neighbors.get(i));
+            }
+        }
     }
 
     public HexMap getHexMap() {
@@ -89,7 +115,37 @@ public class GameSession {
         return new ArrayList<Building>(buildings.values());
     }
 
+    public boolean isWithinBorder(HexCoordinate coordinate) {
+        return claimedBorderTiles.contains(coordinate);
+    }
 
+    public void claimBorderTile(HexCoordinate coordinate) {
+        claimedBorderTiles.add(coordinate);
+    }
+
+    public Set<HexCoordinate> getClaimedBorderTiles() {
+        return claimedBorderTiles;
+    }
+
+    public void addSettlementTile(HexCoordinate coordinate) {
+        settlementTiles.add(coordinate);
+    }
+
+    public boolean isSettlementTile(HexCoordinate coordinate) {
+        return settlementTiles.contains(coordinate);
+    }
+
+    public Set<HexCoordinate> getSettlementTiles() {
+        return settlementTiles;
+    }
+
+    public TownHallUpgradeService getTownHallUpgradeService() {
+        return townHallUpgradeService;
+    }
+
+    public TownHallProductionQueue getTownHallProductionQueue() {
+        return townHallProductionQueue;
+    }
 
     public int getCurrentTurnNumber() {
         return currentTurnNumber;
@@ -106,5 +162,4 @@ public class GameSession {
     public void setInStarvation(boolean inStarvation) {
         this.inStarvation = inStarvation;
     }
-
 }
