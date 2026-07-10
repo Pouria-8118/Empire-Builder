@@ -5,6 +5,7 @@ import civgame.model.building.BuildingCostProvider;
 import civgame.model.building.BuildingFactory;
 import civgame.model.building.BuildingPlacementValidator;
 import civgame.model.building.BuildingType;
+import civgame.model.building.TownHallUpgradeType;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.resource.ResourceType;
@@ -26,6 +27,12 @@ public class ConstructionService {
             return false;
         }
         if (gameSession.getBuildingAt(targetCoordinate) != null) {
+            return false;
+        }
+        if (!gameSession.isWithinBorder(targetCoordinate)) {
+            return false;
+        }
+        if (!isTechnologyUnlockedFor(gameSession, buildingType)) {
             return false;
         }
 
@@ -50,6 +57,16 @@ public class ConstructionService {
         return true;
     }
 
+    private boolean isTechnologyUnlockedFor(GameSession gameSession, BuildingType buildingType) {
+        if (buildingType == BuildingType.STONE_MINE) {
+            return gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.STONE_MINE_TECH);
+        }
+        if (buildingType == BuildingType.IRON_MINE) {
+            return gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.IRON_MINE_TECH);
+        }
+        return true;
+    }
+
     public boolean build(GameSession gameSession, Builder builder, BuildingType buildingType, HexCoordinate targetCoordinate) {
         if (!canBuild(gameSession, builder, buildingType, targetCoordinate)) {
             return false;
@@ -71,7 +88,4 @@ public class ConstructionService {
 
         return true;
     }
-
-    // TODO : reject construction if targetCoordinate is outside
-    // the player's expanded border, once Border Expander is implemented
 }
