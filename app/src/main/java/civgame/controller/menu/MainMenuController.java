@@ -56,7 +56,7 @@ public class MainMenuController {
             fogOfWarCalculator.updateVisibility(gameSession);
 
             GameFrame gameFrame = new GameFrame(gameSession);
-            GameController gameController = new GameController(gameFrame, gameSession);
+            GameController gameController = new GameController(gameFrame, gameSession, fogOfWarCalculator);
 
             gameFrame.setVisible(true);
             mainMenuFrame.dispose();

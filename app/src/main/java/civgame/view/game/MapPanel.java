@@ -31,6 +31,8 @@ public class MapPanel extends JPanel {
     private static final int TOWN_HALL_MARKER_RADIUS = 14;
     private static final Color OUTSIDE_BORDER_TINT = new Color(0, 0, 0, 110);
     private static final Color SETTLEMENT_COLOR = new Color(150, 90, 200);
+    private static final Color REACHABLE_TILE_TINT = new Color(255, 255, 0, 60);
+    private static final Color REACHABLE_TILE_BORDER = new Color(255, 255, 0, 150);
     private final GameSession gameSession;
     private final CameraState cameraState;
     private final SelectionState selectionState;
@@ -92,6 +94,13 @@ public class MapPanel extends JPanel {
         if (tile.getVisibility() != TileVisibility.UNSEEN && !gameSession.isWithinBorder(tile.getCoordinate())) {
             graphics2D.setColor(OUTSIDE_BORDER_TINT);
             graphics2D.fillPolygon(hexagonPolygon);
+        }
+
+        if (selectionState.getReachableTiles().contains(tile.getCoordinate())) {
+            graphics2D.setColor(REACHABLE_TILE_TINT);
+            graphics2D.fillPolygon(hexagonPolygon);
+            graphics2D.setColor(REACHABLE_TILE_BORDER);
+            graphics2D.drawPolygon(hexagonPolygon);
         }
     }
 
