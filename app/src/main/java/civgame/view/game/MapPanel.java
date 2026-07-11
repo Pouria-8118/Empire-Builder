@@ -27,6 +27,8 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Polygon;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +38,8 @@ public class MapPanel extends JPanel {
     private static final double BUILDING_SIZE_FACTOR = 1.2;
     private static final double TOWN_HALL_SIZE_FACTOR = 1.4;
     private static final double REACHABLE_TILE_BRIGHTEN_AMOUNT = 0.16;
+    private static final double STACKED_UNIT_SIZE_SCALE = 0.62;
+    private static final double STACKED_UNIT_CLUSTER_RADIUS_FACTOR = 0.28;
 
     private static final Color OUTSIDE_BORDER_TINT = new Color(0, 0, 0, 110);
     private static final Color SETTLEMENT_COLOR = new Color(150, 90, 200);
@@ -146,8 +150,23 @@ public class MapPanel extends JPanel {
         return hexagonPolygon;
     }
 
+    // If a unit is standing on a resource tile, the resource icon shrinks and
+    // moves toward a corner of the hex so both the unit and the resource stay visible.
     private void drawResourceMarker(Graphics2D graphics2D, HexTile tile, double centerX, double centerY, double hexSize) {
-        int markerSize = (int) (hexSize * 0.42);
+        boolean unitStandingHere = isUnitStandingOn(tile.getCoordinate());
+
+        double markerCenterX = centerX;
+        double markerCenterY = centerY;
+        int markerSize;
+
+        if (unitStandingHere) {
+            markerSize = (int) (hexSize * 0.3);
+            markerCenterX = centerX - hexSize * 0.4;
+            markerCenterY = centerY - hexSize * 0.4;
+        } else {
+            markerSize = (int) (hexSize * 0.42);
+        }
+
         String iconPath = ResourceIconProvider.getIconPath(tile.getResourceType());
         Image resourceIcon = null;
         if (iconPath != null) {
@@ -155,11 +174,11 @@ public class MapPanel extends JPanel {
         }
 
         if (resourceIcon != null) {
-            graphics2D.drawImage(resourceIcon, (int) (centerX - markerSize / 2.0), (int) (centerY - markerSize / 2.0), markerSize, markerSize, this);
+            graphics2D.drawImage(resourceIcon, (int) (markerCenterX - markerSize / 2.0), (int) (markerCenterY - markerSize / 2.0), markerSize, markerSize, this);
         } else {
-            double fallbackRadius = hexSize * 0.2;
+            double fallbackRadius = markerSize / 2.0;
             graphics2D.setColor(Color.WHITE);
-            graphics2D.fillOval((int) (centerX - fallbackRadius), (int) (centerY - fallbackRadius), (int) (fallbackRadius * 2), (int) (fallbackRadius * 2));
+            graphics2D.fillOval((int) (markerCenterX - fallbackRadius), (int) (markerCenterY - fallbackRadius), (int) (fallbackRadius * 2), (int) (fallbackRadius * 2));
         }
 
         if (tile.isIronDepositPresent()) {
@@ -167,10 +186,22 @@ public class MapPanel extends JPanel {
         }
     }
 
+    private boolean isUnitStandingOn(HexCoordinate coordinate) {
+        List<Unit> units = gameSession.getUnits();
+
+        for (int i = 0; i < units.size(); i++) {
+            if (units.get(i).getCoordinate().equals(coordinate)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void drawIronDepositOverlay(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
         int overlaySize = (int) (hexSize * 0.3);
-        double offsetX = centerX + hexSize * 0.3;
-        double offsetY = centerY + hexSize * 0.3;
+        double offsetX = centerX + hexSize * 0.32;
+        double offsetY = centerY + hexSize * 0.32;
 
         Image ironIcon = IconProvider.loadImage(Constants.IRON_ICON_PATH);
         if (ironIcon != null) {
@@ -279,29 +310,65 @@ public class MapPanel extends JPanel {
         graphics2D.drawOval((int) (drawX - markerRadius), (int) (drawY - markerRadius), markerRadius * 2, markerRadius * 2);
     }
 
+    // Units are grouped by tile so that multiple units standing on the same hex
+    // (e.g. workers stationed together in a building) are drawn smaller and
+    // spread out in a small circle instead of fully overlapping each other.
     private void drawAllUnits(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
-        List<Unit> units = gameSession.getUnits();
+        Map<HexCoordinate, List<Unit>> stationaryGroups = new HashMap<HexCoordinate, List<Unit>>();
+        List<Unit> allUnits = gameSession.getUnits();
 
-        for (Unit unit : units) {
-            drawUnit(graphics2D, unit, hexSize, centerX, centerY);
+        for (int i = 0; i < allUnits.size(); i++) {
+            Unit unit = allUnits.get(i);
+
+            if (movementAnimator.isAnimating() && movementAnimator.getAnimatingUnit() == unit) {
+                drawAnimatingUnit(graphics2D, unit, hexSize, centerX, centerY);
+                continue;
+            }
+
+            HexCoordinate coordinate = unit.getCoordinate();
+            List<Unit> group = stationaryGroups.get(coordinate);
+            if (group == null) {
+                group = new ArrayList<Unit>();
+                stationaryGroups.put(coordinate, group);
+            }
+            group.add(unit);
+        }
+
+        for (Map.Entry<HexCoordinate, List<Unit>> entry : stationaryGroups.entrySet()) {
+            drawUnitGroup(graphics2D, entry.getKey(), entry.getValue(), hexSize, centerX, centerY);
         }
     }
 
-    private void drawUnit(Graphics2D graphics2D, Unit unit, double hexSize, double centerX, double centerY) {
-        double drawX;
-        double drawY;
+    private void drawAnimatingUnit(Graphics2D graphics2D, Unit unit, double hexSize, double centerX, double centerY) {
+        Point2D interpolatedPixel = movementAnimator.getInterpolatedPixelPosition(hexSize);
+        double drawX = centerX + interpolatedPixel.getX();
+        double drawY = centerY + interpolatedPixel.getY();
+        drawSingleUnit(graphics2D, unit, drawX, drawY, hexSize, 1.0);
+    }
 
-        if (movementAnimator.isAnimating() && movementAnimator.getAnimatingUnit() == unit) {
-            Point2D interpolatedPixel = movementAnimator.getInterpolatedPixelPosition(hexSize);
-            drawX = centerX + interpolatedPixel.getX();
-            drawY = centerY + interpolatedPixel.getY();
-        } else {
-            Point2D pixelPosition = HexGeometry.axialToPixel(unit.getCoordinate(), hexSize);
-            drawX = centerX + pixelPosition.getX();
-            drawY = centerY + pixelPosition.getY();
+    private void drawUnitGroup(Graphics2D graphics2D, HexCoordinate coordinate, List<Unit> unitsHere, double hexSize, double centerX, double centerY) {
+        Point2D pixelPosition = HexGeometry.axialToPixel(coordinate, hexSize);
+        double tileCenterX = centerX + pixelPosition.getX();
+        double tileCenterY = centerY + pixelPosition.getY();
+
+        double sizeScale = 1.0;
+        double clusterRadius = 0.0;
+        if (unitsHere.size() > 1) {
+            sizeScale = STACKED_UNIT_SIZE_SCALE;
+            clusterRadius = hexSize * STACKED_UNIT_CLUSTER_RADIUS_FACTOR;
         }
 
-        int iconSize = (int) (hexSize * UNIT_SIZE_FACTOR);
+        for (int i = 0; i < unitsHere.size(); i++) {
+            Unit unit = unitsHere.get(i);
+            double angle = (2 * Math.PI * i) / unitsHere.size();
+            double drawX = tileCenterX + clusterRadius * Math.cos(angle);
+            double drawY = tileCenterY + clusterRadius * Math.sin(angle);
+            drawSingleUnit(graphics2D, unit, drawX, drawY, hexSize, sizeScale);
+        }
+    }
+
+    private void drawSingleUnit(Graphics2D graphics2D, Unit unit, double drawX, double drawY, double hexSize, double sizeScale) {
+        int iconSize = (int) (hexSize * UNIT_SIZE_FACTOR * sizeScale);
         Image unitIcon = IconProvider.loadImage(UnitIconProvider.getIconPath(unit.getUnitType()));
 
         if (unitIcon != null) {
