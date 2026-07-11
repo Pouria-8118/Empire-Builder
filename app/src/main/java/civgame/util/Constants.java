@@ -36,7 +36,7 @@ public class Constants {
     public static final int EXPLORER_MAX_ACTION_POINTS = 6;
     public static final int BUILDER_MAX_ACTION_POINTS = 4;
     public static final int WORKER_MAX_ACTION_POINTS = 3;
-    public static final int BORDER_EXPANDER_MAX_ACTION_POINTS = 3;
+    public static final int BORDER_EXPANDER_MAX_ACTION_POINTS = 4;
 
     public static final int EXPLORER_VISION_RADIUS = 3;
     public static final int BUILDER_VISION_RADIUS = 1;
@@ -83,8 +83,8 @@ public class Constants {
     public static final int STARVATION_ACTION_POINT_PENALTY = 1;
     public static final int TOWN_HALL_SAFEGUARD_FOOD = 1;
     public static final int TOWN_HALL_SAFEGUARD_WOOD = 1;
-    
-    public static final int BORDER_EXPAND_ACTION_POINT_COST = 4;
+
+    public static final int BORDER_EXPAND_ACTION_POINT_COST = 1;
 
     public static final int STORAGE_UPGRADE_WOOD_COST = 20;
     public static final int STORAGE_UPGRADE_STONE_COST = 30;
@@ -138,6 +138,7 @@ public class Constants {
     public static final String FARM_ICON_PATH = "/images/buildings/farm.png";
     public static final String STABLE_ICON_PATH = "/images/buildings/stable.png";
     public static final String SETTLEMENT_ICON_PATH = "/images/buildings/settlement.png";
+
     public static final String FOOD_ICON_PATH = "/images/resources/food.png";
     public static final String WOOD_ICON_PATH = "/images/resources/wood.png";
     public static final String STONE_ICON_PATH = "/images/resources/stone.png";
@@ -146,7 +147,7 @@ public class Constants {
     public static final String RICE_ICON_PATH = "/images/resources/rice.png";
     public static final String CATTLE_ICON_PATH = "/images/resources/cattle.png";
     public static final String SHEEP_ICON_PATH = "/images/resources/sheep.png";
-    
+
     private Constants() {
     }
 }
