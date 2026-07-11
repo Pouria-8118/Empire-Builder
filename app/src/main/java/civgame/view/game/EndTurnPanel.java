@@ -1,5 +1,6 @@
 package civgame.view.game;
 
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.Color;
@@ -21,7 +22,8 @@ public class EndTurnPanel extends JPanel {
 
     public EndTurnPanel() {
         setOpaque(false);
-        setLayout(new FlowLayout(FlowLayout.RIGHT, 12, 10));
+        setLayout(new FlowLayout(FlowLayout.CENTER, 14, 10));
+        setBorder(BorderFactory.createEmptyBorder(2, 12, 2, 12));
 
         starvationLabel = new JLabel("");
         starvationLabel.setForeground(WARNING_COLOR);

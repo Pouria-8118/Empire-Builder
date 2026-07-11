@@ -1,6 +1,10 @@
 package civgame.view.game;
 
+import civgame.model.map.HexCoordinate;
 import civgame.util.Constants;
+import civgame.util.HexGeometry;
+
+import java.awt.geom.Point2D;
 
 public class CameraState {
 
@@ -43,5 +47,9 @@ public class CameraState {
         return offsetY;
     }
 
-    // TODO : add keyboard-based panning if needed later
+    public void centerOnTile(HexCoordinate coordinate, double hexSize) {
+        Point2D pixelPosition = HexGeometry.axialToPixel(coordinate, hexSize);
+        this.offsetX = -pixelPosition.getX();
+        this.offsetY = -pixelPosition.getY();
+    }
 }
