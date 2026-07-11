@@ -8,7 +8,7 @@ import civgame.view.hud.SelectedUnitPanel;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 import java.awt.Dimension;
-
+import civgame.view.hud.ControlsHintPanel;
 public class GameFrame extends JFrame {
 
     private static final int HUD_WIDTH = 1000;
@@ -26,6 +26,8 @@ public class GameFrame extends JFrame {
     private final EndTurnPanel endTurnPanel;
     private final HudPanel hudPanel;
     private final SelectedUnitPanel selectedUnitPanel;
+    private final ControlsHintPanel controlsHintPanel;
+
 
     public GameFrame(GameSession gameSession) {
         super(Constants.WINDOW_TITLE + " - Game");
@@ -36,6 +38,7 @@ public class GameFrame extends JFrame {
         this.mapPanel = new MapPanel(gameSession, cameraState, selectionState, movementAnimator);
         this.hudPanel = new HudPanel();
         this.selectedUnitPanel = new SelectedUnitPanel();
+        this.controlsHintPanel = new ControlsHintPanel();
         this.endTurnPanel = new EndTurnPanel();
         this.layeredPane = new JLayeredPane();
 
@@ -70,6 +73,9 @@ public class GameFrame extends JFrame {
         int hudX = (Constants.WINDOW_WIDTH - HUD_WIDTH) / 2;
         hudPanel.setBounds(hudX, MARGIN, HUD_WIDTH, HUD_HEIGHT);
         layeredPane.add(hudPanel, JLayeredPane.PALETTE_LAYER);
+
+        controlsHintPanel.setBounds(MARGIN, MARGIN, 620, 34);
+        layeredPane.add(controlsHintPanel, JLayeredPane.PALETTE_LAYER);
 
         int bottomY = Constants.WINDOW_HEIGHT - BOTTOM_PANEL_HEIGHT - MARGIN;
 
