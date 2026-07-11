@@ -3,6 +3,7 @@ package civgame.model.game;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
+import civgame.model.map.TileVisibility;
 import civgame.util.TerrainMovementCostProvider;
 
 import java.util.ArrayList;
@@ -18,7 +19,9 @@ import java.util.Set;
 public class HexPathFinder {
 
     // Finds the cheapest path (by movement cost) between two hexes using Dijkstra's algorithm.
-    public List<HexCoordinate> findPath(HexMap hexMap, HexCoordinate start, HexCoordinate destination) {
+    // When allowUnseenTiles is false, the search will not travel through hexes that
+    // are still fully hidden by fog of war (only Explorer units are allowed to do this).
+    public List<HexCoordinate> findPath(HexMap hexMap, HexCoordinate start, HexCoordinate destination, boolean allowUnseenTiles) {
         if (!hexMap.containsCoordinate(start) || !hexMap.containsCoordinate(destination)) {
             return null;
         }
@@ -46,7 +49,7 @@ public class HexPathFinder {
                 break;
             }
 
-            expandNeighbors(hexMap, current, costSoFar, cameFrom, frontier);
+            expandNeighborsForPath(hexMap, current, costSoFar, cameFrom, frontier, allowUnseenTiles);
         }
 
         if (!cameFrom.containsKey(destination)) {
@@ -56,8 +59,9 @@ public class HexPathFinder {
         return buildPathFromCameFromMap(cameFrom, start, destination);
     }
 
-    private void expandNeighbors(HexMap hexMap, HexCoordinate current, Map<HexCoordinate, Integer> costSoFar,
-                                  Map<HexCoordinate, HexCoordinate> cameFrom, PriorityQueue<HexCoordinate> frontier) {
+    private void expandNeighborsForPath(HexMap hexMap, HexCoordinate current, Map<HexCoordinate, Integer> costSoFar,
+                                         Map<HexCoordinate, HexCoordinate> cameFrom, PriorityQueue<HexCoordinate> frontier,
+                                         boolean allowUnseenTiles) {
         List<HexCoordinate> neighbors = current.getNeighbors();
 
         for (int i = 0; i < neighbors.size(); i++) {
@@ -68,6 +72,11 @@ public class HexPathFinder {
             }
 
             HexTile neighborTile = hexMap.getTile(neighbor);
+
+            if (!allowUnseenTiles && neighborTile.getVisibility() == TileVisibility.UNSEEN) {
+                continue;
+            }
+
             int stepCost = TerrainMovementCostProvider.getMovementCost(neighborTile.getTerrainType());
             int newCost = costSoFar.get(current) + stepCost;
 
@@ -91,8 +100,6 @@ public class HexPathFinder {
         return path;
     }
 
-    // Cuts a full path down to only the hexes the unit can actually afford with its
-    // current action points, stopping as soon as the next hex would be unaffordable.
     public MovementPlan truncateToAffordablePath(HexMap hexMap, List<HexCoordinate> fullPath, int availableActionPoints) {
         List<HexCoordinate> affordablePath = new ArrayList<HexCoordinate>();
         int totalCost = 0;
@@ -113,9 +120,7 @@ public class HexPathFinder {
         return new MovementPlan(affordablePath, totalCost);
     }
 
-    // Returns every hex the unit could reach with the given AP budget,
-    // used to highlight the movement range on the map.
-    public Set<HexCoordinate> findReachableTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget) {
+    public Set<HexCoordinate> findReachableTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget, boolean allowUnseenTiles) {
         Set<HexCoordinate> reachableTiles = new HashSet<HexCoordinate>();
         Map<HexCoordinate, Integer> costSoFar = new HashMap<HexCoordinate, Integer>();
 
@@ -134,6 +139,11 @@ public class HexPathFinder {
                 }
 
                 HexTile neighborTile = hexMap.getTile(neighbor);
+
+                if (!allowUnseenTiles && neighborTile.getVisibility() == TileVisibility.UNSEEN) {
+                    continue;
+                }
+
                 int stepCost = TerrainMovementCostProvider.getMovementCost(neighborTile.getTerrainType());
                 int newCost = costSoFar.get(current) + stepCost;
 
