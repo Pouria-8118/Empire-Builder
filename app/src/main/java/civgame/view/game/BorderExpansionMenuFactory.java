@@ -4,6 +4,7 @@ import civgame.model.game.BorderExpansionService;
 import civgame.model.game.GameSession;
 import civgame.model.unit.BorderExpander;
 import civgame.util.Constants;
+import civgame.util.MenuIconResolver;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -20,18 +21,15 @@ public class BorderExpansionMenuFactory {
 
     public JPopupMenu buildMenu(GameSession gameSession, BorderExpander expander, Runnable onActionSuccess) {
         JPopupMenu popupMenu = new JPopupMenu();
+        PopupMenuStyler.style(popupMenu);
 
-        String label = "Claim Territory Here (AP cost: " + Constants.BORDER_EXPAND_ACTION_POINT_COST + ")";
         boolean canExpand = borderExpansionService.canExpand(gameSession, expander);
-
+        String reason = "";
         if (!canExpand) {
-            label = label + " [Tile not explored or no AP]";
+            reason = "Tile not explored yet, or not enough AP";
         }
 
-        JMenuItem menuItem = new JMenuItem(label);
-        menuItem.setEnabled(canExpand);
-
-        menuItem.addActionListener(new ActionListener() {
+        ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 boolean success = borderExpansionService.expand(gameSession, expander);
@@ -39,10 +37,18 @@ public class BorderExpansionMenuFactory {
                     onActionSuccess.run();
                 }
             }
-        });
+        };
+
+        JMenuItem menuItem = StyledMenuItemFactory.createItem(
+                MenuIconResolver.resolveForUnit(expander.getUnitType()),
+                "Claim Territory Here",
+                "AP cost: " + Constants.BORDER_EXPAND_ACTION_POINT_COST + "   |   Unit is consumed on use",
+                reason,
+                canExpand,
+                actionListener
+        );
 
         popupMenu.add(menuItem);
         return popupMenu;
     }
-
 }

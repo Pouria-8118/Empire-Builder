@@ -9,6 +9,7 @@ import civgame.model.game.TownHallUpgradeService;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.UnitProductionCostProvider;
 import civgame.model.unit.UnitType;
+import civgame.util.MenuIconResolver;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -20,6 +21,7 @@ public class TownHallMenuFactory {
 
     public JPopupMenu buildMenu(GameSession gameSession, Runnable onActionSuccess) {
         JPopupMenu popupMenu = new JPopupMenu();
+        PopupMenuStyler.style(popupMenu);
 
         addUnitProductionItems(popupMenu, gameSession, onActionSuccess);
         popupMenu.add(new JSeparator());
@@ -40,13 +42,10 @@ public class TownHallMenuFactory {
         int foodCost = UnitProductionCostProvider.getFoodCost(unitType);
         int turns = UnitProductionCostProvider.getDurationInTurns(unitType);
 
-        String label = "Produce " + unitType.name() + " (Wood:" + woodCost + " Food:" + foodCost + ", " + turns + " turns)";
+        String detailText = "Wood: " + woodCost + "   Food: " + foodCost + "   " + turns + " turns";
         String reason = buildUnitUnavailabilityReason(gameSession, woodCost, foodCost);
 
-        JMenuItem menuItem = new JMenuItem(label + reason);
-        menuItem.setEnabled(reason.isEmpty());
-
-        menuItem.addActionListener(new ActionListener() {
+        ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 boolean started = gameSession.getTownHallProductionQueue().startItem(ProductionQueueItem.forUnit(unitType, turns));
@@ -59,24 +58,31 @@ public class TownHallMenuFactory {
                     }
                 }
             }
-        });
+        };
 
-        return menuItem;
+        return StyledMenuItemFactory.createItem(
+                MenuIconResolver.resolveForUnit(unitType),
+                "Produce " + unitType.name(),
+                detailText,
+                reason,
+                reason.isEmpty(),
+                actionListener
+        );
     }
 
     private String buildUnitUnavailabilityReason(GameSession gameSession, int woodCost, int foodCost) {
         TownHallProductionQueue queue = gameSession.getTownHallProductionQueue();
         if (queue.isBusy()) {
-            return " [Queue busy]";
+            return "Production queue is busy";
         }
         if (gameSession.hasReachedUnitCap()) {
-            return " [Unit cap reached]";
+            return "Unit cap reached";
         }
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, woodCost)) {
-            return " [Not enough Wood]";
+            return "Not enough Wood";
         }
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.FOOD, foodCost)) {
-            return " [Not enough Food]";
+            return "Not enough Food";
         }
         return "";
     }
@@ -95,13 +101,11 @@ public class TownHallMenuFactory {
         int ironCost = TownHallUpgradeCostProvider.getIronCost(upgradeType);
         int turns = TownHallUpgradeCostProvider.getDurationInTurns(upgradeType);
 
-        String label = buildUpgradeLabel(gameSession, upgradeType, woodCost, stoneCost, ironCost, turns);
+        String title = buildUpgradeTitle(gameSession, upgradeType);
+        String detailText = "Wood:" + woodCost + " Stone:" + stoneCost + " Iron:" + ironCost + "   " + turns + " turns";
         String reason = buildUpgradeUnavailabilityReason(gameSession, upgradeType, woodCost, stoneCost, ironCost);
 
-        JMenuItem menuItem = new JMenuItem(label + reason);
-        menuItem.setEnabled(reason.isEmpty());
-
-        menuItem.addActionListener(new ActionListener() {
+        ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 boolean started = gameSession.getTownHallProductionQueue().startItem(ProductionQueueItem.forUpgrade(upgradeType, turns));
@@ -115,20 +119,17 @@ public class TownHallMenuFactory {
                     }
                 }
             }
-        });
+        };
 
-        return menuItem;
+        return StyledMenuItemFactory.createItem(null, title, detailText, reason, reason.isEmpty(), actionListener);
     }
 
-    private String buildUpgradeLabel(GameSession gameSession, TownHallUpgradeType upgradeType, int woodCost, int stoneCost, int ironCost, int turns) {
-        String costText = "Wood:" + woodCost + " Stone:" + stoneCost + " Iron:" + ironCost + ", " + turns + " turns";
-
+    private String buildUpgradeTitle(GameSession gameSession, TownHallUpgradeType upgradeType) {
         if (upgradeType == TownHallUpgradeType.STORAGE_UPGRADE) {
             int currentCount = gameSession.getTownHallUpgradeService().getStorageUpgradeCount();
-            return "Storage Upgrade [" + currentCount + "/2] (" + costText + ")";
+            return "Storage Upgrade [" + currentCount + "/2]";
         }
-
-        return upgradeType.name() + " (" + costText + ")";
+        return upgradeType.name();
     }
 
     private String buildUpgradeUnavailabilityReason(GameSession gameSession, TownHallUpgradeType upgradeType, int woodCost, int stoneCost, int ironCost) {
@@ -136,26 +137,23 @@ public class TownHallMenuFactory {
         TownHallUpgradeService upgradeService = gameSession.getTownHallUpgradeService();
 
         if (queue.isBusy()) {
-            return " [Queue busy]";
+            return "Production queue is busy";
         }
         if (upgradeService.isAlreadyMaxed(upgradeType)) {
-            return " [Already unlocked]";
+            return "Already unlocked";
         }
         if (!upgradeService.isPrerequisiteMet(upgradeType)) {
-            return " [Requires previous tech]";
+            return "Requires previous technology";
         }
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, woodCost)) {
-            return " [Not enough Wood]";
+            return "Not enough Wood";
         }
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.STONE, stoneCost)) {
-            return " [Not enough Stone]";
+            return "Not enough Stone";
         }
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.IRON, ironCost)) {
-            return " [Not enough Iron]";
+            return "Not enough Iron";
         }
         return "";
     }
-
-    // TODO (bonus - visual polish): group unit production and tech
-    // upgrades into two separate submenus instead of one flat popup list
 }

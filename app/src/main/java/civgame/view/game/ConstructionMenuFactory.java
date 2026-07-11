@@ -10,6 +10,7 @@ import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Builder;
+import civgame.util.MenuIconResolver;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -27,12 +28,13 @@ public class ConstructionMenuFactory {
 
     public JPopupMenu buildMenu(GameSession gameSession, Builder builder, Runnable onBuildSuccess) {
         JPopupMenu popupMenu = new JPopupMenu();
+        PopupMenuStyler.style(popupMenu);
+
         HexTile tile = gameSession.getHexMap().getTile(builder.getCoordinate());
         List<BuildingType> availableTypes = BuildingPlacementValidator.getAvailableBuildingTypes(tile);
 
         if (availableTypes.isEmpty()) {
-            JMenuItem emptyItem = new JMenuItem("No valid building for this tile");
-            emptyItem.setEnabled(false);
+            JMenuItem emptyItem = StyledMenuItemFactory.createItem(null, "No valid building here", "This tile has no matching resource", "", false, null);
             popupMenu.add(emptyItem);
             return popupMenu;
         }
@@ -49,13 +51,10 @@ public class ConstructionMenuFactory {
         int actionPointCost = BuildingCostProvider.getConstructionActionPointCost(buildingType);
         HexCoordinate targetCoordinate = builder.getCoordinate();
 
-        String label = buildingType.name() + " (Wood: " + woodCost + ", AP: " + actionPointCost + ")";
+        String detailText = "Wood: " + woodCost + "   AP: " + actionPointCost;
         String reason = buildUnavailabilityReason(gameSession, builder, buildingType, targetCoordinate);
 
-        JMenuItem menuItem = new JMenuItem(label + reason);
-        menuItem.setEnabled(reason.isEmpty());
-
-        menuItem.addActionListener(new ActionListener() {
+        ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 boolean success = constructionService.build(gameSession, builder, buildingType, targetCoordinate);
@@ -63,33 +62,40 @@ public class ConstructionMenuFactory {
                     onBuildSuccess.run();
                 }
             }
-        });
+        };
 
-        return menuItem;
+        return StyledMenuItemFactory.createItem(
+                MenuIconResolver.resolveForBuilding(buildingType),
+                "Build " + buildingType.name(),
+                detailText,
+                reason,
+                reason.isEmpty(),
+                actionListener
+        );
     }
 
     private String buildUnavailabilityReason(GameSession gameSession, Builder builder, BuildingType buildingType, HexCoordinate targetCoordinate) {
         if (builder.isOutOfCharges()) {
-            return " [No charges left]";
+            return "No charges left on this Builder";
         }
         if (gameSession.getBuildingAt(targetCoordinate) != null) {
-            return " [Tile occupied]";
+            return "This tile is already occupied";
         }
         if (!gameSession.isWithinBorder(targetCoordinate)) {
-            return " [Outside border]";
+            return "Outside your claimed border";
         }
         if (isTechLocked(gameSession, buildingType)) {
-            return " [Locked - needs tech]";
+            return "Locked - requires technology";
         }
 
         int actionPointCost = BuildingCostProvider.getConstructionActionPointCost(buildingType);
         if (!builder.hasEnoughActionPoints(actionPointCost)) {
-            return " [Not enough AP]";
+            return "Not enough Action Points";
         }
 
         int woodCost = BuildingCostProvider.getWoodCost(buildingType);
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, woodCost)) {
-            return " [Not enough Wood]";
+            return "Not enough Wood";
         }
 
         return "";
