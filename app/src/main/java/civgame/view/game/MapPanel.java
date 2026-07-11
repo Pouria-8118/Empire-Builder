@@ -9,11 +9,17 @@ import civgame.model.map.HexTile;
 import civgame.model.map.TileVisibility;
 import civgame.model.unit.Unit;
 import civgame.util.BuildingColorProvider;
+import civgame.util.BuildingIconProvider;
 import civgame.util.Constants;
 import civgame.util.HexGeometry;
+import civgame.util.IconProvider;
 import civgame.util.TerrainColorProvider;
 import civgame.util.UnitColorProvider;
+import civgame.util.UnitIconProvider;
 
+
+import java.awt.Font;
+import java.awt.Image;
 import javax.swing.JPanel;
 import javax.swing.ToolTipManager;
 
@@ -37,7 +43,8 @@ public class MapPanel extends JPanel {
     private final CameraState cameraState;
     private final SelectionState selectionState;
     private final UnitMovementAnimator movementAnimator;
-
+    private static final Font FALLBACK_LABEL_FONT = new Font("SansSerif", Font.BOLD, 12);
+    private static final Font AP_BADGE_FONT = new Font("SansSerif", Font.BOLD, 10);
     public MapPanel(GameSession gameSession, CameraState cameraState, SelectionState selectionState, UnitMovementAnimator movementAnimator) {
         this.gameSession = gameSession;
         this.cameraState = cameraState;
@@ -145,16 +152,20 @@ public class MapPanel extends JPanel {
         Point2D pixelPosition = HexGeometry.axialToPixel(townHall.getCoordinate(), hexSize);
         double drawX = centerX + pixelPosition.getX();
         double drawY = centerY + pixelPosition.getY();
+        int markerSize = TOWN_HALL_MARKER_RADIUS * 2;
 
-        graphics2D.setColor(new Color(200, 40, 40));
-        graphics2D.fillRect(
-                (int) (drawX - TOWN_HALL_MARKER_RADIUS),
-                (int) (drawY - TOWN_HALL_MARKER_RADIUS),
-                TOWN_HALL_MARKER_RADIUS * 2,
-                TOWN_HALL_MARKER_RADIUS * 2
-        );
+        Image townHallIcon = IconProvider.loadImage(Constants.TOWN_HALL_GAME_ICON_PATH);
 
-        // TODO (bonus - visual polish): replace this red square with a proper town hall sprite
+        if (townHallIcon != null) {
+            graphics2D.drawImage(townHallIcon, (int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize, this);
+        } else {
+            graphics2D.setColor(new Color(200, 40, 40));
+            graphics2D.fillRect((int) (drawX - TOWN_HALL_MARKER_RADIUS), (int) (drawY - TOWN_HALL_MARKER_RADIUS), markerSize, markerSize);
+            graphics2D.setColor(Color.WHITE);
+            graphics2D.setFont(FALLBACK_LABEL_FONT);
+            int textWidth = graphics2D.getFontMetrics().stringWidth("TH");
+            graphics2D.drawString("TH", (int) (drawX - textWidth / 2.0), (int) (drawY + 5));
+        }
     }
     private void drawAllBuildings(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
         List<Building> allBuildings = gameSession.getAllBuildings();
@@ -170,25 +181,41 @@ public class MapPanel extends JPanel {
         double drawY = centerY + pixelPosition.getY();
 
         int squareSize = (int) (hexSize * 0.6);
+        Image buildingIcon = IconProvider.loadImage(BuildingIconProvider.getIconPath(building.getBuildingType()));
 
+        if (buildingIcon != null) {
+            graphics2D.drawImage(buildingIcon, (int) (drawX - squareSize / 2.0), (int) (drawY - squareSize / 2.0), squareSize, squareSize, this);
+        } else {
+            drawBuildingFallbackShape(graphics2D, building, drawX, drawY, squareSize);
+        }
+
+        drawWorkerCountBadge(graphics2D, building, drawX, drawY, squareSize);
+    }
+
+    private void drawBuildingFallbackShape(Graphics2D graphics2D, Building building, double drawX, double drawY, int squareSize) {
         graphics2D.setColor(BuildingColorProvider.getColorForBuildingType(building.getBuildingType()));
-        graphics2D.fillRect(
-                (int) (drawX - squareSize / 2.0),
-                (int) (drawY - squareSize / 2.0),
-                squareSize,
-                squareSize
-        );
+        graphics2D.fillRect((int) (drawX - squareSize / 2.0), (int) (drawY - squareSize / 2.0), squareSize, squareSize);
 
         graphics2D.setColor(Color.BLACK);
-        graphics2D.drawRect(
-                (int) (drawX - squareSize / 2.0),
-                (int) (drawY - squareSize / 2.0),
-                squareSize,
-                squareSize
-        );
+        graphics2D.drawRect((int) (drawX - squareSize / 2.0), (int) (drawY - squareSize / 2.0), squareSize, squareSize);
 
-        // TODO (bonus - visual polish): show a small worker-count badge here,
-        // e.g. "2/3" text near the building square
+        String label = BuildingIconProvider.getFallbackLabel(building.getBuildingType());
+        graphics2D.setFont(FALLBACK_LABEL_FONT);
+        int textWidth = graphics2D.getFontMetrics().stringWidth(label);
+        graphics2D.drawString(label, (int) (drawX - textWidth / 2.0), (int) (drawY + 5));
+    }
+
+    private void drawWorkerCountBadge(Graphics2D graphics2D, Building building, double drawX, double drawY, int squareSize) {
+        String workerText = building.getStationedWorkers().size() + "/" + building.getWorkerCapacity();
+        graphics2D.setFont(AP_BADGE_FONT);
+        int textWidth = graphics2D.getFontMetrics().stringWidth(workerText);
+        int badgeY = (int) (drawY - squareSize / 2.0 - 6);
+
+        graphics2D.setColor(new Color(0, 0, 0, 160));
+        graphics2D.fillRoundRect((int) (drawX - textWidth / 2.0) - 3, badgeY - 11, textWidth + 6, 14, 6, 6);
+
+        graphics2D.setColor(Color.WHITE);
+        graphics2D.drawString(workerText, (int) (drawX - textWidth / 2.0), badgeY);
     }
 
     private void drawAllSettlements(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
@@ -234,6 +261,23 @@ public class MapPanel extends JPanel {
             drawY = centerY + pixelPosition.getY();
         }
 
+        Image unitIcon = IconProvider.loadImage(UnitIconProvider.getIconPath(unit.getUnitType()));
+
+        if (unitIcon != null) {
+            int iconSize = UNIT_MARKER_RADIUS * 2;
+            graphics2D.drawImage(unitIcon, (int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize, this);
+        } else {
+            drawUnitFallbackShape(graphics2D, unit, drawX, drawY);
+        }
+
+        drawActionPointBadge(graphics2D, unit, drawX, drawY);
+
+        if (selectionState.getSelectedUnit() == unit) {
+            drawSelectionHighlight(graphics2D, drawX, drawY);
+        }
+    }
+
+    private void drawUnitFallbackShape(Graphics2D graphics2D, Unit unit, double drawX, double drawY) {
         graphics2D.setColor(UnitColorProvider.getColorForUnitType(unit.getUnitType()));
         graphics2D.fillOval(
                 (int) (drawX - UNIT_MARKER_RADIUS),
@@ -250,9 +294,23 @@ public class MapPanel extends JPanel {
                 UNIT_MARKER_RADIUS * 2
         );
 
-        if (selectionState.getSelectedUnit() == unit) {
-            drawSelectionHighlight(graphics2D, drawX, drawY);
-        }
+        String letter = UnitIconProvider.getFallbackLetter(unit.getUnitType());
+        graphics2D.setFont(FALLBACK_LABEL_FONT);
+        int textWidth = graphics2D.getFontMetrics().stringWidth(letter);
+        graphics2D.drawString(letter, (int) (drawX - textWidth / 2.0), (int) (drawY + 5));
+    }
+
+    private void drawActionPointBadge(Graphics2D graphics2D, Unit unit, double drawX, double drawY) {
+        String apText = unit.getCurrentActionPoints() + "/" + unit.getMaxActionPoints();
+        graphics2D.setFont(AP_BADGE_FONT);
+        int textWidth = graphics2D.getFontMetrics().stringWidth(apText);
+        int badgeY = (int) (drawY + UNIT_MARKER_RADIUS + 14);
+
+        graphics2D.setColor(new Color(0, 0, 0, 160));
+        graphics2D.fillRoundRect((int) (drawX - textWidth / 2.0) - 3, badgeY - 11, textWidth + 6, 14, 6, 6);
+
+        graphics2D.setColor(Color.WHITE);
+        graphics2D.drawString(apText, (int) (drawX - textWidth / 2.0), badgeY);
     }
 
     private void drawSelectionHighlight(Graphics2D graphics2D, double centerX, double centerY) {
