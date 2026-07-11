@@ -25,9 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// A simplified top-down overview of the whole map. Not a real hex render -
-// each tile is drawn as a small square at a scaled-down position, which is
-// enough for orientation and is much cheaper to draw every frame.
 public class MinimapPanel extends JPanel {
 
     private static final Color BACKGROUND_COLOR = new Color(20, 20, 30, 220);
