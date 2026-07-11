@@ -16,7 +16,7 @@ import civgame.util.IconProvider;
 import civgame.util.TerrainColorProvider;
 import civgame.util.UnitColorProvider;
 import civgame.util.UnitIconProvider;
-
+import civgame.util.ResourceIconProvider;
 
 import java.awt.Font;
 import java.awt.Image;
@@ -95,7 +95,7 @@ public class MapPanel extends JPanel {
         graphics2D.drawPolygon(hexagonPolygon);
 
         if (tile.hasResource() && tile.getVisibility() != TileVisibility.UNSEEN) {
-            drawResourceMarker(graphics2D, tileCenterX, tileCenterY, hexSize);
+            drawResourceMarker(graphics2D, tile, tileCenterX, tileCenterY, hexSize);
         }
 
         if (tile.getVisibility() != TileVisibility.UNSEEN && !gameSession.isWithinBorder(tile.getCoordinate())) {
@@ -133,18 +133,39 @@ public class MapPanel extends JPanel {
         return hexagonPolygon;
     }
 
-    private void drawResourceMarker(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
-        double markerRadius = hexSize * 0.2;
-        graphics2D.setColor(Color.WHITE);
-        graphics2D.fillOval(
-                (int) (centerX - markerRadius),
-                (int) (centerY - markerRadius),
-                (int) (markerRadius * 2),
-                (int) (markerRadius * 2)
-        );
+    private void drawResourceMarker(Graphics2D graphics2D, HexTile tile, double centerX, double centerY, double hexSize) {
+        int markerSize = (int) (hexSize * 0.42);
+        String iconPath = ResourceIconProvider.getIconPath(tile.getResourceType());
+        Image resourceIcon = null;
+        if (iconPath != null) {
+            resourceIcon = IconProvider.loadImage(iconPath);
+        }
 
-        // TODO (bonus - visual): replace this generic white dot with a
-        // specific icon per resource type (wood, stone, iron, wheat, rice, cattle, sheep)
+        if (resourceIcon != null) {
+            graphics2D.drawImage(resourceIcon, (int) (centerX - markerSize / 2.0), (int) (centerY - markerSize / 2.0), markerSize, markerSize, this);
+        } else {
+            double fallbackRadius = hexSize * 0.2;
+            graphics2D.setColor(Color.WHITE);
+            graphics2D.fillOval((int) (centerX - fallbackRadius), (int) (centerY - fallbackRadius), (int) (fallbackRadius * 2), (int) (fallbackRadius * 2));
+        }
+
+        if (tile.isIronDepositPresent()) {
+            drawIronDepositOverlay(graphics2D, centerX, centerY, hexSize);
+        }
+    }
+
+    private void drawIronDepositOverlay(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
+        int overlaySize = (int) (hexSize * 0.3);
+        double offsetX = centerX + hexSize * 0.3;
+        double offsetY = centerY + hexSize * 0.3;
+
+        Image ironIcon = IconProvider.loadImage(Constants.IRON_ICON_PATH);
+        if (ironIcon != null) {
+            graphics2D.drawImage(ironIcon, (int) (offsetX - overlaySize / 2.0), (int) (offsetY - overlaySize / 2.0), overlaySize, overlaySize, this);
+        } else {
+            graphics2D.setColor(new Color(160, 80, 30));
+            graphics2D.fillOval((int) (offsetX - overlaySize / 2.0), (int) (offsetY - overlaySize / 2.0), overlaySize, overlaySize);
+        }
     }
 
     private void drawTownHall(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {

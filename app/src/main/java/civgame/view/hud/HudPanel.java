@@ -1,12 +1,14 @@
 package civgame.view.hud;
 
 import civgame.model.game.GameSession;
-import civgame.model.game.ProductionQueueItem;
 import civgame.model.resource.ResourceStorage;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitType;
+import civgame.util.Constants;
+import civgame.util.IconProvider;
 
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.Color;
@@ -14,6 +16,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +28,7 @@ public class HudPanel extends JPanel {
     private static final Color NEGATIVE_RATE_COLOR = new Color(230, 90, 90);
     private static final Color NEUTRAL_TEXT_COLOR = new Color(235, 235, 235);
     private static final Font LABEL_FONT = new Font("SansSerif", Font.BOLD, 13);
+    private static final int RESOURCE_ICON_SIZE = 16;
 
     private final JLabel turnLabel;
     private final JLabel foodLabel;
@@ -38,13 +42,13 @@ public class HudPanel extends JPanel {
         setOpaque(false);
         setLayout(new FlowLayout(FlowLayout.CENTER, 18, 10));
 
-        turnLabel = createStyledLabel("Turn: 1");
-        foodLabel = createStyledLabel("Food: 0/0");
-        woodLabel = createStyledLabel("Wood: 0/0");
-        stoneLabel = createStyledLabel("Stone: 0/0");
-        ironLabel = createStyledLabel("Iron: 0/0");
-        unitCountLabel = createStyledLabel("Units: 0/0");
-        queueLabel = createStyledLabel("Queue: Idle");
+        turnLabel = createStyledLabel("Turn: 1", null);
+        foodLabel = createStyledLabel("Food: 0/0", Constants.FOOD_ICON_PATH);
+        woodLabel = createStyledLabel("Wood: 0/0", Constants.WOOD_ICON_PATH);
+        stoneLabel = createStyledLabel("Stone: 0/0", Constants.STONE_ICON_PATH);
+        ironLabel = createStyledLabel("Iron: 0/0", Constants.IRON_ICON_PATH);
+        unitCountLabel = createStyledLabel("Units: 0/0", null);
+        queueLabel = createStyledLabel("Queue: Idle", null);
 
         add(turnLabel);
         add(foodLabel);
@@ -55,10 +59,20 @@ public class HudPanel extends JPanel {
         add(queueLabel);
     }
 
-    private JLabel createStyledLabel(String text) {
+    private JLabel createStyledLabel(String text, String iconPath) {
         JLabel label = new JLabel(text);
         label.setFont(LABEL_FONT);
         label.setForeground(NEUTRAL_TEXT_COLOR);
+
+        if (iconPath != null) {
+            Image icon = IconProvider.loadImage(iconPath);
+            if (icon != null) {
+                Image scaledIcon = icon.getScaledInstance(RESOURCE_ICON_SIZE, RESOURCE_ICON_SIZE, Image.SCALE_SMOOTH);
+                label.setIcon(new ImageIcon(scaledIcon));
+                label.setIconTextGap(6);
+            }
+        }
+
         return label;
     }
 
@@ -87,15 +101,6 @@ public class HudPanel extends JPanel {
 
         updateUnitCountLabel(gameSession);
         updateQueueLabel(gameSession);
-    }
-
-    private void updateQueueLabel(GameSession gameSession) {
-        ProductionQueueItem currentItem = gameSession.getTownHallProductionQueue().getCurrentItem();
-        if (currentItem == null) {
-            queueLabel.setText("Queue: Idle");
-        } else {
-            queueLabel.setText("Queue: " + currentItem.describeForHud());
-        }
     }
 
     private void updateResourceLabel(JLabel label, String displayName, ResourceStorage storage, ResourceType resourceType, Map<ResourceType, Integer> netRates) {
@@ -139,4 +144,12 @@ public class HudPanel extends JPanel {
         return count;
     }
 
+    private void updateQueueLabel(GameSession gameSession) {
+        civgame.model.game.ProductionQueueItem currentItem = gameSession.getTownHallProductionQueue().getCurrentItem();
+        if (currentItem == null) {
+            queueLabel.setText("Queue: Idle");
+        } else {
+            queueLabel.setText("Queue: " + currentItem.describeForHud());
+        }
+    }
 }

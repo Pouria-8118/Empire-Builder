@@ -138,6 +138,15 @@ public class Constants {
     public static final String FARM_ICON_PATH = "/images/buildings/farm.png";
     public static final String STABLE_ICON_PATH = "/images/buildings/stable.png";
     public static final String SETTLEMENT_ICON_PATH = "/images/buildings/settlement.png";
+    public static final String FOOD_ICON_PATH = "/images/resources/food.png";
+    public static final String WOOD_ICON_PATH = "/images/resources/wood.png";
+    public static final String STONE_ICON_PATH = "/images/resources/stone.png";
+    public static final String IRON_ICON_PATH = "/images/resources/iron.png";
+    public static final String WHEAT_ICON_PATH = "/images/resources/wheat.png";
+    public static final String RICE_ICON_PATH = "/images/resources/rice.png";
+    public static final String CATTLE_ICON_PATH = "/images/resources/cattle.png";
+    public static final String SHEEP_ICON_PATH = "/images/resources/sheep.png";
+    
     private Constants() {
     }
 }
