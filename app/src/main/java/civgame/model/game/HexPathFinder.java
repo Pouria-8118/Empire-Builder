@@ -111,6 +111,43 @@ public class HexPathFinder {
         return new MovementPlan(affordablePath, totalCost);
     }
 
-    // TODO : if some terrain becomes fully impassable in a later phase,
-    // skip it here instead of only weighting it as expensive
+    // Returns every hex the unit could reach with the given AP budget,
+    // used to highlight the movement range on the map.
+    public java.util.Set<HexCoordinate> findReachableTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget) {
+        java.util.Set<HexCoordinate> reachableTiles = new java.util.HashSet<HexCoordinate>();
+        Map<HexCoordinate, Integer> costSoFar = new HashMap<HexCoordinate, Integer>();
+
+        costSoFar.put(start, 0);
+        LinkedList<HexCoordinate> frontier = new LinkedList<HexCoordinate>();
+        frontier.add(start);
+
+        while (!frontier.isEmpty()) {
+            HexCoordinate current = frontier.poll();
+            List<HexCoordinate> neighbors = current.getNeighbors();
+
+            for (int i = 0; i < neighbors.size(); i++) {
+                HexCoordinate neighbor = neighbors.get(i);
+                if (!hexMap.containsCoordinate(neighbor)) {
+                    continue;
+                }
+
+                HexTile neighborTile = hexMap.getTile(neighbor);
+                int stepCost = TerrainMovementCostProvider.getMovementCost(neighborTile.getTerrainType());
+                int newCost = costSoFar.get(current) + stepCost;
+
+                if (newCost > actionPointBudget) {
+                    continue;
+                }
+                if (costSoFar.containsKey(neighbor) && costSoFar.get(neighbor) <= newCost) {
+                    continue;
+                }
+
+                costSoFar.put(neighbor, newCost);
+                reachableTiles.add(neighbor);
+                frontier.add(neighbor);
+            }
+        }
+
+        return reachableTiles;
+    }
 }
