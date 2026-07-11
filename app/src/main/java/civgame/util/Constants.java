@@ -126,6 +126,18 @@ public class Constants {
     public static final int BORDER_EXPANDER_PRODUCTION_FOOD_COST = 10;
     public static final int BORDER_EXPANDER_PRODUCTION_TURNS = 3;
 
+    public static final String EXPLORER_ICON_PATH = "/images/units/explorer.png";
+    public static final String BUILDER_ICON_PATH = "/images/units/builder.png";
+    public static final String WORKER_ICON_PATH = "/images/units/worker.png";
+    public static final String BORDER_EXPANDER_ICON_PATH = "/images/units/border_expander.png";
+
+    public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
+    public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";
+    public static final String STONE_MINE_ICON_PATH = "/images/buildings/stone_mine.png";
+    public static final String IRON_MINE_ICON_PATH = "/images/buildings/iron_mine.png";
+    public static final String FARM_ICON_PATH = "/images/buildings/farm.png";
+    public static final String STABLE_ICON_PATH = "/images/buildings/stable.png";
+    public static final String SETTLEMENT_ICON_PATH = "/images/buildings/settlement.png";
     private Constants() {
     }
 }
