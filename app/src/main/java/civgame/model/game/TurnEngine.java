@@ -1,5 +1,6 @@
 package civgame.model.game;
 
+import civgame.model.building.TownHallUpgradeType;
 import civgame.model.map.HexCoordinate;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitFactory;
@@ -26,7 +27,7 @@ public class TurnEngine {
         refreshAllUnitActionPoints(gameSession);
 
         resourceProductionService.applyProduction(gameSession);
-        processProductionQueue(gameSession);
+        String completedProductionDescription = processProductionQueue(gameSession);
 
         List<String> destroyedBuildingIds = upkeepService.applyBuildingUpkeep(gameSession);
         boolean starvationTriggered = upkeepService.applyUnitFoodConsumption(gameSession);
@@ -38,7 +39,7 @@ public class TurnEngine {
 
         gameSession.incrementTurnNumber();
 
-        return new TurnSummary(destroyedBuildingIds, starvationTriggered, gameSession.getCurrentTurnNumber());
+        return new TurnSummary(destroyedBuildingIds, starvationTriggered, gameSession.getCurrentTurnNumber(), completedProductionDescription);
     }
 
     private void refreshAllUnitActionPoints(GameSession gameSession) {
@@ -55,17 +56,21 @@ public class TurnEngine {
         }
     }
 
-    private void processProductionQueue(GameSession gameSession) {
+    private String processProductionQueue(GameSession gameSession) {
         ProductionQueueItem completedItem = gameSession.getTownHallProductionQueue().advanceOneTurn();
         if (completedItem == null) {
-            return;
+            return null;
         }
 
         if (completedItem.getCategory() == ProductionQueueItem.QueueItemCategory.UNIT) {
-            completeUnitProduction(gameSession, completedItem.getUnitType());
-        } else {
-            gameSession.getTownHallUpgradeService().applyUpgradeEffects(gameSession, completedItem.getUpgradeType());
+            UnitType unitType = completedItem.getUnitType();
+            completeUnitProduction(gameSession, unitType);
+            return "New unit ready: " + unitType.name();
         }
+
+        TownHallUpgradeType upgradeType = completedItem.getUpgradeType();
+        gameSession.getTownHallUpgradeService().applyUpgradeEffects(gameSession, upgradeType);
+        return "Upgrade completed: " + upgradeType.name();
     }
 
     private void completeUnitProduction(GameSession gameSession, UnitType unitType) {
