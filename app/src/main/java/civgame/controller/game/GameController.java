@@ -2,6 +2,7 @@ package civgame.controller.game;
 
 import civgame.model.game.BorderExpansionService;
 import civgame.model.game.ConstructionService;
+import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
 import civgame.model.game.MovementPlan;
@@ -53,11 +54,12 @@ public class GameController {
     private final TownHallMenuFactory townHallMenuFactory;
     private final BorderExpansionMenuFactory borderExpansionMenuFactory;
     private final SelectedUnitPanel selectedUnitPanel;
+    private final FogOfWarCalculator fogOfWarCalculator;
     private int lastDragX;
     private int lastDragY;
     private boolean wasDragged;
 
-    public GameController(GameFrame gameFrame, GameSession gameSession) {
+    public GameController(GameFrame gameFrame, GameSession gameSession, FogOfWarCalculator fogOfWarCalculator) {
         this.mapPanel = gameFrame.getMapPanel();
         this.cameraState = gameFrame.getCameraState();
         this.selectionState = gameFrame.getSelectionState();
@@ -69,6 +71,7 @@ public class GameController {
         this.townHallMenuFactory = new TownHallMenuFactory();
         this.borderExpansionMenuFactory = new BorderExpansionMenuFactory(new BorderExpansionService());
         this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
+        this.fogOfWarCalculator = fogOfWarCalculator;
         registerListeners();
         registerEscapeKeyBinding();
         refreshSelectedUnitDisplay();
@@ -103,9 +106,20 @@ public class GameController {
             selectionState.clearSelection();
         } else {
             selectionState.setSelectedUnit(clickedUnit);
+            updateReachableTilesForSelection();
         }
         refreshSelectedUnitDisplay();
         mapPanel.repaint();
+    }
+
+    private void updateReachableTilesForSelection() {
+        Unit selectedUnit = selectionState.getSelectedUnit();
+        java.util.Set<HexCoordinate> reachableTiles = pathFinder.findReachableTiles(
+                gameSession.getHexMap(),
+                selectedUnit.getCoordinate(),
+                selectedUnit.getCurrentActionPoints()
+        );
+        selectionState.setReachableTiles(reachableTiles);
     }
 
     private void handleRightClick(int screenX, int screenY, MouseEvent mouseEvent) {
@@ -220,8 +234,22 @@ public class GameController {
 
         selectedUnit.consumeActionPoints(movementPlan.getTotalCost());
         refreshSelectedUnitDisplay();
-        movementAnimator.startMovement(selectedUnit, movementPlan.getPath(), null);
+        movementAnimator.startMovement(selectedUnit, movementPlan.getPath(), createMovementFinishedCallback());
     }
+
+    private Runnable createMovementFinishedCallback() {
+        return new Runnable() {
+            @Override
+            public void run() {
+                fogOfWarCalculator.updateVisibility(gameSession);
+                if (selectionState.hasSelection()) {
+                    updateReachableTilesForSelection();
+                }
+                mapPanel.repaint();
+            }
+        };
+    }
+    
 
     private Unit findUnitAtCoordinate(HexCoordinate coordinate) {
         List<Unit> units = gameSession.getUnits();
