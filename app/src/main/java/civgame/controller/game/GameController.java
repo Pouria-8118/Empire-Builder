@@ -8,6 +8,7 @@ import civgame.model.game.HexPathFinder;
 import civgame.model.game.MovementPlan;
 import civgame.model.game.StationingService;
 import civgame.model.map.HexCoordinate;
+import civgame.model.map.HexTile;
 import civgame.model.unit.BorderExpander;
 import civgame.model.unit.Builder;
 import civgame.model.unit.Unit;
@@ -15,6 +16,7 @@ import civgame.model.unit.UnitType;
 import civgame.model.unit.Worker;
 import civgame.util.HexGeometry;
 import civgame.util.MenuIconResolver;
+import civgame.util.TerrainMovementCostProvider;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
 import civgame.view.game.ConstructionMenuFactory;
@@ -42,7 +44,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class GameController {
 
@@ -117,7 +121,7 @@ public class GameController {
 
     private void updateReachableTilesForSelection() {
         Unit selectedUnit = selectionState.getSelectedUnit();
-        java.util.Set<HexCoordinate> reachableTiles = pathFinder.findReachableTiles(
+        Set<HexCoordinate> reachableTiles = pathFinder.findReachableTiles(
                 gameSession.getHexMap(),
                 selectedUnit.getCoordinate(),
                 selectedUnit.getCurrentActionPoints()
@@ -239,13 +243,44 @@ public class GameController {
                 selectedUnit.getCurrentActionPoints()
         );
 
-        if (movementPlan.getPath().isEmpty()) {
+        List<HexCoordinate> freePath = removeOccupiedTilesFromPathEnd(movementPlan.getPath());
+
+        if (freePath.isEmpty()) {
             return;
         }
 
-        selectedUnit.consumeActionPoints(movementPlan.getTotalCost());
+        int recalculatedCost = recalculatePathCost(freePath);
+
+        selectedUnit.consumeActionPoints(recalculatedCost);
         refreshSelectedUnitDisplay();
-        movementAnimator.startMovement(selectedUnit, movementPlan.getPath(), createMovementFinishedCallback());
+        movementAnimator.startMovement(selectedUnit, freePath, createMovementFinishedCallback());
+    }
+
+    // Stops the path right before any hex that already has another unit on
+    // it, so two units can never end up stacked on the same tile.
+    private List<HexCoordinate> removeOccupiedTilesFromPathEnd(List<HexCoordinate> path) {
+        List<HexCoordinate> freePath = new ArrayList<HexCoordinate>();
+
+        for (int i = 0; i < path.size(); i++) {
+            HexCoordinate coordinate = path.get(i);
+            if (findUnitAtCoordinate(coordinate) != null) {
+                break;
+            }
+            freePath.add(coordinate);
+        }
+
+        return freePath;
+    }
+
+    private int recalculatePathCost(List<HexCoordinate> path) {
+        int totalCost = 0;
+
+        for (int i = 0; i < path.size(); i++) {
+            HexTile tile = gameSession.getHexMap().getTile(path.get(i));
+            totalCost = totalCost + TerrainMovementCostProvider.getMovementCost(tile.getTerrainType());
+        }
+
+        return totalCost;
     }
 
     private Runnable createMovementFinishedCallback() {
@@ -260,7 +295,6 @@ public class GameController {
             }
         };
     }
-    
 
     private Unit findUnitAtCoordinate(HexCoordinate coordinate) {
         List<Unit> units = gameSession.getUnits();

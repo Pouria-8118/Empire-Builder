@@ -8,10 +8,12 @@ import civgame.util.TerrainMovementCostProvider;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 public class HexPathFinder {
 
@@ -113,8 +115,8 @@ public class HexPathFinder {
 
     // Returns every hex the unit could reach with the given AP budget,
     // used to highlight the movement range on the map.
-    public java.util.Set<HexCoordinate> findReachableTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget) {
-        java.util.Set<HexCoordinate> reachableTiles = new java.util.HashSet<HexCoordinate>();
+    public Set<HexCoordinate> findReachableTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget) {
+        Set<HexCoordinate> reachableTiles = new HashSet<HexCoordinate>();
         Map<HexCoordinate, Integer> costSoFar = new HashMap<HexCoordinate, Integer>();
 
         costSoFar.put(start, 0);
