@@ -14,13 +14,16 @@ import civgame.model.unit.Unit;
 import civgame.model.unit.UnitType;
 import civgame.model.unit.Worker;
 import civgame.util.HexGeometry;
+import civgame.util.MenuIconResolver;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
 import civgame.view.game.ConstructionMenuFactory;
 import civgame.view.game.GameFrame;
 import civgame.view.game.MapPanel;
+import civgame.view.game.PopupMenuStyler;
 import civgame.view.game.SelectionState;
 import civgame.view.game.StationingMenuFactory;
+import civgame.view.game.StyledMenuItemFactory;
 import civgame.view.game.TownHallMenuFactory;
 import civgame.view.game.UnitMovementAnimator;
 import civgame.view.hud.SelectedUnitPanel;
@@ -164,9 +167,17 @@ public class GameController {
 
     private void showUnitInfoMenu(Unit unit, MouseEvent mouseEvent) {
         JPopupMenu popupMenu = new JPopupMenu();
+        PopupMenuStyler.style(popupMenu);
+
         String apText = unit.getCurrentActionPoints() + "/" + unit.getMaxActionPoints();
-        JMenuItem infoItem = new JMenuItem(unit.getUnitType().name() + " - AP: " + apText);
-        infoItem.setEnabled(false);
+        JMenuItem infoItem = StyledMenuItemFactory.createItem(
+                MenuIconResolver.resolveForUnit(unit.getUnitType()),
+                unit.getUnitType().name(),
+                "Action Points: " + apText,
+                "",
+                false,
+                null
+        );
         popupMenu.add(infoItem);
         popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
     }
