@@ -121,10 +121,13 @@ public class GameController {
 
     private void updateReachableTilesForSelection() {
         Unit selectedUnit = selectionState.getSelectedUnit();
+        boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
+
         Set<HexCoordinate> reachableTiles = pathFinder.findReachableTiles(
                 gameSession.getHexMap(),
                 selectedUnit.getCoordinate(),
-                selectedUnit.getCurrentActionPoints()
+                selectedUnit.getCurrentActionPoints(),
+                allowUnseenTiles
         );
         selectionState.setReachableTiles(reachableTiles);
     }
@@ -231,7 +234,9 @@ public class GameController {
         }
 
         Unit selectedUnit = selectionState.getSelectedUnit();
-        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination);
+        boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
+
+        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination, allowUnseenTiles);
 
         if (fullPath == null || fullPath.isEmpty()) {
             return;
@@ -256,16 +261,18 @@ public class GameController {
         movementAnimator.startMovement(selectedUnit, freePath, createMovementFinishedCallback());
     }
 
-    // Stops the path right before any hex that already has another unit on
-    // it, so two units can never end up stacked on the same tile.
     private List<HexCoordinate> removeOccupiedTilesFromPathEnd(List<HexCoordinate> path) {
         List<HexCoordinate> freePath = new ArrayList<HexCoordinate>();
 
         for (int i = 0; i < path.size(); i++) {
             HexCoordinate coordinate = path.get(i);
-            if (findUnitAtCoordinate(coordinate) != null) {
+            boolean tileOccupied = findUnitAtCoordinate(coordinate) != null;
+            boolean hasBuilding = gameSession.getBuildingAt(coordinate) != null;
+
+            if (tileOccupied && !hasBuilding) {
                 break;
             }
+
             freePath.add(coordinate);
         }
 
