@@ -1,5 +1,7 @@
 package civgame.model.map;
 
+import civgame.util.Constants;
+
 public class HexTile {
 
     private final HexCoordinate coordinate;
@@ -8,6 +10,7 @@ public class HexTile {
     private boolean resourceDepleted;
     private boolean ironDepositPresent;
     private TileVisibility visibility;
+    private int remainingResourceCapacity;
 
     public HexTile(HexCoordinate coordinate, TerrainType terrainType, TileResourceType resourceType) {
         this.coordinate = coordinate;
@@ -16,6 +19,14 @@ public class HexTile {
         this.resourceDepleted = false;
         this.ironDepositPresent = false;
         this.visibility = TileVisibility.UNSEEN;
+        this.remainingResourceCapacity = computeInitialCapacity(resourceType);
+    }
+
+    private int computeInitialCapacity(TileResourceType resourceType) {
+        if (resourceType == TileResourceType.NONE) {
+            return 0;
+        }
+        return Constants.RESOURCE_TILE_CAPACITY;
     }
 
     public HexCoordinate getCoordinate() {
@@ -40,6 +51,23 @@ public class HexTile {
 
     public void depleteResource() {
         this.resourceDepleted = true;
+    }
+
+    public int getRemainingResourceCapacity() {
+        return remainingResourceCapacity;
+    }
+    
+    public void consumeResourceCapacity(int amount) {
+        if (resourceDepleted) {
+            return;
+        }
+
+        remainingResourceCapacity = remainingResourceCapacity - amount;
+
+        if (remainingResourceCapacity <= 0) {
+            remainingResourceCapacity = 0;
+            depleteResource();
+        }
     }
 
     public boolean isIronDepositPresent() {
