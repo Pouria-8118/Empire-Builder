@@ -111,7 +111,9 @@ public class MapPanel extends JPanel {
             graphics2D.drawPolygon(hexagonPolygon);
         }
 
-        if (tile.hasResource() && tile.getVisibility() != TileVisibility.UNSEEN) {
+        boolean hasBuildingHere = gameSession.getBuildingAt(tile.getCoordinate()) != null;
+
+        if (tile.hasResource() && tile.getVisibility() != TileVisibility.UNSEEN && !hasBuildingHere) {
             drawResourceMarker(graphics2D, tile, tileCenterX, tileCenterY, hexSize);
         }
 
@@ -150,8 +152,6 @@ public class MapPanel extends JPanel {
         return hexagonPolygon;
     }
 
-    // If a unit is standing on a resource tile, the resource icon shrinks and
-    // moves toward a corner of the hex so both the unit and the resource stay visible.
     private void drawResourceMarker(Graphics2D graphics2D, HexTile tile, double centerX, double centerY, double hexSize) {
         boolean unitStandingHere = isUnitStandingOn(tile.getCoordinate());
 
@@ -310,9 +310,6 @@ public class MapPanel extends JPanel {
         graphics2D.drawOval((int) (drawX - markerRadius), (int) (drawY - markerRadius), markerRadius * 2, markerRadius * 2);
     }
 
-    // Units are grouped by tile so that multiple units standing on the same hex
-    // (e.g. workers stationed together in a building) are drawn smaller and
-    // spread out in a small circle instead of fully overlapping each other.
     private void drawAllUnits(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
         Map<HexCoordinate, List<Unit>> stationaryGroups = new HashMap<HexCoordinate, List<Unit>>();
         List<Unit> allUnits = gameSession.getUnits();
