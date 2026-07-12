@@ -5,6 +5,7 @@ import civgame.util.Constants;
 import civgame.util.FullScreenToggler;
 import civgame.view.hud.ControlsHintPanel;
 import civgame.view.hud.HudPanel;
+import civgame.view.hud.MinimapPanel;
 import civgame.view.hud.NotificationEntry;
 import civgame.view.hud.SelectedUnitPanel;
 import civgame.view.hud.TurnNotificationPanel;
@@ -33,6 +34,8 @@ public class GameFrame extends JFrame {
     private static final int BOTTOM_PANEL_HEIGHT = 55;
     private static final int SELECTED_UNIT_PANEL_WIDTH = 340;
     private static final int END_TURN_PANEL_WIDTH = 260;
+    private static final int MINIMAP_WIDTH = 230;
+    private static final int MINIMAP_HEIGHT = 170;
     private static final int MARGIN = 15;
 
     private final JLayeredPane layeredPane;
@@ -45,6 +48,7 @@ public class GameFrame extends JFrame {
     private final SelectedUnitPanel selectedUnitPanel;
     private final ControlsHintPanel controlsHintPanel;
     private final TurnNotificationPanel turnNotificationPanel;
+    private final MinimapPanel minimapPanel;
     private final FullScreenToggler fullScreenToggler;
 
     public GameFrame(GameSession gameSession) {
@@ -59,10 +63,12 @@ public class GameFrame extends JFrame {
         this.controlsHintPanel = new ControlsHintPanel();
         this.turnNotificationPanel = new TurnNotificationPanel();
         this.endTurnPanel = new EndTurnPanel();
+        this.minimapPanel = new MinimapPanel(gameSession, cameraState);
         this.layeredPane = new JLayeredPane();
         this.fullScreenToggler = new FullScreenToggler(this);
 
         this.movementAnimator.setRepaintCallback(createRepaintCallback());
+        this.minimapPanel.setMapRepaintCallback(createRepaintCallback());
 
         setupFrame();
         setupLayeredPane();
@@ -95,6 +101,7 @@ public class GameFrame extends JFrame {
         layeredPane.add(controlsHintPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(selectedUnitPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(endTurnPanel, JLayeredPane.PALETTE_LAYER);
+        layeredPane.add(minimapPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(turnNotificationPanel, JLayeredPane.DRAG_LAYER);
 
         setContentPane(layeredPane);
@@ -147,6 +154,9 @@ public class GameFrame extends JFrame {
 
         int endTurnX = frameWidth - END_TURN_PANEL_WIDTH - MARGIN;
         endTurnPanel.setBounds(endTurnX, bottomY, END_TURN_PANEL_WIDTH, BOTTOM_PANEL_HEIGHT);
+
+        int minimapX = frameWidth - MINIMAP_WIDTH - MARGIN;
+        minimapPanel.setBounds(minimapX, MARGIN, MINIMAP_WIDTH, MINIMAP_HEIGHT);
 
         if (turnNotificationPanel.isVisible()) {
             centerNotificationPanel();
