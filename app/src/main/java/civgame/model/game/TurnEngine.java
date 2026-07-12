@@ -26,7 +26,7 @@ public class TurnEngine {
     public TurnSummary executeTurn(GameSession gameSession) {
         refreshAllUnitActionPoints(gameSession);
 
-        resourceProductionService.applyProduction(gameSession);
+        List<String> depletedResourceDescriptions = resourceProductionService.applyProduction(gameSession);
         String completedProductionDescription = processProductionQueue(gameSession);
 
         List<String> destroyedBuildingIds = upkeepService.applyBuildingUpkeep(gameSession);
@@ -39,7 +39,7 @@ public class TurnEngine {
 
         gameSession.incrementTurnNumber();
 
-        return new TurnSummary(destroyedBuildingIds, starvationTriggered, gameSession.getCurrentTurnNumber(), completedProductionDescription);
+        return new TurnSummary(destroyedBuildingIds, starvationTriggered, gameSession.getCurrentTurnNumber(), completedProductionDescription, depletedResourceDescriptions);
     }
 
     private void refreshAllUnitActionPoints(GameSession gameSession) {
