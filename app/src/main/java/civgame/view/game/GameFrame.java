@@ -1,6 +1,8 @@
 package civgame.view.game;
 
 import civgame.model.game.GameSession;
+import civgame.model.game.ResourceRateCalculator;
+import civgame.model.resource.ResourceType;
 import civgame.util.Constants;
 import civgame.util.FullScreenToggler;
 import civgame.view.hud.ControlsHintPanel;
@@ -23,6 +25,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.util.List;
+import java.util.Map;
 
 public class GameFrame extends JFrame {
 
@@ -50,6 +53,7 @@ public class GameFrame extends JFrame {
     private final TurnNotificationPanel turnNotificationPanel;
     private final MinimapPanel minimapPanel;
     private final FullScreenToggler fullScreenToggler;
+    private final ResourceRateCalculator resourceRateCalculator;
 
     public GameFrame(GameSession gameSession) {
         super(Constants.WINDOW_TITLE + " - Game");
@@ -66,6 +70,7 @@ public class GameFrame extends JFrame {
         this.minimapPanel = new MinimapPanel(gameSession, cameraState);
         this.layeredPane = new JLayeredPane();
         this.fullScreenToggler = new FullScreenToggler(this);
+        this.resourceRateCalculator = new ResourceRateCalculator();
 
         this.movementAnimator.setRepaintCallback(createRepaintCallback());
         this.minimapPanel.setMapRepaintCallback(createRepaintCallback());
@@ -176,6 +181,11 @@ public class GameFrame extends JFrame {
         int y = (layeredPane.getHeight() - height) / 2 - 80;
 
         turnNotificationPanel.setBounds(x, y, width, height);
+    }
+
+    public void refreshHud(GameSession gameSession) {
+        Map<ResourceType, Integer> netRates = resourceRateCalculator.calculateNetRates(gameSession);
+        hudPanel.refresh(gameSession, netRates);
     }
 
     public MapPanel getMapPanel() {
