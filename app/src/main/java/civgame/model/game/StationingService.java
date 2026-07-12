@@ -1,6 +1,7 @@
 package civgame.model.game;
 
 import civgame.model.building.Building;
+import civgame.model.map.HexTile;
 import civgame.model.unit.Worker;
 import civgame.util.Constants;
 
@@ -25,7 +26,7 @@ public class StationingService {
         return null;
     }
 
-    public boolean canStation(Worker worker, Building building) {
+    public boolean canStation(GameSession gameSession, Worker worker, Building building) {
         if (building.isFull()) {
             return false;
         }
@@ -35,11 +36,23 @@ public class StationingService {
         if (!worker.getCoordinate().equals(building.getCoordinate())) {
             return false;
         }
-        return worker.hasEnoughActionPoints(Constants.WORKER_STATION_AP_COST);
+        if (!worker.hasEnoughActionPoints(Constants.WORKER_STATION_AP_COST)) {
+            return false;
+        }
+        if (isWorkerStationedAnywhere(gameSession, worker)) {
+            return false;
+        }
+
+        HexTile tile = gameSession.getHexMap().getTile(building.getCoordinate());
+        if (tile == null || !tile.hasResource()) {
+            return false;
+        }
+
+        return true;
     }
 
-    public boolean station(Worker worker, Building building) {
-        if (!canStation(worker, building)) {
+    public boolean station(GameSession gameSession, Worker worker, Building building) {
+        if (!canStation(gameSession, worker, building)) {
             return false;
         }
 
@@ -51,7 +64,4 @@ public class StationingService {
     public void unstation(Worker worker, Building building) {
         building.unstationWorker(worker);
     }
-
-    // TODO : when a building's resource tile becomes depleted,
-    // automatically unstation all its workers
 }
