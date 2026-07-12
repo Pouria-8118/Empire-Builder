@@ -1,11 +1,11 @@
 package civgame.controller.game;
 
+import civgame.model.building.Building;
 import civgame.model.game.BorderExpansionService;
 import civgame.model.game.ConstructionService;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
-import civgame.model.game.MovementPlan;
 import civgame.model.game.StationingService;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
@@ -46,7 +46,6 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class GameController {
 
@@ -62,6 +61,7 @@ public class GameController {
     private final BorderExpansionMenuFactory borderExpansionMenuFactory;
     private final SelectedUnitPanel selectedUnitPanel;
     private final FogOfWarCalculator fogOfWarCalculator;
+    private final StationingService stationingService;
     private int lastDragX;
     private int lastDragY;
     private boolean wasDragged;
@@ -74,7 +74,8 @@ public class GameController {
         this.gameSession = gameSession;
         this.pathFinder = new HexPathFinder();
         this.constructionMenuFactory = new ConstructionMenuFactory(new ConstructionService());
-        this.stationingMenuFactory = new StationingMenuFactory(new StationingService());
+        this.stationingService = new StationingService();
+        this.stationingMenuFactory = new StationingMenuFactory(stationingService);
         this.townHallMenuFactory = new TownHallMenuFactory();
         this.borderExpansionMenuFactory = new BorderExpansionMenuFactory(new BorderExpansionService());
         this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
@@ -98,23 +99,52 @@ public class GameController {
             return;
         }
 
-        Unit clickedUnit = findUnitAtCoordinate(clickedCoordinate);
+        if (shouldPrioritizeMovingWorkerOntoBuilding(clickedCoordinate)) {
+            attemptMoveSelectedUnit(clickedCoordinate);
+            return;
+        }
 
-        if (clickedUnit != null) {
-            selectUnitOrToggleOff(clickedUnit);
+        List<Unit> unitsHere = findUnitsAtCoordinate(clickedCoordinate);
+
+        if (!unitsHere.isEmpty()) {
+            selectUnitFromStackOrToggle(unitsHere);
             return;
         }
 
         attemptMoveSelectedUnit(clickedCoordinate);
     }
 
-    private void selectUnitOrToggleOff(Unit clickedUnit) {
-        if (selectionState.getSelectedUnit() == clickedUnit) {
+    private boolean shouldPrioritizeMovingWorkerOntoBuilding(HexCoordinate clickedCoordinate) {
+        if (!selectionState.hasSelection()) {
+            return false;
+        }
+
+        Unit selectedUnit = selectionState.getSelectedUnit();
+        if (selectedUnit.getUnitType() != UnitType.WORKER) {
+            return false;
+        }
+        if (selectedUnit.getCoordinate().equals(clickedCoordinate)) {
+            return false;
+        }
+
+        return gameSession.getBuildingAt(clickedCoordinate) != null;
+    }
+
+    private void selectUnitFromStackOrToggle(List<Unit> unitsHere) {
+        Unit currentlySelected = selectionState.getSelectedUnit();
+        int currentIndex = unitsHere.indexOf(currentlySelected);
+
+        if (currentIndex == -1) {
+            selectionState.setSelectedUnit(unitsHere.get(0));
+            updateReachableTilesForSelection();
+        } else if (unitsHere.size() == 1) {
             selectionState.clearSelection();
         } else {
-            selectionState.setSelectedUnit(clickedUnit);
+            int nextIndex = (currentIndex + 1) % unitsHere.size();
+            selectionState.setSelectedUnit(unitsHere.get(nextIndex));
             updateReachableTilesForSelection();
         }
+
         refreshSelectedUnitDisplay();
         mapPanel.repaint();
     }
@@ -123,7 +153,7 @@ public class GameController {
         Unit selectedUnit = selectionState.getSelectedUnit();
         boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
 
-        Set<HexCoordinate> reachableTiles = pathFinder.findReachableTiles(
+        java.util.Set<HexCoordinate> reachableTiles = pathFinder.findReachableTiles(
                 gameSession.getHexMap(),
                 selectedUnit.getCoordinate(),
                 selectedUnit.getCurrentActionPoints(),
@@ -206,6 +236,9 @@ public class GameController {
             @Override
             public void run() {
                 refreshSelectedUnitDisplay();
+                if (selectionState.hasSelection()) {
+                    updateReachableTilesForSelection();
+                }
                 mapPanel.repaint();
             }
         };
@@ -232,6 +265,9 @@ public class GameController {
         if (destination.equals(gameSession.getTownHall().getCoordinate())) {
             return;
         }
+        if (!selectionState.getReachableTiles().contains(destination)) {
+            return;
+        }
 
         Unit selectedUnit = selectionState.getSelectedUnit();
         boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
@@ -242,23 +278,36 @@ public class GameController {
             return;
         }
 
-        MovementPlan movementPlan = pathFinder.truncateToAffordablePath(
-                gameSession.getHexMap(),
-                fullPath,
-                selectedUnit.getCurrentActionPoints()
-        );
-
-        List<HexCoordinate> freePath = removeOccupiedTilesFromPathEnd(movementPlan.getPath());
+        List<HexCoordinate> freePath = removeOccupiedTilesFromPathEnd(fullPath);
 
         if (freePath.isEmpty()) {
             return;
         }
 
-        int recalculatedCost = recalculatePathCost(freePath);
+        int movementCost = recalculatePathCost(freePath);
 
-        selectedUnit.consumeActionPoints(recalculatedCost);
+        if (!selectedUnit.hasEnoughActionPoints(movementCost)) {
+            return;
+        }
+
+        unstationIfWorkerIsLeavingItsBuilding(selectedUnit);
+
+        selectedUnit.consumeActionPoints(movementCost);
         refreshSelectedUnitDisplay();
         movementAnimator.startMovement(selectedUnit, freePath, createMovementFinishedCallback());
+    }
+
+
+    private void unstationIfWorkerIsLeavingItsBuilding(Unit unit) {
+        if (unit.getUnitType() != UnitType.WORKER) {
+            return;
+        }
+
+        Worker worker = (Worker) unit;
+        Building currentBuilding = stationingService.findBuildingContainingWorker(gameSession, worker);
+        if (currentBuilding != null) {
+            stationingService.unstation(worker, currentBuilding);
+        }
     }
 
     private List<HexCoordinate> removeOccupiedTilesFromPathEnd(List<HexCoordinate> path) {
@@ -304,16 +353,24 @@ public class GameController {
     }
 
     private Unit findUnitAtCoordinate(HexCoordinate coordinate) {
+        List<Unit> unitsHere = findUnitsAtCoordinate(coordinate);
+        if (unitsHere.isEmpty()) {
+            return null;
+        }
+        return unitsHere.get(0);
+    }
+
+    private List<Unit> findUnitsAtCoordinate(HexCoordinate coordinate) {
+        List<Unit> result = new ArrayList<Unit>();
         List<Unit> units = gameSession.getUnits();
 
         for (int i = 0; i < units.size(); i++) {
-            Unit unit = units.get(i);
-            if (unit.getCoordinate().equals(coordinate)) {
-                return unit;
+            if (units.get(i).getCoordinate().equals(coordinate)) {
+                result.add(units.get(i));
             }
         }
 
-        return null;
+        return result;
     }
 
     private class MapMouseListener extends MouseAdapter {
