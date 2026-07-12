@@ -3,6 +3,7 @@ package civgame.view.game;
 import civgame.model.building.Building;
 import civgame.model.game.GameSession;
 import civgame.model.game.StationingService;
+import civgame.model.map.HexTile;
 import civgame.model.unit.Worker;
 import civgame.util.Constants;
 import civgame.util.MenuIconResolver;
@@ -37,29 +38,20 @@ public class StationingMenuFactory {
         if (alreadyStationed) {
             popupMenu.add(createUnstationItem(worker, buildingHere, onActionSuccess));
         } else {
-            popupMenu.add(createStationItem(worker, buildingHere, onActionSuccess));
+            popupMenu.add(createStationItem(gameSession, worker, buildingHere, onActionSuccess));
         }
 
         return popupMenu;
     }
 
-    private JMenuItem createStationItem(Worker worker, Building building, Runnable onActionSuccess) {
-        boolean canStation = stationingService.canStation(worker, building);
-        String reason = "";
-        if (!canStation) {
-            if (building.isFull()) {
-                reason = "Building is full";
-            } else if (!worker.hasEnoughActionPoints(Constants.WORKER_STATION_AP_COST)) {
-                reason = "Not enough Action Points";
-            } else {
-                reason = "Cannot station here";
-            }
-        }
+    private JMenuItem createStationItem(GameSession gameSession, Worker worker, Building building, Runnable onActionSuccess) {
+        boolean canStation = stationingService.canStation(gameSession, worker, building);
+        String reason = buildUnavailabilityReason(gameSession, worker, building, canStation);
 
         ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                boolean success = stationingService.station(worker, building);
+                boolean success = stationingService.station(gameSession, worker, building);
                 if (success && onActionSuccess != null) {
                     onActionSuccess.run();
                 }
@@ -76,6 +68,29 @@ public class StationingMenuFactory {
                 canStation,
                 actionListener
         );
+    }
+
+    private String buildUnavailabilityReason(GameSession gameSession, Worker worker, Building building, boolean canStation) {
+        if (canStation) {
+            return "";
+        }
+
+        if (building.isFull()) {
+            return "Building is full";
+        }
+        if (!worker.hasEnoughActionPoints(Constants.WORKER_STATION_AP_COST)) {
+            return "Not enough Action Points";
+        }
+        if (stationingService.isWorkerStationedAnywhere(gameSession, worker)) {
+            return "Already working elsewhere";
+        }
+
+        HexTile tile = gameSession.getHexMap().getTile(building.getCoordinate());
+        if (tile == null || !tile.hasResource()) {
+            return "Resource depleted";
+        }
+
+        return "Cannot station here";
     }
 
     private JMenuItem createUnstationItem(Worker worker, Building building, Runnable onActionSuccess) {
