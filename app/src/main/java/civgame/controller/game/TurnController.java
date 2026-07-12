@@ -105,6 +105,11 @@ public class TurnController {
             entries.add(new NotificationEntry(null, "A building collapsed from unpaid upkeep", null, false));
         }
 
+        List<String> depletedDescriptions = turnSummary.getDepletedResourceDescriptions();
+        for (int i = 0; i < depletedDescriptions.size(); i++) {
+            entries.add(new NotificationEntry(null, depletedDescriptions.get(i), null, false));
+        }
+
         if (entries.isEmpty()) {
             entries.add(new NotificationEntry(null, "No changes this turn", null, true));
         }
