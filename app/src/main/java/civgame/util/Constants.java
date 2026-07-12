@@ -122,9 +122,11 @@ public class Constants {
     public static final int WORKER_PRODUCTION_FOOD_COST = 5;
     public static final int WORKER_PRODUCTION_TURNS = 2;
 
-    public static final int BORDER_EXPANDER_PRODUCTION_WOOD_COST = 20;
-    public static final int BORDER_EXPANDER_PRODUCTION_FOOD_COST = 10;
-    public static final int BORDER_EXPANDER_PRODUCTION_TURNS = 3;
+    public static final int BORDER_EXPANDER_PRODUCTION_WOOD_COST = 15;
+    public static final int BORDER_EXPANDER_PRODUCTION_FOOD_COST = 8;
+    public static final int BORDER_EXPANDER_PRODUCTION_TURNS = 2;
+
+    public static final int RESOURCE_TILE_CAPACITY = 80;
 
     public static final String EXPLORER_ICON_PATH = "/images/units/explorer.png";
     public static final String BUILDER_ICON_PATH = "/images/units/builder.png";
