@@ -2,7 +2,6 @@ package civgame.controller.game;
 
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
-import civgame.model.game.ResourceRateCalculator;
 import civgame.model.game.TurnEngine;
 import civgame.model.game.TurnSummary;
 import civgame.model.resource.ResourceType;
@@ -11,7 +10,6 @@ import civgame.util.Constants;
 import civgame.view.game.EndTurnPanel;
 import civgame.view.game.GameFrame;
 import civgame.view.game.MapPanel;
-import civgame.view.hud.HudPanel;
 import civgame.view.hud.NotificationEntry;
 
 import javax.swing.JOptionPane;
@@ -27,9 +25,7 @@ public class TurnController {
     private final GameSession gameSession;
     private final TurnEngine turnEngine;
     private final FogOfWarCalculator fogOfWarCalculator;
-    private final ResourceRateCalculator resourceRateCalculator;
     private final EndTurnPanel endTurnPanel;
-    private final HudPanel hudPanel;
     private final GameFrame gameFrame;
     private final MapPanel mapPanel;
 
@@ -38,21 +34,14 @@ public class TurnController {
         this.gameSession = gameSession;
         this.turnEngine = turnEngine;
         this.fogOfWarCalculator = fogOfWarCalculator;
-        this.resourceRateCalculator = new ResourceRateCalculator();
         this.endTurnPanel = gameFrame.getEndTurnPanel();
-        this.hudPanel = gameFrame.getHudPanel();
         this.mapPanel = gameFrame.getMapPanel();
         registerListeners();
-        refreshHud();
+        gameFrame.refreshHud(gameSession);
     }
 
     private void registerListeners() {
         endTurnPanel.getEndTurnButton().addActionListener(new EndTurnListener());
-    }
-
-    private void refreshHud() {
-        Map<ResourceType, Integer> netRates = resourceRateCalculator.calculateNetRates(gameSession);
-        hudPanel.refresh(gameSession, netRates);
     }
 
     private class EndTurnListener implements ActionListener {
@@ -67,7 +56,7 @@ public class TurnController {
             TurnSummary turnSummary = turnEngine.executeTurn(gameSession);
             fogOfWarCalculator.updateVisibility(gameSession);
 
-            refreshHud();
+            gameFrame.refreshHud(gameSession);
             endTurnPanel.setStarvationWarningVisible(turnSummary.isStarvationTriggered());
 
             showTurnNotification(turnSummary, amountsBeforeTurn);

@@ -15,16 +15,19 @@ public class TurnEngine {
     private final UpkeepService upkeepService;
     private final UnitFactory unitFactory;
     private final SpawnPositionFinder spawnPositionFinder;
+    private final AutoExploreService autoExploreService;
 
     public TurnEngine() {
         this.resourceProductionService = new ResourceProductionService();
         this.upkeepService = new UpkeepService();
         this.unitFactory = new UnitFactory();
         this.spawnPositionFinder = new SpawnPositionFinder();
+        this.autoExploreService = new AutoExploreService();
     }
 
     public TurnSummary executeTurn(GameSession gameSession) {
         refreshAllUnitActionPoints(gameSession);
+        autoExploreService.runAutoExploreForAllUnits(gameSession);
 
         List<String> depletedResourceDescriptions = resourceProductionService.applyProduction(gameSession);
         String completedProductionDescription = processProductionQueue(gameSession);

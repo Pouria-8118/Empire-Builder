@@ -118,9 +118,9 @@ public class Constants {
     public static final int BUILDER_PRODUCTION_FOOD_COST = 5;
     public static final int BUILDER_PRODUCTION_TURNS = 3;
 
-    public static final int WORKER_PRODUCTION_WOOD_COST = 10;
-    public static final int WORKER_PRODUCTION_FOOD_COST = 5;
-    public static final int WORKER_PRODUCTION_TURNS = 2;
+    public static final int WORKER_PRODUCTION_WOOD_COST = 8;
+    public static final int WORKER_PRODUCTION_FOOD_COST = 4;
+    public static final int WORKER_PRODUCTION_TURNS = 1;
 
     public static final int BORDER_EXPANDER_PRODUCTION_WOOD_COST = 15;
     public static final int BORDER_EXPANDER_PRODUCTION_FOOD_COST = 8;

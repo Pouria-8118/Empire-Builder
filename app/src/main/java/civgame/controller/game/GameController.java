@@ -11,21 +11,20 @@ import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.unit.BorderExpander;
 import civgame.model.unit.Builder;
+import civgame.model.unit.Explorer;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitType;
 import civgame.model.unit.Worker;
 import civgame.util.HexGeometry;
-import civgame.util.MenuIconResolver;
 import civgame.util.TerrainMovementCostProvider;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
 import civgame.view.game.ConstructionMenuFactory;
+import civgame.view.game.ExplorerMenuFactory;
 import civgame.view.game.GameFrame;
 import civgame.view.game.MapPanel;
-import civgame.view.game.PopupMenuStyler;
 import civgame.view.game.SelectionState;
 import civgame.view.game.StationingMenuFactory;
-import civgame.view.game.StyledMenuItemFactory;
 import civgame.view.game.TownHallMenuFactory;
 import civgame.view.game.UnitMovementAnimator;
 import civgame.view.hud.SelectedUnitPanel;
@@ -34,7 +33,6 @@ import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
-import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 
@@ -46,6 +44,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class GameController {
 
@@ -59,9 +58,11 @@ public class GameController {
     private final StationingMenuFactory stationingMenuFactory;
     private final TownHallMenuFactory townHallMenuFactory;
     private final BorderExpansionMenuFactory borderExpansionMenuFactory;
+    private final ExplorerMenuFactory explorerMenuFactory;
     private final SelectedUnitPanel selectedUnitPanel;
     private final FogOfWarCalculator fogOfWarCalculator;
     private final StationingService stationingService;
+    private final GameFrame gameFrame;
     private int lastDragX;
     private int lastDragY;
     private boolean wasDragged;
@@ -78,8 +79,10 @@ public class GameController {
         this.stationingMenuFactory = new StationingMenuFactory(stationingService);
         this.townHallMenuFactory = new TownHallMenuFactory();
         this.borderExpansionMenuFactory = new BorderExpansionMenuFactory(new BorderExpansionService());
+        this.explorerMenuFactory = new ExplorerMenuFactory();
         this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
         this.fogOfWarCalculator = fogOfWarCalculator;
+        this.gameFrame = gameFrame;
         registerListeners();
         registerEscapeKeyBinding();
         refreshSelectedUnitDisplay();
@@ -114,6 +117,7 @@ public class GameController {
         attemptMoveSelectedUnit(clickedCoordinate);
     }
 
+
     private boolean shouldPrioritizeMovingWorkerOntoBuilding(HexCoordinate clickedCoordinate) {
         if (!selectionState.hasSelection()) {
             return false;
@@ -129,6 +133,7 @@ public class GameController {
 
         return gameSession.getBuildingAt(clickedCoordinate) != null;
     }
+
 
     private void selectUnitFromStackOrToggle(List<Unit> unitsHere) {
         Unit currentlySelected = selectionState.getSelectedUnit();
@@ -149,11 +154,12 @@ public class GameController {
         mapPanel.repaint();
     }
 
+
     private void updateReachableTilesForSelection() {
         Unit selectedUnit = selectionState.getSelectedUnit();
         boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
 
-        java.util.Set<HexCoordinate> reachableTiles = pathFinder.findReachableTiles(
+        Set<HexCoordinate> reachableTiles = pathFinder.findReachableTiles(
                 gameSession.getHexMap(),
                 selectedUnit.getCoordinate(),
                 selectedUnit.getCurrentActionPoints(),
@@ -174,20 +180,39 @@ public class GameController {
             return;
         }
 
-        Unit clickedUnit = findUnitAtCoordinate(clickedCoordinate);
-        if (clickedUnit == null) {
+        List<Unit> unitsHere = findUnitsAtCoordinate(clickedCoordinate);
+        if (unitsHere.isEmpty()) {
             return;
         }
 
-        if (clickedUnit.getUnitType() == UnitType.BUILDER) {
-            showConstructionMenu((Builder) clickedUnit, mouseEvent);
-        } else if (clickedUnit.getUnitType() == UnitType.WORKER) {
-            showStationingMenu((Worker) clickedUnit, mouseEvent);
-        } else if (clickedUnit.getUnitType() == UnitType.BORDER_EXPANDER) {
-            showBorderExpansionMenu((BorderExpander) clickedUnit, mouseEvent);
-        } else {
-            showUnitInfoMenu(clickedUnit, mouseEvent);
+        Unit targetUnit = resolveRightClickTarget(unitsHere);
+        selectionState.setSelectedUnit(targetUnit);
+        updateReachableTilesForSelection();
+        refreshSelectedUnitDisplay();
+        mapPanel.repaint();
+
+        if (targetUnit.getUnitType() == UnitType.BUILDER) {
+            showConstructionMenu((Builder) targetUnit, mouseEvent);
+        } else if (targetUnit.getUnitType() == UnitType.WORKER) {
+            showStationingMenu((Worker) targetUnit, mouseEvent);
+        } else if (targetUnit.getUnitType() == UnitType.BORDER_EXPANDER) {
+            showBorderExpansionMenu((BorderExpander) targetUnit, mouseEvent);
+        } else if (targetUnit.getUnitType() == UnitType.EXPLORER) {
+            showExplorerMenu((Explorer) targetUnit, mouseEvent);
         }
+    }
+
+
+    private Unit resolveRightClickTarget(List<Unit> unitsHere) {
+        Unit currentlySelected = selectionState.getSelectedUnit();
+        int currentIndex = unitsHere.indexOf(currentlySelected);
+
+        if (currentIndex == -1) {
+            return unitsHere.get(0);
+        }
+
+        int nextIndex = (currentIndex + 1) % unitsHere.size();
+        return unitsHere.get(nextIndex);
     }
 
     private void showTownHallMenu(MouseEvent mouseEvent) {
@@ -202,20 +227,9 @@ public class GameController {
         popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
     }
 
-    private void showUnitInfoMenu(Unit unit, MouseEvent mouseEvent) {
-        JPopupMenu popupMenu = new JPopupMenu();
-        PopupMenuStyler.style(popupMenu);
-
-        String apText = unit.getCurrentActionPoints() + "/" + unit.getMaxActionPoints();
-        JMenuItem infoItem = StyledMenuItemFactory.createItem(
-                MenuIconResolver.resolveForUnit(unit.getUnitType()),
-                unit.getUnitType().name(),
-                "Action Points: " + apText,
-                "",
-                false,
-                null
-        );
-        popupMenu.add(infoItem);
+    private void showExplorerMenu(Explorer explorer, MouseEvent mouseEvent) {
+        Runnable onSuccess = createRepaintRunnable();
+        JPopupMenu popupMenu = explorerMenuFactory.buildMenu(explorer, onSuccess);
         popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
     }
 
@@ -239,6 +253,7 @@ public class GameController {
                 if (selectionState.hasSelection()) {
                     updateReachableTilesForSelection();
                 }
+                gameFrame.refreshHud(gameSession);
                 mapPanel.repaint();
             }
         };
@@ -309,6 +324,7 @@ public class GameController {
             stationingService.unstation(worker, currentBuilding);
         }
     }
+
 
     private List<HexCoordinate> removeOccupiedTilesFromPathEnd(List<HexCoordinate> path) {
         List<HexCoordinate> freePath = new ArrayList<HexCoordinate>();
