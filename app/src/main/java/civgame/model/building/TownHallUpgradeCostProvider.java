@@ -43,6 +43,9 @@ public class TownHallUpgradeCostProvider {
         if (upgradeType == TownHallUpgradeType.PROFESSIONAL_TOOLS_TECH) {
             return Constants.PROFESSIONAL_TOOLS_TECH_IRON_COST;
         }
+        if (upgradeType == TownHallUpgradeType.SETTLEMENT_TECH) {
+            return Constants.SETTLEMENT_TECH_IRON_COST;
+        }
         return 0;
     }
 
