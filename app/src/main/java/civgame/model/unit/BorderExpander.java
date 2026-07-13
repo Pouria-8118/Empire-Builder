@@ -13,5 +13,4 @@ public class BorderExpander extends Unit {
         return UnitType.BORDER_EXPANDER;
     }
 
-    // TODO : add the claim-territory action and self-removal after use
 }

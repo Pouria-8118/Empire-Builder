@@ -30,5 +30,4 @@ public class Builder extends Unit {
         }
     }
 
-    // TODO : call consumeCharge() whenever this builder finishes constructing a building
 }

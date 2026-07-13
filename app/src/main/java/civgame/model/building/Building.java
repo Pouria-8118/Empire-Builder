@@ -91,6 +91,4 @@ public abstract class Building {
         stationedWorkers.clear();
     }
     
-    // TODO : apply the "professional tools" tech multiplier (1.5x) here
-    // for StoneMine and IronMine production, once the tech system exists
 }

@@ -39,6 +39,4 @@ public class BuildingCostProvider {
         return Constants.STABLE_CONSTRUCTION_AP_COST;
     }
 
-    // TODO : add getStoneCost / getIronCost here if higher-tier
-    // buildings (Hamlet/Village) require multiple resource types
 }
