@@ -19,7 +19,7 @@ public class Constants {
     public static final int HEX_SIZE = 40;
     public static final double[] ZOOM_LEVELS = {0.5, 0.75, 1.0, 1.25, 1.5, 2.0};
     public static final int DEFAULT_ZOOM_INDEX = 2;
-    public static final int DEFAULT_MAP_RADIUS = 10;
+    public static final int DEFAULT_MAP_RADIUS = 14;
 
     public static final int STARTING_FOOD = 50;
     public static final int STARTING_WOOD = 60;
@@ -33,7 +33,7 @@ public class Constants {
 
     public static final int INITIAL_UNIT_CAP = 10;
 
-    public static final int EXPLORER_MAX_ACTION_POINTS = 6;
+    public static final int EXPLORER_MAX_ACTION_POINTS = 4;
     public static final int BUILDER_MAX_ACTION_POINTS = 4;
     public static final int WORKER_MAX_ACTION_POINTS = 3;
     public static final int BORDER_EXPANDER_MAX_ACTION_POINTS = 4;
