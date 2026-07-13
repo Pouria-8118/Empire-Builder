@@ -102,7 +102,7 @@ public class GameController {
             return;
         }
 
-        if (shouldPrioritizeMovingWorkerOntoBuilding(clickedCoordinate)) {
+        if (shouldPrioritizeMovingOntoOccupiedTile(clickedCoordinate)) {
             attemptMoveSelectedUnit(clickedCoordinate);
             return;
         }
@@ -118,22 +118,21 @@ public class GameController {
     }
 
 
-    private boolean shouldPrioritizeMovingWorkerOntoBuilding(HexCoordinate clickedCoordinate) {
+    private boolean shouldPrioritizeMovingOntoOccupiedTile(HexCoordinate clickedCoordinate) {
         if (!selectionState.hasSelection()) {
             return false;
         }
 
         Unit selectedUnit = selectionState.getSelectedUnit();
-        if (selectedUnit.getUnitType() != UnitType.WORKER) {
-            return false;
-        }
         if (selectedUnit.getCoordinate().equals(clickedCoordinate)) {
             return false;
         }
+        if (!selectionState.getReachableTiles().contains(clickedCoordinate)) {
+            return false;
+        }
 
-        return gameSession.getBuildingAt(clickedCoordinate) != null;
+        return !findUnitsAtCoordinate(clickedCoordinate).isEmpty();
     }
-
 
     private void selectUnitFromStackOrToggle(List<Unit> unitsHere) {
         Unit currentlySelected = selectionState.getSelectedUnit();
@@ -324,7 +323,6 @@ public class GameController {
             stationingService.unstation(worker, currentBuilding);
         }
     }
-
 
     private List<HexCoordinate> removeOccupiedTilesFromPathEnd(List<HexCoordinate> path) {
         List<HexCoordinate> freePath = new ArrayList<HexCoordinate>();
