@@ -44,9 +44,10 @@ public class MapPanel extends JPanel {
     private static final Color OUTSIDE_BORDER_TINT = new Color(0, 0, 0, 110);
     private static final Color SETTLEMENT_COLOR = new Color(150, 90, 200);
     private static final Color REACHABLE_TILE_OUTLINE = new Color(255, 255, 255, 130);
+    private static final Color DEPLETED_RESOURCE_TINT = new Color(180, 30, 30, 70);
     private static final Font FALLBACK_LABEL_FONT = new Font("SansSerif", Font.BOLD, 12);
     private static final Font AP_BADGE_FONT = new Font("SansSerif", Font.BOLD, 10);
-
+    
     private final GameSession gameSession;
     private final CameraState cameraState;
     private final SelectionState selectionState;
@@ -119,6 +120,11 @@ public class MapPanel extends JPanel {
 
         if (tile.getVisibility() != TileVisibility.UNSEEN && !gameSession.isWithinBorder(tile.getCoordinate())) {
             graphics2D.setColor(OUTSIDE_BORDER_TINT);
+            graphics2D.fillPolygon(hexagonPolygon);
+        }
+        
+        if (tile.isResourceDepleted() && tile.getVisibility() != TileVisibility.UNSEEN) {
+            graphics2D.setColor(DEPLETED_RESOURCE_TINT);
             graphics2D.fillPolygon(hexagonPolygon);
         }
     }
