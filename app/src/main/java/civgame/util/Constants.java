@@ -33,7 +33,7 @@ public class Constants {
 
     public static final int INITIAL_UNIT_CAP = 10;
 
-    public static final int EXPLORER_MAX_ACTION_POINTS = 4;
+    public static final int EXPLORER_MAX_ACTION_POINTS = 5;
     public static final int BUILDER_MAX_ACTION_POINTS = 4;
     public static final int WORKER_MAX_ACTION_POINTS = 3;
     public static final int BORDER_EXPANDER_MAX_ACTION_POINTS = 4;
@@ -43,6 +43,7 @@ public class Constants {
     public static final int WORKER_VISION_RADIUS = 1;
     public static final int BORDER_EXPANDER_VISION_RADIUS = 1;
     public static final int TOWN_HALL_VISION_RADIUS = 2;
+    public static final int BUILDING_VISION_RADIUS = 1;
 
     public static final int BUILDER_STARTING_CHARGES = 3;
 
@@ -107,6 +108,7 @@ public class Constants {
 
     public static final int SETTLEMENT_TECH_WOOD_COST = 40;
     public static final int SETTLEMENT_TECH_STONE_COST = 30;
+    public static final int SETTLEMENT_TECH_IRON_COST = 15;
     public static final int SETTLEMENT_TECH_TURNS = 4;
     public static final int SETTLEMENT_UNIT_CAP_BONUS = 5;
 
@@ -126,7 +128,7 @@ public class Constants {
     public static final int BORDER_EXPANDER_PRODUCTION_FOOD_COST = 8;
     public static final int BORDER_EXPANDER_PRODUCTION_TURNS = 2;
 
-    public static final int RESOURCE_TILE_CAPACITY = 80;
+    public static final int RESOURCE_TILE_CAPACITY = 400;
 
     public static final String EXPLORER_ICON_PATH = "/images/units/explorer.png";
     public static final String BUILDER_ICON_PATH = "/images/units/builder.png";
