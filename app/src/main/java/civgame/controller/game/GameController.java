@@ -292,13 +292,7 @@ public class GameController {
             return;
         }
 
-        List<HexCoordinate> freePath = removeOccupiedTilesFromPathEnd(fullPath);
-
-        if (freePath.isEmpty()) {
-            return;
-        }
-
-        int movementCost = recalculatePathCost(freePath);
+        int movementCost = recalculatePathCost(fullPath);
 
         if (!selectedUnit.hasEnoughActionPoints(movementCost)) {
             return;
@@ -308,9 +302,8 @@ public class GameController {
 
         selectedUnit.consumeActionPoints(movementCost);
         refreshSelectedUnitDisplay();
-        movementAnimator.startMovement(selectedUnit, freePath, createMovementFinishedCallback());
+        movementAnimator.startMovement(selectedUnit, fullPath, createMovementFinishedCallback());
     }
-
 
     private void unstationIfWorkerIsLeavingItsBuilding(Unit unit) {
         if (unit.getUnitType() != UnitType.WORKER) {
@@ -322,24 +315,6 @@ public class GameController {
         if (currentBuilding != null) {
             stationingService.unstation(worker, currentBuilding);
         }
-    }
-
-    private List<HexCoordinate> removeOccupiedTilesFromPathEnd(List<HexCoordinate> path) {
-        List<HexCoordinate> freePath = new ArrayList<HexCoordinate>();
-
-        for (int i = 0; i < path.size(); i++) {
-            HexCoordinate coordinate = path.get(i);
-            boolean tileOccupied = findUnitAtCoordinate(coordinate) != null;
-            boolean hasBuilding = gameSession.getBuildingAt(coordinate) != null;
-
-            if (tileOccupied && !hasBuilding) {
-                break;
-            }
-
-            freePath.add(coordinate);
-        }
-
-        return freePath;
     }
 
     private int recalculatePathCost(List<HexCoordinate> path) {
