@@ -63,5 +63,4 @@ public class SelectedUnitPanel extends JPanel {
         infoLabel.setText("No unit selected");
     }
 
-    // TODO : show extra info once Border Expander has an in-game action
 }

@@ -14,6 +14,7 @@ import civgame.view.hud.TurnNotificationPanel;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
+import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -24,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -80,6 +82,7 @@ public class GameFrame extends JFrame {
         setupLayeredPane();
         registerResizeListener();
         registerFullScreenKeyBinding();
+        loadApplicationIcon();
     }
 
     private Runnable createRepaintCallback() {
@@ -185,6 +188,13 @@ public class GameFrame extends JFrame {
         int y = (layeredPane.getHeight() - height) / 2 - 80;
 
         turnNotificationPanel.setBounds(x, y, width, height);
+    }
+
+    private void loadApplicationIcon() {
+        URL iconUrl = getClass().getResource(Constants.APP_ICON_PATH);
+        if (iconUrl != null) {
+            setIconImage(new ImageIcon(iconUrl).getImage());
+        }
     }
 
     public void refreshHud(GameSession gameSession) {

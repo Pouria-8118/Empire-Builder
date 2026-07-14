@@ -341,14 +341,6 @@ public class GameController {
         };
     }
 
-    private Unit findUnitAtCoordinate(HexCoordinate coordinate) {
-        List<Unit> unitsHere = findUnitsAtCoordinate(coordinate);
-        if (unitsHere.isEmpty()) {
-            return null;
-        }
-        return unitsHere.get(0);
-    }
-
     private List<Unit> findUnitsAtCoordinate(HexCoordinate coordinate) {
         List<Unit> result = new ArrayList<Unit>();
         List<Unit> units = gameSession.getUnits();

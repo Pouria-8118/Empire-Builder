@@ -1,9 +1,9 @@
 package civgame.view.menu;
 
 import civgame.util.Constants;
+import civgame.view.game.StyledButton;
 
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JPanel;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -15,9 +15,9 @@ import java.net.URL;
 
 public class MainMenuPanel extends JPanel {
 
-    private JButton startButton;
-    private JButton settingsButton;
-    private JButton exitButton;
+    private StyledButton startButton;
+    private StyledButton settingsButton;
+    private StyledButton exitButton;
     private Image backgroundImage;
 
     public MainMenuPanel() {
@@ -35,31 +35,38 @@ public class MainMenuPanel extends JPanel {
     }
 
     private void createButtons() {
-        startButton = new JButton("Start");
-        settingsButton = new JButton("Settings");
-        exitButton = new JButton("Exit");
+        startButton = new StyledButton("Start");
+        settingsButton = new StyledButton("Settings");
+        exitButton = new StyledButton("Exit");
 
         setButtonIcon(startButton, Constants.START_ICON_PATH);
         setButtonIcon(settingsButton, Constants.SETTINGS_ICON_PATH);
         setButtonIcon(exitButton, Constants.EXIT_ICON_PATH);
 
-        Dimension buttonSize = new Dimension(200, 50);
+        Dimension buttonSize = new Dimension(220, 55);
         startButton.setPreferredSize(buttonSize);
         settingsButton.setPreferredSize(buttonSize);
         exitButton.setPreferredSize(buttonSize);
+
+        startButton.setIconTextGap(12);
+        settingsButton.setIconTextGap(12);
+        exitButton.setIconTextGap(12);
     }
 
-    private void setButtonIcon(JButton button, String iconPath) {
+    private void setButtonIcon(StyledButton button, String iconPath) {
         URL iconUrl = getClass().getResource(iconPath);
         if (iconUrl != null) {
-            button.setIcon(new ImageIcon(iconUrl));
+            ImageIcon originalIcon = new ImageIcon(iconUrl);
+            Image scaledImage = originalIcon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
+            button.setIcon(new ImageIcon(scaledImage));
         }
     }
 
     private void placeButtons() {
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(10, 10, 10, 10);
+        constraints.insets = new Insets(12, 10, 12, 10);
         constraints.gridx = 0;
+        constraints.anchor = GridBagConstraints.CENTER;
 
         constraints.gridy = 0;
         add(startButton, constraints);
@@ -79,15 +86,15 @@ public class MainMenuPanel extends JPanel {
         }
     }
 
-    public JButton getStartButton() {
+    public StyledButton getStartButton() {
         return startButton;
     }
 
-    public JButton getSettingsButton() {
+    public StyledButton getSettingsButton() {
         return settingsButton;
     }
 
-    public JButton getExitButton() {
+    public StyledButton getExitButton() {
         return exitButton;
     }
 }
