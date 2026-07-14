@@ -45,9 +45,6 @@ public class GameSession {
         claimInitialBorderAroundTownHall();
     }
 
-    // The player starts with a small claimed area around the Town Hall so
-    // the starting Builder can construct something before any Border
-    // Expander has been used.
     private void claimInitialBorderAroundTownHall() {
         claimedBorderTiles.add(townHall.getCoordinate());
 

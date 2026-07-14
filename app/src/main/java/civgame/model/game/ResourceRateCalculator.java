@@ -82,5 +82,4 @@ public class ResourceRateCalculator {
         netRates.put(ResourceType.FOOD, currentFood - totalConsumption);
     }
 
-    // TODO : factor in Town Hall production queue upkeep once implemented
 }

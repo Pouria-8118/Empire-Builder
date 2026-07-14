@@ -25,5 +25,4 @@ public class BuildingColorProvider {
         return new Color(180, 130, 90);
     }
 
-    // TODO (bonus - visual polish): replace these colored squares with per-building-type icons
 }

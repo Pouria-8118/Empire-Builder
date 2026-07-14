@@ -241,6 +241,4 @@ public class HexMapGenerator {
         return minInclusive + random.nextInt(maxInclusive - minInclusive + 1);
     }
 
-    // TODO : if a finite per-tile resource capacity system is added later,
-    // factor it into generation here (currently depletion is just a boolean flag on HexTile)
 }

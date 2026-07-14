@@ -22,5 +22,4 @@ public class UnitColorProvider {
         return new Color(180, 60, 200);
     }
 
-    // TODO  (bonus - visual polish): replace these colored circles with per-unit-type icons
 }

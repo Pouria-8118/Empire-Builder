@@ -6,8 +6,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-// Loads and caches images from resources. Returns null gracefully if the
-// file does not exist yet, so callers can fall back to a simple shape.
 public class IconProvider {
 
     private static final Map<String, Image> imageCache = new HashMap<String, Image>();

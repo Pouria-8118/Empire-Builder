@@ -49,5 +49,4 @@ public class UpkeepService {
         return shortfall > 0;
     }
 
-    // TODO : once population growth exists, halt it here while in starvation
 }

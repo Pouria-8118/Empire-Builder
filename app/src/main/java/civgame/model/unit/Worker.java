@@ -12,6 +12,4 @@ public class Worker extends Unit {
     public UnitType getUnitType() {
         return UnitType.WORKER;
     }
-
-    // TODO : add a reference to the building this worker is currently stationed in
 }

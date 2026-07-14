@@ -18,9 +18,6 @@ import java.util.Set;
 
 public class HexPathFinder {
 
-    // Finds the cheapest path (by movement cost) between two hexes using Dijkstra's algorithm.
-    // When allowUnseenTiles is false, the search will not travel through hexes that
-    // are still fully hidden by fog of war (only Explorer units are allowed to do this).
     public List<HexCoordinate> findPath(HexMap hexMap, HexCoordinate start, HexCoordinate destination, boolean allowUnseenTiles) {
         if (!hexMap.containsCoordinate(start) || !hexMap.containsCoordinate(destination)) {
             return null;

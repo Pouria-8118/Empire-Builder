@@ -66,8 +66,6 @@ public class ResourceStorage {
         capacities.put(resourceType, newCapacity);
     }
 
-    // Consumes as much as possible without going below zero, and reports how much
-    // could not be paid (the deficit) so callers can detect a starvation crisis.
     public int consumeAsMuchAsPossible(ResourceType resourceType, int amount) {
         int available = getAmount(resourceType);
 

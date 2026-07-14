@@ -8,8 +8,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 
-// A small circular fallback icon used inside menus when a real image
-// has not been placed in resources yet.
 public class LetterIcon implements Icon {
 
     private final String letter;

@@ -44,5 +44,4 @@ public class FogOfWarCalculator {
         }
     }
 
-    // TODO : call updateVisibility() again after every unit movement, not just at game start
 }

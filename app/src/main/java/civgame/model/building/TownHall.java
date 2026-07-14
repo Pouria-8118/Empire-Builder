@@ -14,5 +14,4 @@ public class TownHall {
         return coordinate;
     }
 
-    // TODO : add production queue, storage upgrade level, and base passive production here
 }

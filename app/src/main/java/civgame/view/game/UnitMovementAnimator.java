@@ -111,5 +111,4 @@ public class UnitMovementAnimator {
         return new Point2D.Double(interpolatedX, interpolatedY);
     }
 
-    // TODO : pause/cancel animation gracefully if a new turn starts mid-movement
 }

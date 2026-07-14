@@ -55,6 +55,4 @@ public class BorderExpansionService {
         gameSession.claimBorderTile(coordinate);
     }
 
-    // TODO (bonus - visual polish): show a preview highlight of the
-    // hexes that would be claimed before the player confirms the action
 }
