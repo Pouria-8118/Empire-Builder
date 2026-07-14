@@ -40,6 +40,7 @@ public class GameFrame extends JFrame {
     private static final int MINIMAP_WIDTH = 230;
     private static final int MINIMAP_HEIGHT = 170;
     private static final int MARGIN = 15;
+    private static final int MINIMUM_CENTERED_AREA_WIDTH = 300;
 
     private final JLayeredPane layeredPane;
     private final MapPanel mapPanel;
@@ -145,12 +146,18 @@ public class GameFrame extends JFrame {
 
         mapPanel.setBounds(0, 0, frameWidth, frameHeight);
 
-        int hudWidth = Math.min(HUD_MAX_WIDTH, frameWidth - MARGIN * 2);
-        int hudX = (frameWidth - hudWidth) / 2;
+        int minimapX = frameWidth - MINIMAP_WIDTH - MARGIN;
+        minimapPanel.setBounds(minimapX, MARGIN, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+
+        int reservedRightWidth = MINIMAP_WIDTH + MARGIN * 2;
+        int centeredAreaWidth = Math.max(MINIMUM_CENTERED_AREA_WIDTH, frameWidth - reservedRightWidth - MARGIN);
+
+        int hudWidth = Math.min(HUD_MAX_WIDTH, centeredAreaWidth);
+        int hudX = MARGIN + (centeredAreaWidth - hudWidth) / 2;
         hudPanel.setBounds(hudX, MARGIN, hudWidth, HUD_HEIGHT);
 
-        int hintWidth = Math.min(CONTROLS_HINT_MAX_WIDTH, frameWidth - MARGIN * 2);
-        int hintX = (frameWidth - hintWidth) / 2;
+        int hintWidth = Math.min(CONTROLS_HINT_MAX_WIDTH, centeredAreaWidth);
+        int hintX = MARGIN + (centeredAreaWidth - hintWidth) / 2;
         int hintY = MARGIN + HUD_HEIGHT + CONTROLS_HINT_GAP;
         controlsHintPanel.setBounds(hintX, hintY, hintWidth, CONTROLS_HINT_HEIGHT);
 
@@ -159,9 +166,6 @@ public class GameFrame extends JFrame {
 
         int endTurnX = frameWidth - END_TURN_PANEL_WIDTH - MARGIN;
         endTurnPanel.setBounds(endTurnX, bottomY, END_TURN_PANEL_WIDTH, BOTTOM_PANEL_HEIGHT);
-
-        int minimapX = frameWidth - MINIMAP_WIDTH - MARGIN;
-        minimapPanel.setBounds(minimapX, MARGIN, MINIMAP_WIDTH, MINIMAP_HEIGHT);
 
         if (turnNotificationPanel.isVisible()) {
             centerNotificationPanel();
