@@ -21,7 +21,7 @@ public class Constants {
     public static final int DEFAULT_ZOOM_INDEX = 2;
     public static final int DEFAULT_MAP_RADIUS = 14;
 
-    public static final int STARTING_FOOD = 50;
+    public static final int STARTING_FOOD = 70;
     public static final int STARTING_WOOD = 60;
     public static final int STARTING_STONE = 20;
     public static final int STARTING_IRON = 0;
@@ -31,7 +31,7 @@ public class Constants {
     public static final int INITIAL_STONE_CAPACITY = 150;
     public static final int INITIAL_IRON_CAPACITY = 100;
 
-    public static final int INITIAL_UNIT_CAP = 10;
+    public static final int INITIAL_UNIT_CAP = 12;
 
     public static final int EXPLORER_MAX_ACTION_POINTS = 5;
     public static final int BUILDER_MAX_ACTION_POINTS = 4;
@@ -82,7 +82,7 @@ public class Constants {
 
     public static final int UNIT_FOOD_CONSUMPTION_PER_TURN = 1;
     public static final int STARVATION_ACTION_POINT_PENALTY = 1;
-    public static final int TOWN_HALL_SAFEGUARD_FOOD = 1;
+    public static final int TOWN_HALL_SAFEGUARD_FOOD = 2;
     public static final int TOWN_HALL_SAFEGUARD_WOOD = 1;
 
     public static final int BORDER_EXPAND_ACTION_POINT_COST = 1;
