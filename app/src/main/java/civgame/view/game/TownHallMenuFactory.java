@@ -3,7 +3,8 @@ package civgame.view.game;
 import civgame.model.building.TownHallUpgradeCostProvider;
 import civgame.model.building.TownHallUpgradeType;
 import civgame.model.game.GameSession;
-import civgame.model.game.ProductionQueueItem;
+import civgame.model.game.TownHallUpgradeCommand;
+import civgame.model.game.UnitProductionCommand;
 import civgame.model.game.TownHallProductionQueue;
 import civgame.model.game.TownHallUpgradeService;
 import civgame.model.resource.ResourceType;
@@ -48,8 +49,7 @@ public class TownHallMenuFactory {
         ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                boolean started = gameSession.getTownHallProductionQueue().startItem(ProductionQueueItem.forUnit(unitType, turns));
-
+                boolean started = gameSession.getTownHallProductionQueue().startCommand(new UnitProductionCommand(unitType, turns));
                 if (started) {
                     gameSession.getResourceStorage().removeResource(ResourceType.WOOD, woodCost);
                     gameSession.getResourceStorage().removeResource(ResourceType.FOOD, foodCost);
@@ -108,8 +108,7 @@ public class TownHallMenuFactory {
         ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                boolean started = gameSession.getTownHallProductionQueue().startItem(ProductionQueueItem.forUpgrade(upgradeType, turns));
-
+                boolean started = gameSession.getTownHallProductionQueue().startCommand(new TownHallUpgradeCommand(upgradeType, turns));
                 if (started) {
                     gameSession.getResourceStorage().removeResource(ResourceType.WOOD, woodCost);
                     gameSession.getResourceStorage().removeResource(ResourceType.STONE, stoneCost);

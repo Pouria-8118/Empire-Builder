@@ -145,11 +145,11 @@ public class HudPanel extends JPanel {
     }
 
     private void updateQueueLabel(GameSession gameSession) {
-        civgame.model.game.ProductionQueueItem currentItem = gameSession.getTownHallProductionQueue().getCurrentItem();
-        if (currentItem == null) {
+        civgame.model.game.ProductionCommand currentCommand = gameSession.getTownHallProductionQueue().getCurrentCommand();
+        if (currentCommand == null) {
             queueLabel.setText("Queue: Idle");
         } else {
-            queueLabel.setText("Queue: " + currentItem.describeForHud());
+            queueLabel.setText("Queue: " + currentCommand.describeForHud());
         }
     }
 }
