@@ -2,35 +2,44 @@ package civgame.model.game;
 
 public class TownHallProductionQueue {
 
-    private ProductionQueueItem currentItem;
+    private ProductionCommand currentCommand;
 
     public boolean isBusy() {
-        return currentItem != null;
+        return currentCommand != null;
     }
 
-    public ProductionQueueItem getCurrentItem() {
-        return currentItem;
+    public ProductionCommand getCurrentCommand() {
+        return currentCommand;
     }
 
-    public boolean startItem(ProductionQueueItem item) {
+    public boolean startCommand(ProductionCommand command) {
         if (isBusy()) {
             return false;
         }
-        currentItem = item;
+        currentCommand = command;
         return true;
     }
 
-    public ProductionQueueItem advanceOneTurn() {
-        if (currentItem == null) {
+    public void cancelCurrentCommand(GameSession gameSession) {
+        if (currentCommand == null) {
+            return;
+        }
+        currentCommand.cancel(gameSession);
+        currentCommand = null;
+    }
+
+    public ProductionCommand advanceOneTurn(GameSession gameSession) {
+        if (currentCommand == null) {
             return null;
         }
 
-        currentItem.advanceOneTurn();
+        currentCommand.advanceOneTurn();
 
-        if (currentItem.isFinished()) {
-            ProductionQueueItem finishedItem = currentItem;
-            currentItem = null;
-            return finishedItem;
+        if (currentCommand.isFinished()) {
+            ProductionCommand finishedCommand = currentCommand;
+            currentCommand = null;
+            finishedCommand.execute(gameSession);
+            return finishedCommand;
         }
 
         return null;

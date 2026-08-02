@@ -1,10 +1,7 @@
 package civgame.model.game;
 
-import civgame.model.building.TownHallUpgradeType;
-import civgame.model.map.HexCoordinate;
+import civgame.model.event.TurnEndedEvent;
 import civgame.model.unit.Unit;
-import civgame.model.unit.UnitFactory;
-import civgame.model.unit.UnitType;
 import civgame.util.Constants;
 
 import java.util.List;
@@ -13,15 +10,11 @@ public class TurnEngine {
 
     private final ResourceProductionService resourceProductionService;
     private final UpkeepService upkeepService;
-    private final UnitFactory unitFactory;
-    private final SpawnPositionFinder spawnPositionFinder;
     private final AutoExploreService autoExploreService;
 
     public TurnEngine() {
         this.resourceProductionService = new ResourceProductionService();
         this.upkeepService = new UpkeepService();
-        this.unitFactory = new UnitFactory();
-        this.spawnPositionFinder = new SpawnPositionFinder();
         this.autoExploreService = new AutoExploreService();
     }
 
@@ -41,6 +34,7 @@ public class TurnEngine {
         }
 
         gameSession.incrementTurnNumber();
+        gameSession.getEventBus().publish(new TurnEndedEvent(gameSession.getCurrentTurnNumber()));
 
         return new TurnSummary(destroyedBuildingIds, starvationTriggered, gameSession.getCurrentTurnNumber(), completedProductionDescription, depletedResourceDescriptions);
     }
@@ -60,29 +54,17 @@ public class TurnEngine {
     }
 
     private String processProductionQueue(GameSession gameSession) {
-        ProductionQueueItem completedItem = gameSession.getTownHallProductionQueue().advanceOneTurn();
-        if (completedItem == null) {
+        ProductionCommand completedCommand = gameSession.getTownHallProductionQueue().advanceOneTurn(gameSession);
+        if (completedCommand == null) {
             return null;
         }
 
-        if (completedItem.getCategory() == ProductionQueueItem.QueueItemCategory.UNIT) {
-            UnitType unitType = completedItem.getUnitType();
-            completeUnitProduction(gameSession, unitType);
-            return "New unit ready: " + unitType.name();
+        if (completedCommand instanceof UnitProductionCommand) {
+            UnitProductionCommand unitCommand = (UnitProductionCommand) completedCommand;
+            return "New unit ready: " + unitCommand.getUnitType().name();
         }
 
-        TownHallUpgradeType upgradeType = completedItem.getUpgradeType();
-        gameSession.getTownHallUpgradeService().applyUpgradeEffects(gameSession, upgradeType);
-        return "Upgrade completed: " + upgradeType.name();
-    }
-
-    private void completeUnitProduction(GameSession gameSession, UnitType unitType) {
-        if (gameSession.hasReachedUnitCap()) {
-            return;
-        }
-
-        HexCoordinate spawnCoordinate = spawnPositionFinder.findFreeNeighbor(gameSession, gameSession.getTownHall().getCoordinate());
-        Unit newUnit = unitFactory.createUnit(unitType, spawnCoordinate);
-        gameSession.addUnit(newUnit);
+        TownHallUpgradeCommand upgradeCommand = (TownHallUpgradeCommand) completedCommand;
+        return "Upgrade completed: " + upgradeCommand.getUpgradeType().name();
     }
 }

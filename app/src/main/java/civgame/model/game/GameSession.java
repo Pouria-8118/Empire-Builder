@@ -2,6 +2,7 @@ package civgame.model.game;
 
 import civgame.model.building.Building;
 import civgame.model.building.TownHall;
+import civgame.model.event.GameEventBus;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.resource.ResourceStorage;
@@ -25,6 +26,7 @@ public class GameSession {
     private final Set<HexCoordinate> settlementTiles;
     private final TownHallUpgradeService townHallUpgradeService;
     private final TownHallProductionQueue townHallProductionQueue;
+    private final GameEventBus eventBus;
     private int unitCap;
     private int currentTurnNumber;
     private boolean inStarvation;
@@ -39,6 +41,7 @@ public class GameSession {
         this.settlementTiles = new HashSet<HexCoordinate>();
         this.townHallUpgradeService = new TownHallUpgradeService();
         this.townHallProductionQueue = new TownHallProductionQueue();
+        this.eventBus = new GameEventBus();
         this.unitCap = initialUnitCap;
         this.currentTurnNumber = 1;
         this.inStarvation = false;
@@ -144,6 +147,10 @@ public class GameSession {
         return townHallProductionQueue;
     }
 
+    public GameEventBus getEventBus() {
+        return eventBus;
+    }
+    
     public int getCurrentTurnNumber() {
         return currentTurnNumber;
     }
