@@ -1,5 +1,6 @@
 package civgame.view.hud;
 
+import civgame.model.building.TownHall;
 import civgame.model.game.GameSession;
 import civgame.model.resource.ResourceStorage;
 import civgame.model.resource.ResourceType;
@@ -31,6 +32,7 @@ public class HudPanel extends JPanel {
     private static final int RESOURCE_ICON_SIZE = 16;
 
     private final JLabel turnLabel;
+    private final JLabel townHallLabel;
     private final JLabel foodLabel;
     private final JLabel woodLabel;
     private final JLabel stoneLabel;
@@ -43,6 +45,7 @@ public class HudPanel extends JPanel {
         setLayout(new FlowLayout(FlowLayout.CENTER, 18, 10));
 
         turnLabel = createStyledLabel("Turn: 1", null);
+        townHallLabel = createStyledLabel("Town Hall: BASE_CAMP (200/200 HP)", null);
         foodLabel = createStyledLabel("Food: 0/0", Constants.FOOD_ICON_PATH);
         woodLabel = createStyledLabel("Wood: 0/0", Constants.WOOD_ICON_PATH);
         stoneLabel = createStyledLabel("Stone: 0/0", Constants.STONE_ICON_PATH);
@@ -51,6 +54,7 @@ public class HudPanel extends JPanel {
         queueLabel = createStyledLabel("Queue: Idle", null);
 
         add(turnLabel);
+        add(townHallLabel);
         add(foodLabel);
         add(woodLabel);
         add(stoneLabel);
@@ -93,6 +97,7 @@ public class HudPanel extends JPanel {
 
     public void refresh(GameSession gameSession, Map<ResourceType, Integer> netRates) {
         turnLabel.setText("Turn: " + gameSession.getCurrentTurnNumber());
+        updateTownHallLabel(gameSession);
 
         updateResourceLabel(foodLabel, "Food", gameSession.getResourceStorage(), ResourceType.FOOD, netRates);
         updateResourceLabel(woodLabel, "Wood", gameSession.getResourceStorage(), ResourceType.WOOD, netRates);
@@ -121,6 +126,12 @@ public class HudPanel extends JPanel {
         } else {
             label.setForeground(NEUTRAL_TEXT_COLOR);
         }
+    }
+
+    private void updateTownHallLabel(GameSession gameSession) {
+        TownHall townHall = gameSession.getTownHall();
+        String labelText = "Town Hall: " + townHall.getLevel().name() + " (" + townHall.getCurrentHitPoints() + "/" + townHall.getMaxHitPoints() + " HP)";
+        townHallLabel.setText(labelText);
     }
 
     private void updateUnitCountLabel(GameSession gameSession) {
