@@ -25,6 +25,7 @@ public class GameSession {
     private final Set<HexCoordinate> claimedBorderTiles;
     private final Set<HexCoordinate> settlementTiles;
     private final TownHallUpgradeService townHallUpgradeService;
+    private final TownHallLevelService townHallLevelService;
     private final TownHallProductionQueue townHallProductionQueue;
     private final GameEventBus eventBus;
     private int unitCap;
@@ -40,6 +41,7 @@ public class GameSession {
         this.claimedBorderTiles = new HashSet<HexCoordinate>();
         this.settlementTiles = new HashSet<HexCoordinate>();
         this.townHallUpgradeService = new TownHallUpgradeService();
+        this.townHallLevelService = new TownHallLevelService();
         this.townHallProductionQueue = new TownHallProductionQueue();
         this.eventBus = new GameEventBus();
         this.unitCap = initialUnitCap;
@@ -141,6 +143,10 @@ public class GameSession {
 
     public TownHallUpgradeService getTownHallUpgradeService() {
         return townHallUpgradeService;
+    }
+
+    public TownHallLevelService getTownHallLevelService() {
+        return townHallLevelService;
     }
 
     public TownHallProductionQueue getTownHallProductionQueue() {
