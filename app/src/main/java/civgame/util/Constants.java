@@ -112,6 +112,19 @@ public class Constants {
     public static final int SETTLEMENT_TECH_TURNS = 4;
     public static final int SETTLEMENT_UNIT_CAP_BONUS = 5;
 
+    public static final int TOWN_HALL_BASE_HIT_POINTS = 200;
+
+    public static final int TOWN_HALL_LEVEL_2_WOOD_COST = 50;
+    public static final int TOWN_HALL_LEVEL_2_STONE_COST = 50;
+    public static final int TOWN_HALL_LEVEL_2_TURNS = 3;
+    public static final int TOWN_HALL_LEVEL_2_STORAGE_CAPACITY_BONUS = 100;
+    public static final int TOWN_HALL_LEVEL_2_HEAL_AMOUNT = 50;
+
+    public static final int TOWN_HALL_LEVEL_3_STONE_COST = 100;
+    public static final int TOWN_HALL_LEVEL_3_IRON_COST = 50;
+    public static final int TOWN_HALL_LEVEL_3_TURNS = 5;
+    public static final int TOWN_HALL_LEVEL_3_STORAGE_CAPACITY_BONUS = 150;
+
     public static final int EXPLORER_PRODUCTION_WOOD_COST = 10;
     public static final int EXPLORER_PRODUCTION_FOOD_COST = 5;
     public static final int EXPLORER_PRODUCTION_TURNS = 2;
