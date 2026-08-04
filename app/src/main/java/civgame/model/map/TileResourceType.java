@@ -8,5 +8,6 @@ public enum TileResourceType {
     WHEAT,
     RICE,
     CATTLE,
-    SHEEP
+    SHEEP,
+    FISH
 }
