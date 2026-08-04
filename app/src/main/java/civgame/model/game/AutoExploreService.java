@@ -1,5 +1,6 @@
 package civgame.model.game;
 
+import civgame.model.building.TownHallUpgradeType;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
@@ -50,7 +51,8 @@ public class AutoExploreService {
             return;
         }
 
-        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), explorer.getCoordinate(), targetCoordinate, true);
+        boolean navalTechUnlocked = gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.NAVAL_TECHNIQUES);
+        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), explorer.getCoordinate(), targetCoordinate, true, navalTechUnlocked);
         if (fullPath == null || fullPath.isEmpty()) {
             return;
         }

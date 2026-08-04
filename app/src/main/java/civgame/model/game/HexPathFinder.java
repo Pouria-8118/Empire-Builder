@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class HexPathFinder {
 
-    public List<HexCoordinate> findPath(HexMap hexMap, HexCoordinate start, HexCoordinate destination, boolean allowUnseenTiles) {
+    public List<HexCoordinate> findPath(HexMap hexMap, HexCoordinate start, HexCoordinate destination, boolean allowUnseenTiles, boolean navalTechUnlocked) {
         if (!hexMap.containsCoordinate(start) || !hexMap.containsCoordinate(destination)) {
             return null;
         }
@@ -46,7 +46,7 @@ public class HexPathFinder {
                 break;
             }
 
-            expandNeighborsForPath(hexMap, current, costSoFar, cameFrom, frontier, allowUnseenTiles);
+            expandNeighborsForPath(hexMap, current, costSoFar, cameFrom, frontier, allowUnseenTiles, navalTechUnlocked);
         }
 
         if (!cameFrom.containsKey(destination)) {
@@ -58,7 +58,7 @@ public class HexPathFinder {
 
     private void expandNeighborsForPath(HexMap hexMap, HexCoordinate current, Map<HexCoordinate, Integer> costSoFar,
                                          Map<HexCoordinate, HexCoordinate> cameFrom, PriorityQueue<HexCoordinate> frontier,
-                                         boolean allowUnseenTiles) {
+                                         boolean allowUnseenTiles, boolean navalTechUnlocked) {
         List<HexCoordinate> neighbors = current.getNeighbors();
 
         for (int i = 0; i < neighbors.size(); i++) {
@@ -71,6 +71,9 @@ public class HexPathFinder {
             HexTile neighborTile = hexMap.getTile(neighbor);
 
             if (!allowUnseenTiles && neighborTile.getVisibility() == TileVisibility.UNSEEN) {
+                continue;
+            }
+            if (!TerrainMovementCostProvider.isPassable(neighborTile.getTerrainType(), navalTechUnlocked)) {
                 continue;
             }
 
@@ -117,7 +120,7 @@ public class HexPathFinder {
         return new MovementPlan(affordablePath, totalCost);
     }
 
-    public Set<HexCoordinate> findReachableTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget, boolean allowUnseenTiles) {
+    public Set<HexCoordinate> findReachableTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget, boolean allowUnseenTiles, boolean navalTechUnlocked) {
         Set<HexCoordinate> reachableTiles = new HashSet<HexCoordinate>();
         Map<HexCoordinate, Integer> costSoFar = new HashMap<HexCoordinate, Integer>();
 
@@ -138,6 +141,9 @@ public class HexPathFinder {
                 HexTile neighborTile = hexMap.getTile(neighbor);
 
                 if (!allowUnseenTiles && neighborTile.getVisibility() == TileVisibility.UNSEEN) {
+                    continue;
+                }
+                if (!TerrainMovementCostProvider.isPassable(neighborTile.getTerrainType(), navalTechUnlocked)) {
                     continue;
                 }
 
