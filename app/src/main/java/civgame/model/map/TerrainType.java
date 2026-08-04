@@ -4,5 +4,7 @@ public enum TerrainType {
     FOREST,
     PLAIN,
     MOUNTAIN,
-    GRASSLAND
+    MOUNTAIN_RANGE,
+    GRASSLAND,
+    SEA
 }
