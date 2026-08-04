@@ -20,6 +20,20 @@ public class HexMapGenerator {
     private static final int MOUNTAIN_RANGE_COUNT = 2;
     private static final int MOUNTAIN_MIN_DISTANCE_FROM_TOWN_HALL = 4;
 
+    private static final int IMPASSABLE_RANGE_MIN_LENGTH = 4;
+    private static final int IMPASSABLE_RANGE_MAX_LENGTH = 7;
+    private static final int IMPASSABLE_RANGE_COUNT = 1;
+    private static final int IMPASSABLE_RANGE_MIN_DISTANCE_FROM_TOWN_HALL = 5;
+
+    private static final int SEA_PATCH_MIN_SIZE = 5;
+    private static final int SEA_PATCH_MAX_SIZE = 10;
+    private static final int SEA_PATCH_COUNT = 1;
+    private static final int SEA_MIN_DISTANCE_FROM_TOWN_HALL = 5;
+    private static final double FISH_RESOURCE_CHANCE = 0.4;
+
+    private static final int MAX_BARRIER_GENERATION_ATTEMPTS = 5;
+    private static final double MIN_REACHABLE_OPEN_TILE_FRACTION = 0.7;
+
     private static final double IRON_DEPOSIT_CHANCE = 0.3;
     private static final double GRASSLAND_RESOURCE_CHANCE = 0.5;
     private static final double PLAIN_RESOURCE_CHANCE = 0.4;
@@ -39,9 +53,15 @@ public class HexMapGenerator {
         Set<HexCoordinate> forestTiles = generateForestPatches(hexMap, townHallCoordinate);
         Set<HexCoordinate> mountainTiles = generateMountainRanges(hexMap, townHallCoordinate);
 
+        Set<HexCoordinate> impassableRangeTiles = new HashSet<HexCoordinate>();
+        Set<HexCoordinate> seaTiles = new HashSet<HexCoordinate>();
+        generateConnectedBarrierFeatures(hexMap, townHallCoordinate, impassableRangeTiles, seaTiles);
+
         applyForestTerrain(hexMap, forestTiles);
         applyMountainTerrain(hexMap, mountainTiles);
-        applyRemainingTerrain(hexMap, forestTiles, mountainTiles);
+        applyImpassableRangeTerrain(hexMap, impassableRangeTiles);
+        applySeaTerrain(hexMap, seaTiles);
+        applyRemainingTerrain(hexMap, forestTiles, mountainTiles, impassableRangeTiles, seaTiles);
 
         HexTile clearedTownHallTile = new HexTile(townHallCoordinate, TerrainType.PLAIN, TileResourceType.NONE);
         hexMap.setTile(townHallCoordinate, clearedTownHallTile);
@@ -92,6 +112,89 @@ public class HexMapGenerator {
         return mountainTiles;
     }
 
+    private void generateConnectedBarrierFeatures(HexMap hexMap, HexCoordinate townHallCoordinate, Set<HexCoordinate> impassableRangeTiles, Set<HexCoordinate> seaTiles) {
+        for (int attempt = 0; attempt < MAX_BARRIER_GENERATION_ATTEMPTS; attempt++) {
+            Set<HexCoordinate> candidateImpassableTiles = generateImpassableRangeTiles(hexMap, townHallCoordinate);
+            Set<HexCoordinate> candidateSeaTiles = generateSeaTiles(hexMap, townHallCoordinate);
+
+            Set<HexCoordinate> combinedBarrier = new HashSet<HexCoordinate>();
+            combinedBarrier.addAll(candidateImpassableTiles);
+            combinedBarrier.addAll(candidateSeaTiles);
+
+            if (isTownHallAreaStillOpen(hexMap, townHallCoordinate, combinedBarrier)) {
+                impassableRangeTiles.addAll(candidateImpassableTiles);
+                seaTiles.addAll(candidateSeaTiles);
+                return;
+            }
+        }
+    }
+
+    private Set<HexCoordinate> generateImpassableRangeTiles(HexMap hexMap, HexCoordinate townHallCoordinate) {
+        Set<HexCoordinate> impassableTiles = new HashSet<HexCoordinate>();
+
+        for (int i = 0; i < IMPASSABLE_RANGE_COUNT; i++) {
+            HexCoordinate startCoordinate = pickRandomCoordinateFarFromTownHall(hexMap, townHallCoordinate, IMPASSABLE_RANGE_MIN_DISTANCE_FROM_TOWN_HALL);
+            if (startCoordinate == null) {
+                continue;
+            }
+            int rangeLength = randomBetween(IMPASSABLE_RANGE_MIN_LENGTH, IMPASSABLE_RANGE_MAX_LENGTH);
+            impassableTiles.addAll(growMountainRange(hexMap, startCoordinate, rangeLength));
+        }
+
+        return impassableTiles;
+    }
+
+    private Set<HexCoordinate> generateSeaTiles(HexMap hexMap, HexCoordinate townHallCoordinate) {
+        Set<HexCoordinate> seaTiles = new HashSet<HexCoordinate>();
+
+        for (int i = 0; i < SEA_PATCH_COUNT; i++) {
+            HexCoordinate startCoordinate = pickRandomCoordinateFarFromTownHall(hexMap, townHallCoordinate, SEA_MIN_DISTANCE_FROM_TOWN_HALL);
+            if (startCoordinate == null) {
+                continue;
+            }
+            int patchSize = randomBetween(SEA_PATCH_MIN_SIZE, SEA_PATCH_MAX_SIZE);
+            seaTiles.addAll(growCluster(hexMap, startCoordinate, patchSize, townHallCoordinate));
+        }
+
+        return seaTiles;
+    }
+
+    private boolean isTownHallAreaStillOpen(HexMap hexMap, HexCoordinate townHallCoordinate, Set<HexCoordinate> barrierTiles) {
+        Set<HexCoordinate> reachable = new HashSet<HexCoordinate>();
+        Queue<HexCoordinate> frontier = new LinkedList<HexCoordinate>();
+
+        reachable.add(townHallCoordinate);
+        frontier.add(townHallCoordinate);
+
+        while (!frontier.isEmpty()) {
+            HexCoordinate current = frontier.poll();
+            List<HexCoordinate> neighbors = current.getNeighbors();
+
+            for (int i = 0; i < neighbors.size(); i++) {
+                HexCoordinate neighbor = neighbors.get(i);
+                if (!hexMap.containsCoordinate(neighbor)) {
+                    continue;
+                }
+                if (barrierTiles.contains(neighbor)) {
+                    continue;
+                }
+                if (reachable.contains(neighbor)) {
+                    continue;
+                }
+                reachable.add(neighbor);
+                frontier.add(neighbor);
+            }
+        }
+
+        int totalOpenTiles = hexMap.getAllTiles().size() - barrierTiles.size();
+        if (totalOpenTiles <= 0) {
+            return false;
+        }
+
+        double reachableFraction = (double) reachable.size() / totalOpenTiles;
+        return reachableFraction >= MIN_REACHABLE_OPEN_TILE_FRACTION;
+    }
+
     private void applyForestTerrain(HexMap hexMap, Set<HexCoordinate> forestTiles) {
         for (HexCoordinate coordinate : forestTiles) {
             HexTile forestTile = new HexTile(coordinate, TerrainType.FOREST, TileResourceType.WOOD);
@@ -109,9 +212,30 @@ public class HexMapGenerator {
         }
     }
 
-    private void applyRemainingTerrain(HexMap hexMap, Set<HexCoordinate> forestTiles, Set<HexCoordinate> mountainTiles) {
+    private void applyImpassableRangeTerrain(HexMap hexMap, Set<HexCoordinate> impassableRangeTiles) {
+        for (HexCoordinate coordinate : impassableRangeTiles) {
+            HexTile rangeTile = new HexTile(coordinate, TerrainType.MOUNTAIN_RANGE, TileResourceType.NONE);
+            hexMap.setTile(coordinate, rangeTile);
+        }
+    }
+
+    private void applySeaTerrain(HexMap hexMap, Set<HexCoordinate> seaTiles) {
+        for (HexCoordinate coordinate : seaTiles) {
+            TileResourceType resourceType = TileResourceType.NONE;
+            if (random.nextDouble() < FISH_RESOURCE_CHANCE) {
+                resourceType = TileResourceType.FISH;
+            }
+            HexTile seaTile = new HexTile(coordinate, TerrainType.SEA, resourceType);
+            hexMap.setTile(coordinate, seaTile);
+        }
+    }
+
+    private void applyRemainingTerrain(HexMap hexMap, Set<HexCoordinate> forestTiles, Set<HexCoordinate> mountainTiles, Set<HexCoordinate> impassableRangeTiles, Set<HexCoordinate> seaTiles) {
         for (HexCoordinate coordinate : hexMap.getAllTiles().keySet()) {
             if (forestTiles.contains(coordinate) || mountainTiles.contains(coordinate)) {
+                continue;
+            }
+            if (impassableRangeTiles.contains(coordinate) || seaTiles.contains(coordinate)) {
                 continue;
             }
 
@@ -222,10 +346,14 @@ public class HexMapGenerator {
     }
 
     private HexCoordinate pickRandomCoordinateFarFromTownHall(HexMap hexMap, HexCoordinate townHallCoordinate) {
+        return pickRandomCoordinateFarFromTownHall(hexMap, townHallCoordinate, MOUNTAIN_MIN_DISTANCE_FROM_TOWN_HALL);
+    }
+
+    private HexCoordinate pickRandomCoordinateFarFromTownHall(HexMap hexMap, HexCoordinate townHallCoordinate, int minDistance) {
         List<HexCoordinate> farCoordinates = new ArrayList<HexCoordinate>();
 
         for (HexCoordinate coordinate : hexMap.getAllTiles().keySet()) {
-            if (townHallCoordinate.distanceTo(coordinate) >= MOUNTAIN_MIN_DISTANCE_FROM_TOWN_HALL) {
+            if (townHallCoordinate.distanceTo(coordinate) >= minDistance) {
                 farCoordinates.add(coordinate);
             }
         }
