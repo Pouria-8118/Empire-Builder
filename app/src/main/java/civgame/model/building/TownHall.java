@@ -9,12 +9,14 @@ public class TownHall {
     private TownHallLevel level;
     private int currentHitPoints;
     private int maxHitPoints;
+    private int defense;
 
     public TownHall(HexCoordinate coordinate) {
         this.coordinate = coordinate;
         this.level = TownHallLevel.BASE_CAMP;
         this.maxHitPoints = Constants.TOWN_HALL_BASE_HIT_POINTS;
         this.currentHitPoints = maxHitPoints;
+        this.defense = Constants.TOWN_HALL_BASE_DEFENSE;
     }
 
     public HexCoordinate getCoordinate() {
@@ -50,6 +52,14 @@ public class TownHall {
         if (currentHitPoints > maxHitPoints) {
             currentHitPoints = maxHitPoints;
         }
+    }
+
+    public int getDefense() {
+        return defense;
+    }
+
+    public void setDefense(int defense) {
+        this.defense = defense;
     }
 
     // TODO: implement generic combat damage handling here once TownHall

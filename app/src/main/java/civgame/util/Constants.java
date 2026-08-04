@@ -101,9 +101,9 @@ public class Constants {
     public static final int IRON_MINE_TECH_STONE_COST = 20;
     public static final int IRON_MINE_TECH_TURNS = 3;
 
-    public static final int PROFESSIONAL_TOOLS_TECH_STONE_COST = 40;
-    public static final int PROFESSIONAL_TOOLS_TECH_IRON_COST = 20;
-    public static final int PROFESSIONAL_TOOLS_TECH_TURNS = 4;
+    public static final int PROFESSIONAL_TOOLS_TECH_STONE_COST = 0;
+    public static final int PROFESSIONAL_TOOLS_TECH_IRON_COST = 40;
+    public static final int PROFESSIONAL_TOOLS_TECH_TURNS = 3;
     public static final double PROFESSIONAL_TOOLS_PRODUCTION_MULTIPLIER = 1.5;
 
     public static final int SETTLEMENT_TECH_WOOD_COST = 40;
@@ -124,6 +124,16 @@ public class Constants {
     public static final int TOWN_HALL_LEVEL_3_IRON_COST = 50;
     public static final int TOWN_HALL_LEVEL_3_TURNS = 5;
     public static final int TOWN_HALL_LEVEL_3_STORAGE_CAPACITY_BONUS = 150;
+
+    public static final int TOWN_HALL_BASE_DEFENSE = 10;
+
+    public static final int NAVAL_TECHNIQUES_WOOD_COST = 80;
+    public static final int NAVAL_TECHNIQUES_TURNS = 4;
+
+    public static final int DEFENSIVE_ARCHITECTURE_STONE_COST = 100;
+    public static final int DEFENSIVE_ARCHITECTURE_TURNS = 4;
+    public static final int DEFENSIVE_ARCHITECTURE_DEFENSE_VALUE = 30;
+    public static final int DEFENSIVE_ARCHITECTURE_MAX_HIT_POINTS = 350;
 
     public static final int EXPLORER_PRODUCTION_WOOD_COST = 10;
     public static final int EXPLORER_PRODUCTION_FOOD_COST = 5;

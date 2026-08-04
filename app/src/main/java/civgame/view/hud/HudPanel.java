@@ -45,7 +45,7 @@ public class HudPanel extends JPanel {
         setLayout(new FlowLayout(FlowLayout.CENTER, 18, 10));
 
         turnLabel = createStyledLabel("Turn: 1", null);
-        townHallLabel = createStyledLabel("Town Hall: BASE_CAMP (200/200 HP)", null);
+        townHallLabel = createStyledLabel("Town Hall: BASE_CAMP (200/200 HP)  DEF:10", null);
         foodLabel = createStyledLabel("Food: 0/0", Constants.FOOD_ICON_PATH);
         woodLabel = createStyledLabel("Wood: 0/0", Constants.WOOD_ICON_PATH);
         stoneLabel = createStyledLabel("Stone: 0/0", Constants.STONE_ICON_PATH);
@@ -130,7 +130,7 @@ public class HudPanel extends JPanel {
 
     private void updateTownHallLabel(GameSession gameSession) {
         TownHall townHall = gameSession.getTownHall();
-        String labelText = "Town Hall: " + townHall.getLevel().name() + " (" + townHall.getCurrentHitPoints() + "/" + townHall.getMaxHitPoints() + " HP)";
+        String labelText = "Town Hall: " + townHall.getLevel().name() + " (" + townHall.getCurrentHitPoints() + "/" + townHall.getMaxHitPoints() + " HP)  DEF:" + townHall.getDefense();
         townHallLabel.setText(labelText);
     }
 

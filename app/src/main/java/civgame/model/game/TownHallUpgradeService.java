@@ -1,6 +1,7 @@
 package civgame.model.game;
 
 import civgame.model.building.BuildingType;
+import civgame.model.building.TownHallLevel;
 import civgame.model.building.TownHallUpgradeType;
 import civgame.model.map.HexCoordinate;
 import civgame.model.resource.ResourceType;
@@ -27,12 +28,20 @@ public class TownHallUpgradeService {
         return storageUpgradeCount;
     }
 
-    public boolean isPrerequisiteMet(TownHallUpgradeType upgradeType) {
+    public boolean isPrerequisiteMet(GameSession gameSession, TownHallUpgradeType upgradeType) {
         if (upgradeType == TownHallUpgradeType.IRON_MINE_TECH) {
             return isUnlocked(TownHallUpgradeType.STONE_MINE_TECH);
         }
         if (upgradeType == TownHallUpgradeType.PROFESSIONAL_TOOLS_TECH) {
-            return isUnlocked(TownHallUpgradeType.STONE_MINE_TECH) && isUnlocked(TownHallUpgradeType.IRON_MINE_TECH);
+            boolean minesUnlocked = isUnlocked(TownHallUpgradeType.STONE_MINE_TECH) && isUnlocked(TownHallUpgradeType.IRON_MINE_TECH);
+            boolean levelMet = gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.SETTLEMENT);
+            return minesUnlocked && levelMet;
+        }
+        if (upgradeType == TownHallUpgradeType.NAVAL_TECHNIQUES) {
+            return gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.SETTLEMENT);
+        }
+        if (upgradeType == TownHallUpgradeType.DEFENSIVE_ARCHITECTURE) {
+            return gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.CAPITAL);
         }
         return true;
     }
@@ -52,6 +61,11 @@ public class TownHallUpgradeService {
         if (upgradeType == TownHallUpgradeType.SETTLEMENT_TECH) {
             unlockedUpgrades.add(upgradeType);
             applySettlementUpgrade(gameSession);
+            return;
+        }
+        if (upgradeType == TownHallUpgradeType.DEFENSIVE_ARCHITECTURE) {
+            unlockedUpgrades.add(upgradeType);
+            applyDefensiveArchitectureUpgrade(gameSession);
             return;
         }
 
@@ -75,6 +89,14 @@ public class TownHallUpgradeService {
         if (eligibleCoordinate != null) {
             gameSession.addSettlementTile(eligibleCoordinate);
         }
+    }
+
+    private void applyDefensiveArchitectureUpgrade(GameSession gameSession) {
+        gameSession.getTownHall().setDefense(Constants.DEFENSIVE_ARCHITECTURE_DEFENSE_VALUE);
+        gameSession.getTownHall().setMaxHitPoints(Constants.DEFENSIVE_ARCHITECTURE_MAX_HIT_POINTS);
+
+        // TODO: once the Wall model exists, automatically build a stone Wall
+        // on every edge hex around the Town Hall's coordinate here.
     }
 
     public double getProductionMultiplier(BuildingType buildingType) {

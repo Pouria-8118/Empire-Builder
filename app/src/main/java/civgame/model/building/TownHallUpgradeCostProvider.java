@@ -20,6 +20,9 @@ public class TownHallUpgradeCostProvider {
         if (upgradeType == TownHallUpgradeType.SETTLEMENT_TECH) {
             return Constants.SETTLEMENT_TECH_WOOD_COST;
         }
+        if (upgradeType == TownHallUpgradeType.NAVAL_TECHNIQUES) {
+            return Constants.NAVAL_TECHNIQUES_WOOD_COST;
+        }
         return 0;
     }
 
@@ -35,6 +38,12 @@ public class TownHallUpgradeCostProvider {
         }
         if (upgradeType == TownHallUpgradeType.PROFESSIONAL_TOOLS_TECH) {
             return Constants.PROFESSIONAL_TOOLS_TECH_STONE_COST;
+        }
+        if (upgradeType == TownHallUpgradeType.NAVAL_TECHNIQUES) {
+            return 0;
+        }
+        if (upgradeType == TownHallUpgradeType.DEFENSIVE_ARCHITECTURE) {
+            return Constants.DEFENSIVE_ARCHITECTURE_STONE_COST;
         }
         return Constants.SETTLEMENT_TECH_STONE_COST;
     }
@@ -61,6 +70,12 @@ public class TownHallUpgradeCostProvider {
         }
         if (upgradeType == TownHallUpgradeType.PROFESSIONAL_TOOLS_TECH) {
             return Constants.PROFESSIONAL_TOOLS_TECH_TURNS;
+        }
+        if (upgradeType == TownHallUpgradeType.NAVAL_TECHNIQUES) {
+            return Constants.NAVAL_TECHNIQUES_TURNS;
+        }
+        if (upgradeType == TownHallUpgradeType.DEFENSIVE_ARCHITECTURE) {
+            return Constants.DEFENSIVE_ARCHITECTURE_TURNS;
         }
         return Constants.SETTLEMENT_TECH_TURNS;
     }

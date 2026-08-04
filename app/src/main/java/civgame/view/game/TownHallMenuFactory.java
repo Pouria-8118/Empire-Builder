@@ -121,6 +121,8 @@ public class TownHallMenuFactory {
         popupMenu.add(createUpgradeItem(gameSession, TownHallUpgradeType.IRON_MINE_TECH, onActionSuccess));
         popupMenu.add(createUpgradeItem(gameSession, TownHallUpgradeType.PROFESSIONAL_TOOLS_TECH, onActionSuccess));
         popupMenu.add(createUpgradeItem(gameSession, TownHallUpgradeType.SETTLEMENT_TECH, onActionSuccess));
+        popupMenu.add(createUpgradeItem(gameSession, TownHallUpgradeType.NAVAL_TECHNIQUES, onActionSuccess));
+        popupMenu.add(createUpgradeItem(gameSession, TownHallUpgradeType.DEFENSIVE_ARCHITECTURE, onActionSuccess));
     }
 
     private JMenuItem createUpgradeItem(GameSession gameSession, TownHallUpgradeType upgradeType, Runnable onActionSuccess) {
@@ -169,7 +171,7 @@ public class TownHallMenuFactory {
         if (upgradeService.isAlreadyMaxed(upgradeType)) {
             return "Already unlocked";
         }
-        if (!upgradeService.isPrerequisiteMet(upgradeType)) {
+        if (!upgradeService.isPrerequisiteMet(gameSession, upgradeType)) {
             return "Requires previous technology";
         }
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, woodCost)) {
