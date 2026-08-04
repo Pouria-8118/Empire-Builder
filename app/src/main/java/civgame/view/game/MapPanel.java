@@ -6,12 +6,14 @@ import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
+import civgame.model.map.TerrainType;
 import civgame.model.map.TileVisibility;
 import civgame.model.unit.Unit;
 import civgame.util.BuildingColorProvider;
 import civgame.util.BuildingIconProvider;
 import civgame.util.Constants;
 import civgame.util.HexGeometry;
+import civgame.util.HexTileTooltipTextBuilder;
 import civgame.util.IconProvider;
 import civgame.util.ResourceIconProvider;
 import civgame.util.TerrainColorProvider;
@@ -26,6 +28,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Polygon;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +64,28 @@ public class MapPanel extends JPanel {
         setBackground(Color.BLACK);
         setToolTipText("");
         ToolTipManager.sharedInstance().registerComponent(this);
+    }
+
+    @Override
+    public String getToolTipText(MouseEvent mouseEvent) {
+        double hexSize = getCurrentHexSize();
+        double centerX = getPanelCenterX();
+        double centerY = getPanelCenterY();
+
+        double relativeX = mouseEvent.getX() - centerX;
+        double relativeY = mouseEvent.getY() - centerY;
+        HexCoordinate coordinate = HexGeometry.pixelToAxial(relativeX, relativeY, hexSize);
+
+        if (!gameSession.getHexMap().containsCoordinate(coordinate)) {
+            return null;
+        }
+
+        HexTile tile = gameSession.getHexMap().getTile(coordinate);
+        if (tile.getVisibility() == TileVisibility.UNSEEN) {
+            return null;
+        }
+
+        return HexTileTooltipTextBuilder.build(tile);
     }
 
     @Override
@@ -112,6 +137,10 @@ public class MapPanel extends JPanel {
             graphics2D.drawPolygon(hexagonPolygon);
         }
 
+        if (tile.getTerrainType() == TerrainType.MOUNTAIN_RANGE && tile.getVisibility() != TileVisibility.UNSEEN) {
+            drawMountainRangeOverlay(graphics2D, tileCenterX, tileCenterY, hexSize);
+        }
+
         boolean hasBuildingHere = gameSession.getBuildingAt(tile.getCoordinate()) != null;
 
         if (tile.hasResource() && tile.getVisibility() != TileVisibility.UNSEEN && !hasBuildingHere) {
@@ -144,6 +173,26 @@ public class MapPanel extends JPanel {
             return TerrainColorProvider.getExploredColor(tile.getTerrainType());
         }
         return TerrainColorProvider.getColorForTerrain(tile.getTerrainType());
+    }
+
+    private void drawMountainRangeOverlay(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
+        graphics2D.setColor(new Color(30, 25, 25));
+
+        int peakWidth = (int) (hexSize * 0.35);
+        int peakHeight = (int) (hexSize * 0.5);
+        int baseY = (int) (centerY + hexSize * 0.35);
+
+        drawPeak(graphics2D, (int) (centerX - hexSize * 0.35), baseY, peakWidth, peakHeight);
+        drawPeak(graphics2D, (int) centerX, baseY, peakWidth, peakHeight);
+        drawPeak(graphics2D, (int) (centerX + hexSize * 0.35), baseY, peakWidth, peakHeight);
+    }
+
+    private void drawPeak(Graphics2D graphics2D, int baseCenterX, int baseY, int width, int height) {
+        Polygon peakPolygon = new Polygon();
+        peakPolygon.addPoint(baseCenterX - width / 2, baseY);
+        peakPolygon.addPoint(baseCenterX, baseY - height);
+        peakPolygon.addPoint(baseCenterX + width / 2, baseY);
+        graphics2D.fillPolygon(peakPolygon);
     }
 
     private Polygon buildHexagonPolygon(double centerX, double centerY, double hexSize) {
@@ -372,12 +421,16 @@ public class MapPanel extends JPanel {
 
     private void drawSingleUnit(Graphics2D graphics2D, Unit unit, double drawX, double drawY, double hexSize, double sizeScale) {
         int iconSize = (int) (hexSize * UNIT_SIZE_FACTOR * sizeScale);
-        Image unitIcon = IconProvider.loadImage(UnitIconProvider.getIconPath(unit.getUnitType()));
 
-        if (unitIcon != null) {
-            graphics2D.drawImage(unitIcon, (int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize, this);
+        if (unit.isFloating()) {
+            drawFloatingUnit(graphics2D, drawX, drawY, iconSize);
         } else {
-            drawUnitFallbackShape(graphics2D, unit, drawX, drawY, iconSize);
+            Image unitIcon = IconProvider.loadImage(UnitIconProvider.getIconPath(unit.getUnitType()));
+            if (unitIcon != null) {
+                graphics2D.drawImage(unitIcon, (int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize, this);
+            } else {
+                drawUnitFallbackShape(graphics2D, unit, drawX, drawY, iconSize);
+            }
         }
 
         drawActionPointBadge(graphics2D, unit, drawX, drawY, iconSize);
@@ -385,6 +438,33 @@ public class MapPanel extends JPanel {
         if (selectionState.getSelectedUnit() == unit) {
             drawSelectionHighlight(graphics2D, drawX, drawY, iconSize);
         }
+    }
+
+    private void drawFloatingUnit(Graphics2D graphics2D, double drawX, double drawY, int iconSize) {
+        Image boatIcon = IconProvider.loadImage(Constants.FLOATING_UNIT_ICON_PATH);
+        if (boatIcon != null) {
+            graphics2D.drawImage(boatIcon, (int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize, this);
+            return;
+        }
+
+        int hullTop = (int) (drawY - iconSize * 0.15);
+        int hullBottom = (int) (drawY + iconSize * 0.45);
+        int hullLeft = (int) (drawX - iconSize * 0.5);
+        int hullRight = (int) (drawX + iconSize * 0.5);
+
+        Polygon hullPolygon = new Polygon();
+        hullPolygon.addPoint((int) drawX, hullBottom);
+        hullPolygon.addPoint(hullLeft, hullTop);
+        hullPolygon.addPoint(hullRight, hullTop);
+
+        graphics2D.setColor(new Color(120, 80, 40));
+        graphics2D.fillPolygon(hullPolygon);
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawPolygon(hullPolygon);
+
+        int mastX = (int) drawX;
+        int mastTop = (int) (drawY - iconSize * 0.55);
+        graphics2D.drawLine(mastX, mastTop, mastX, hullTop);
     }
 
     private void drawUnitFallbackShape(Graphics2D graphics2D, Unit unit, double drawX, double drawY, int iconSize) {
