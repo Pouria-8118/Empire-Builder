@@ -26,6 +26,9 @@ public class ResourceIconProvider {
         if (resourceType == TileResourceType.SHEEP) {
             return Constants.SHEEP_ICON_PATH;
         }
+        if (resourceType == TileResourceType.FISH) {
+            return Constants.FISH_ICON_PATH;
+        }
         return null;
     }
 }

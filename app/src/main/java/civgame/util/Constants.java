@@ -164,6 +164,7 @@ public class Constants {
     public static final String BUILDER_ICON_PATH = "/images/units/builder.png";
     public static final String WORKER_ICON_PATH = "/images/units/worker.png";
     public static final String BORDER_EXPANDER_ICON_PATH = "/images/units/border_expander.png";
+    public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
 
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";
@@ -181,6 +182,7 @@ public class Constants {
     public static final String RICE_ICON_PATH = "/images/resources/rice.png";
     public static final String CATTLE_ICON_PATH = "/images/resources/cattle.png";
     public static final String SHEEP_ICON_PATH = "/images/resources/sheep.png";
+    public static final String FISH_ICON_PATH = "/images/resources/fish.png";
 
     private Constants() {
     }
