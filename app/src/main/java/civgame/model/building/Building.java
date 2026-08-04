@@ -1,5 +1,6 @@
 package civgame.model.building;
 
+import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Worker;
@@ -7,7 +8,7 @@ import civgame.model.unit.Worker;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Building {
+public abstract class Building implements Attackable {
 
     private final String id;
     private final HexCoordinate coordinate;
@@ -15,6 +16,8 @@ public abstract class Building {
     private final List<Worker> stationedWorkers;
     private int missedUpkeepTurns;
     private boolean destroyed;
+    private int currentHitPoints;
+    private int maxHitPoints;
 
     public Building(String id, HexCoordinate coordinate, int workerCapacity) {
         this.id = id;
@@ -23,6 +26,8 @@ public abstract class Building {
         this.stationedWorkers = new ArrayList<Worker>();
         this.missedUpkeepTurns = 0;
         this.destroyed = false;
+        this.maxHitPoints = BuildingHitPointsProvider.getMaxHitPoints(getBuildingType());
+        this.currentHitPoints = maxHitPoints;
     }
 
     public abstract BuildingType getBuildingType();
@@ -90,5 +95,37 @@ public abstract class Building {
     public void clearAllStationedWorkers() {
         stationedWorkers.clear();
     }
+
+    @Override
+    public int getCurrentHitPoints() {
+        return currentHitPoints;
+    }
+
+    @Override
+    public int getMaxHitPoints() {
+        return maxHitPoints;
+    }
+
+    @Override
+    public boolean isDestroyedByCombat() {
+        return currentHitPoints <= 0;
+    }
+
+    @Override
+    public void applyCombatDamage(int amount) {
+        currentHitPoints = currentHitPoints - amount;
+        if (currentHitPoints < 0) {
+            currentHitPoints = 0;
+        }
+
+        if (currentHitPoints <= 0) {
+            clearAllStationedWorkers();
+            destroy();
+        }
+    }
+
+    // TODO: the future CombatService must also call
+    // gameSession.removeBuildingAt(building.getCoordinate()) after a building
+    // is destroyed by combat, the same way UpkeepService.collapseBuilding does.
     
 }

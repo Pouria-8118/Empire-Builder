@@ -75,6 +75,13 @@ public class Constants {
     public static final int FARM_PRODUCTION_PER_WORKER = 3;
     public static final int STABLE_PRODUCTION_PER_WORKER = 2;
 
+    public static final int LUMBER_MILL_MAX_HIT_POINTS = 40;
+    public static final int STONE_MINE_MAX_HIT_POINTS = 50;
+    public static final int IRON_MINE_MAX_HIT_POINTS = 50;
+    public static final int FARM_MAX_HIT_POINTS = 40;
+    public static final int STABLE_MAX_HIT_POINTS = 60;
+    public static final int DEFAULT_BUILDING_MAX_HIT_POINTS = 40;
+
     public static final int WORKER_STATION_AP_COST = 1;
 
     public static final int BUILDING_UPKEEP_WOOD_AMOUNT = 1;

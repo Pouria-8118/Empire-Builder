@@ -1,7 +1,7 @@
 package civgame.model.combat;
 
-// TODO: military Unit subclasses and Building (including TownHall and Wall)
-// will implement this interface once hit points and combat damage are introduced.
+// TODO: military Unit subclasses will implement this interface
+// once actual combat units are introduced.
 public interface Attackable {
 
     int getCurrentHitPoints();

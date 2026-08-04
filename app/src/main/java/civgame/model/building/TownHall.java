@@ -1,9 +1,10 @@
 package civgame.model.building;
 
+import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 import civgame.util.Constants;
 
-public class TownHall {
+public class TownHall implements Attackable {
 
     private final HexCoordinate coordinate;
     private TownHallLevel level;
@@ -35,10 +36,12 @@ public class TownHall {
         return level.ordinal() >= requiredLevel.ordinal();
     }
 
+    @Override
     public int getCurrentHitPoints() {
         return currentHitPoints;
     }
 
+    @Override
     public int getMaxHitPoints() {
         return maxHitPoints;
     }
@@ -54,6 +57,19 @@ public class TownHall {
         }
     }
 
+    @Override
+    public boolean isDestroyedByCombat() {
+        return currentHitPoints <= 0;
+    }
+
+    @Override
+    public void applyCombatDamage(int amount) {
+        currentHitPoints = currentHitPoints - amount;
+        if (currentHitPoints < 0) {
+            currentHitPoints = 0;
+        }
+    }
+
     public int getDefense() {
         return defense;
     }
@@ -62,6 +78,6 @@ public class TownHall {
         this.defense = defense;
     }
 
-    // TODO: implement generic combat damage handling here once TownHall
-    // implements the Attackable interface alongside Building and military Unit subclasses.
+    // TODO: decide and implement what happens at the game level
+    // when the Town Hall itself reaches 0 HP through combat.
 }

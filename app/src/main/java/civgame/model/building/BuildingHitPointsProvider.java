@@ -1,0 +1,28 @@
+package civgame.model.building;
+
+import civgame.util.Constants;
+
+public class BuildingHitPointsProvider {
+
+    private BuildingHitPointsProvider() {
+    }
+
+    public static int getMaxHitPoints(BuildingType buildingType) {
+        if (buildingType == BuildingType.FARM) {
+            return Constants.FARM_MAX_HIT_POINTS;
+        }
+        if (buildingType == BuildingType.LUMBER_MILL) {
+            return Constants.LUMBER_MILL_MAX_HIT_POINTS;
+        }
+        if (buildingType == BuildingType.STONE_MINE) {
+            return Constants.STONE_MINE_MAX_HIT_POINTS;
+        }
+        if (buildingType == BuildingType.IRON_MINE) {
+            return Constants.IRON_MINE_MAX_HIT_POINTS;
+        }
+        if (buildingType == BuildingType.STABLE) {
+            return Constants.STABLE_MAX_HIT_POINTS;
+        }
+        return Constants.DEFAULT_BUILDING_MAX_HIT_POINTS;
+    }
+}
