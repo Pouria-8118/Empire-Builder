@@ -1,6 +1,7 @@
 package civgame.controller.game;
 
 import civgame.model.building.Building;
+import civgame.model.building.TownHallUpgradeType;
 import civgame.model.game.BorderExpansionService;
 import civgame.model.game.ConstructionService;
 import civgame.model.game.FogOfWarCalculator;
@@ -9,6 +10,7 @@ import civgame.model.game.HexPathFinder;
 import civgame.model.game.StationingService;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
+import civgame.model.map.TerrainType;
 import civgame.model.unit.BorderExpander;
 import civgame.model.unit.Builder;
 import civgame.model.unit.Explorer;
@@ -157,12 +159,14 @@ public class GameController {
     private void updateReachableTilesForSelection() {
         Unit selectedUnit = selectionState.getSelectedUnit();
         boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
+        boolean navalTechUnlocked = gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.NAVAL_TECHNIQUES);
 
         Set<HexCoordinate> reachableTiles = pathFinder.findReachableTiles(
                 gameSession.getHexMap(),
                 selectedUnit.getCoordinate(),
                 selectedUnit.getCurrentActionPoints(),
-                allowUnseenTiles
+                allowUnseenTiles,
+                navalTechUnlocked
         );
         selectionState.setReachableTiles(reachableTiles);
     }
@@ -285,8 +289,9 @@ public class GameController {
 
         Unit selectedUnit = selectionState.getSelectedUnit();
         boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
+        boolean navalTechUnlocked = gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.NAVAL_TECHNIQUES);
 
-        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination, allowUnseenTiles);
+        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination, allowUnseenTiles, navalTechUnlocked);
 
         if (fullPath == null || fullPath.isEmpty()) {
             return;
@@ -302,7 +307,7 @@ public class GameController {
 
         selectedUnit.consumeActionPoints(movementCost);
         refreshSelectedUnitDisplay();
-        movementAnimator.startMovement(selectedUnit, fullPath, createMovementFinishedCallback());
+        movementAnimator.startMovement(selectedUnit, fullPath, createMovementFinishedCallback(selectedUnit));
     }
 
     private void unstationIfWorkerIsLeavingItsBuilding(Unit unit) {
@@ -328,14 +333,22 @@ public class GameController {
         return totalCost;
     }
 
-    private Runnable createMovementFinishedCallback() {
+    private Runnable createMovementFinishedCallback(Unit movedUnit) {
         return new Runnable() {
             @Override
             public void run() {
+                HexTile arrivalTile = gameSession.getHexMap().getTile(movedUnit.getCoordinate());
+                boolean nowOnSea = arrivalTile != null && arrivalTile.getTerrainType() == TerrainType.SEA;
+                movedUnit.setFloating(nowOnSea);
+                if (nowOnSea) {
+                    movedUnit.zeroRemainingActionPoints();
+                }
+
                 fogOfWarCalculator.updateVisibility(gameSession);
                 if (selectionState.hasSelection()) {
                     updateReachableTilesForSelection();
                 }
+                refreshSelectedUnitDisplay();
                 mapPanel.repaint();
             }
         };

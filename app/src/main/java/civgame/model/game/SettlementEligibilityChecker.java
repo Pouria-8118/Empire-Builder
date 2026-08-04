@@ -49,6 +49,12 @@ public class SettlementEligibilityChecker {
         if (tile.getTerrainType() == TerrainType.MOUNTAIN) {
             return !tile.isIronDepositPresent();
         }
+        if (tile.getTerrainType() == TerrainType.MOUNTAIN_RANGE) {
+            return false;
+        }
+        if (tile.getTerrainType() == TerrainType.SEA) {
+            return false;
+        }
         return tile.getResourceType() == TileResourceType.NONE;
     }
 }
