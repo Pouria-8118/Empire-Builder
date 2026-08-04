@@ -9,6 +9,7 @@ public abstract class Unit {
     private final int maxActionPoints;
     private int currentActionPoints;
     private final int visionRadius;
+    private boolean floating;
 
     public Unit(String id, HexCoordinate coordinate, int maxActionPoints, int visionRadius) {
         this.id = id;
@@ -16,6 +17,7 @@ public abstract class Unit {
         this.maxActionPoints = maxActionPoints;
         this.currentActionPoints = maxActionPoints;
         this.visionRadius = visionRadius;
+        this.floating = false;
     }
 
     public abstract UnitType getUnitType();
@@ -56,6 +58,10 @@ public abstract class Unit {
         return true;
     }
 
+    public void zeroRemainingActionPoints() {
+        currentActionPoints = 0;
+    }
+
     public void refreshActionPoints() {
         currentActionPoints = maxActionPoints;
     }
@@ -69,5 +75,13 @@ public abstract class Unit {
             if (currentActionPoints < 0) {
                 currentActionPoints = 0;
             }
+    }
+
+    public boolean isFloating() {
+        return floating;
+    }
+
+    public void setFloating(boolean floating) {
+        this.floating = floating;
     }
 }
