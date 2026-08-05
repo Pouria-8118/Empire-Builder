@@ -18,6 +18,9 @@ public class HexTileTooltipTextBuilder {
         textBuilder.append("Terrain: ").append(tile.getTerrainType().name()).append("<br>");
         textBuilder.append(buildMovementLine(tile.getTerrainType()));
         textBuilder.append(buildResourceLine(tile));
+        if (tile.isRoadPresent()) {
+            textBuilder.append("Road: Yes<br>");
+        }
         textBuilder.append(buildBuildableLine(tile));
         textBuilder.append("</html>");
         return textBuilder.toString();
