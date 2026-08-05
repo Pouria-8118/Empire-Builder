@@ -57,7 +57,7 @@ public class AutoExploreService {
             return;
         }
 
-        MovementPlan movementPlan = pathFinder.truncateToAffordablePath(gameSession.getHexMap(), fullPath, explorer.getCurrentActionPoints());
+        MovementPlan movementPlan = pathFinder.truncateToAffordablePath(gameSession.getHexMap(), explorer.getCoordinate(), fullPath, explorer.getCurrentActionPoints());
         if (movementPlan.getPath().isEmpty()) {
             return;
         }

@@ -5,6 +5,8 @@ import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
 import civgame.model.map.TileVisibility;
 import civgame.util.TerrainMovementCostProvider;
+import civgame.util.EdgeMovementCostProvider;
+import civgame.util.TerrainMovementCostProvider;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -77,7 +79,8 @@ public class HexPathFinder {
                 continue;
             }
 
-            int stepCost = TerrainMovementCostProvider.getMovementCost(neighborTile.getTerrainType());
+            int baseCost = TerrainMovementCostProvider.getMovementCost(neighborTile.getTerrainType());
+            int stepCost = EdgeMovementCostProvider.getStepCost(hexMap, current, neighbor, baseCost);
             int newCost = costSoFar.get(current) + stepCost;
 
             if (!costSoFar.containsKey(neighbor) || newCost < costSoFar.get(neighbor)) {
@@ -100,14 +103,16 @@ public class HexPathFinder {
         return path;
     }
 
-    public MovementPlan truncateToAffordablePath(HexMap hexMap, List<HexCoordinate> fullPath, int availableActionPoints) {
+    public MovementPlan truncateToAffordablePath(HexMap hexMap, HexCoordinate startCoordinate, List<HexCoordinate> fullPath, int availableActionPoints) {
         List<HexCoordinate> affordablePath = new ArrayList<HexCoordinate>();
         int totalCost = 0;
+        HexCoordinate previousCoordinate = startCoordinate;
 
         for (int i = 0; i < fullPath.size(); i++) {
             HexCoordinate coordinate = fullPath.get(i);
             HexTile tile = hexMap.getTile(coordinate);
-            int stepCost = TerrainMovementCostProvider.getMovementCost(tile.getTerrainType());
+            int baseCost = TerrainMovementCostProvider.getMovementCost(tile.getTerrainType());
+            int stepCost = EdgeMovementCostProvider.getStepCost(hexMap, previousCoordinate, coordinate, baseCost);
 
             if (totalCost + stepCost > availableActionPoints) {
                 break;
@@ -115,6 +120,7 @@ public class HexPathFinder {
 
             totalCost = totalCost + stepCost;
             affordablePath.add(coordinate);
+            previousCoordinate = coordinate;
         }
 
         return new MovementPlan(affordablePath, totalCost);
@@ -147,7 +153,8 @@ public class HexPathFinder {
                     continue;
                 }
 
-                int stepCost = TerrainMovementCostProvider.getMovementCost(neighborTile.getTerrainType());
+                int baseCost = TerrainMovementCostProvider.getMovementCost(neighborTile.getTerrainType());
+                int stepCost = EdgeMovementCostProvider.getStepCost(hexMap, current, neighbor, baseCost);
                 int newCost = costSoFar.get(current) + stepCost;
 
                 if (newCost > actionPointBudget) {
