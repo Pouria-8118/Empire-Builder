@@ -4,6 +4,7 @@ import civgame.model.building.Building;
 import civgame.model.building.TownHallUpgradeType;
 import civgame.model.game.BorderExpansionService;
 import civgame.model.game.ConstructionService;
+import civgame.model.game.RoadConstructionService;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
@@ -19,6 +20,7 @@ import civgame.model.unit.UnitType;
 import civgame.model.unit.Worker;
 import civgame.util.HexGeometry;
 import civgame.util.TerrainMovementCostProvider;
+import civgame.util.EdgeMovementCostProvider;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
 import civgame.view.game.ConstructionMenuFactory;
@@ -76,7 +78,7 @@ public class GameController {
         this.movementAnimator = gameFrame.getMovementAnimator();
         this.gameSession = gameSession;
         this.pathFinder = new HexPathFinder();
-        this.constructionMenuFactory = new ConstructionMenuFactory(new ConstructionService());
+        this.constructionMenuFactory = new ConstructionMenuFactory(new ConstructionService(), new RoadConstructionService());
         this.stationingService = new StationingService();
         this.stationingMenuFactory = new StationingMenuFactory(stationingService);
         this.townHallMenuFactory = new TownHallMenuFactory();
@@ -297,7 +299,7 @@ public class GameController {
             return;
         }
 
-        int movementCost = recalculatePathCost(fullPath);
+        int movementCost = recalculatePathCost(selectedUnit.getCoordinate(), fullPath);
 
         if (!selectedUnit.hasEnoughActionPoints(movementCost)) {
             return;
@@ -322,12 +324,16 @@ public class GameController {
         }
     }
 
-    private int recalculatePathCost(List<HexCoordinate> path) {
+    private int recalculatePathCost(HexCoordinate startCoordinate, List<HexCoordinate> path) {
         int totalCost = 0;
+        HexCoordinate previousCoordinate = startCoordinate;
 
         for (int i = 0; i < path.size(); i++) {
-            HexTile tile = gameSession.getHexMap().getTile(path.get(i));
-            totalCost = totalCost + TerrainMovementCostProvider.getMovementCost(tile.getTerrainType());
+            HexCoordinate currentCoordinate = path.get(i);
+            HexTile tile = gameSession.getHexMap().getTile(currentCoordinate);
+            int baseCost = TerrainMovementCostProvider.getMovementCost(tile.getTerrainType());
+            totalCost = totalCost + EdgeMovementCostProvider.getStepCost(gameSession.getHexMap(), previousCoordinate, currentCoordinate, baseCost);
+            previousCoordinate = currentCoordinate;
         }
 
         return totalCost;
