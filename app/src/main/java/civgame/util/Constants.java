@@ -82,6 +82,12 @@ public class Constants {
     public static final int STABLE_MAX_HIT_POINTS = 60;
     public static final int DEFAULT_BUILDING_MAX_HIT_POINTS = 40;
 
+    public static final int ROAD_CONSTRUCTION_WOOD_COST = 15;
+    public static final int ROAD_CONSTRUCTION_AP_COST = 1;
+    public static final int ROAD_MOVEMENT_COST = 1;
+    public static final int RIVER_CROSSING_EXTRA_COST = 1;
+    public static final int RIVER_CROSSING_COST_WITH_ROAD = 0;
+
     public static final int WORKER_STATION_AP_COST = 1;
 
     public static final int BUILDING_UPKEEP_WOOD_AMOUNT = 1;

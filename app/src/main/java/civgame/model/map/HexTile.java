@@ -9,6 +9,7 @@ public class HexTile {
     private final TileResourceType resourceType;
     private boolean resourceDepleted;
     private boolean ironDepositPresent;
+    private boolean roadPresent;
     private TileVisibility visibility;
     private int remainingResourceCapacity;
 
@@ -18,6 +19,7 @@ public class HexTile {
         this.resourceType = resourceType;
         this.resourceDepleted = false;
         this.ironDepositPresent = false;
+        this.roadPresent = false;
         this.visibility = TileVisibility.UNSEEN;
         this.remainingResourceCapacity = computeInitialCapacity(resourceType);
     }
@@ -56,7 +58,7 @@ public class HexTile {
     public int getRemainingResourceCapacity() {
         return remainingResourceCapacity;
     }
-    
+
     public void consumeResourceCapacity(int amount) {
         if (resourceDepleted) {
             return;
@@ -76,6 +78,14 @@ public class HexTile {
 
     public void setIronDepositPresent(boolean ironDepositPresent) {
         this.ironDepositPresent = ironDepositPresent;
+    }
+
+    public boolean isRoadPresent() {
+        return roadPresent;
+    }
+
+    public void setRoadPresent(boolean roadPresent) {
+        this.roadPresent = roadPresent;
     }
 
     public TileVisibility getVisibility() {
