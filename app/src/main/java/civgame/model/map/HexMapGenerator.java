@@ -34,6 +34,10 @@ public class HexMapGenerator {
     private static final int MAX_BARRIER_GENERATION_ATTEMPTS = 5;
     private static final double MIN_REACHABLE_OPEN_TILE_FRACTION = 0.7;
 
+    private static final int RIVER_MIN_LENGTH = 6;
+    private static final int RIVER_MAX_LENGTH = 10;
+    private static final int RIVER_MIN_DISTANCE_FROM_TOWN_HALL = 3;
+
     private static final double IRON_DEPOSIT_CHANCE = 0.3;
     private static final double GRASSLAND_RESOURCE_CHANCE = 0.5;
     private static final double PLAIN_RESOURCE_CHANCE = 0.4;
@@ -62,9 +66,44 @@ public class HexMapGenerator {
         applyImpassableRangeTerrain(hexMap, impassableRangeTiles);
         applySeaTerrain(hexMap, seaTiles);
         applyRemainingTerrain(hexMap, forestTiles, mountainTiles, impassableRangeTiles, seaTiles);
+        generateRiver(hexMap, townHallCoordinate);
 
         HexTile clearedTownHallTile = new HexTile(townHallCoordinate, TerrainType.PLAIN, TileResourceType.NONE);
         hexMap.setTile(townHallCoordinate, clearedTownHallTile);
+    }
+
+    private void generateRiver(HexMap hexMap, HexCoordinate townHallCoordinate) {
+        HexCoordinate startCoordinate = pickRandomCoordinateFarFromTownHall(hexMap, townHallCoordinate, RIVER_MIN_DISTANCE_FROM_TOWN_HALL);
+        if (startCoordinate == null) {
+            return;
+        }
+
+        int riverLength = randomBetween(RIVER_MIN_LENGTH, RIVER_MAX_LENGTH);
+        HexCoordinate current = startCoordinate;
+        Set<HexCoordinate> visited = new HashSet<HexCoordinate>();
+        visited.add(current);
+
+        for (int i = 1; i < riverLength; i++) {
+            List<HexCoordinate> neighbors = current.getNeighbors();
+            Collections.shuffle(neighbors, random);
+
+            HexCoordinate nextCoordinate = null;
+            for (int j = 0; j < neighbors.size(); j++) {
+                HexCoordinate neighbor = neighbors.get(j);
+                if (hexMap.containsCoordinate(neighbor) && !visited.contains(neighbor) && !neighbor.equals(townHallCoordinate)) {
+                    nextCoordinate = neighbor;
+                    break;
+                }
+            }
+
+            if (nextCoordinate == null) {
+                break;
+            }
+
+            hexMap.getOrCreateEdgeFeatures(current, nextCoordinate).setRiverPresent(true);
+            visited.add(nextCoordinate);
+            current = nextCoordinate;
+        }
     }
 
     private Set<HexCoordinate> generateForestPatches(HexMap hexMap, HexCoordinate townHallCoordinate) {
