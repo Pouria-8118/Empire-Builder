@@ -4,6 +4,7 @@ import civgame.model.building.Building;
 import civgame.model.building.TownHall;
 import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
+import civgame.model.map.HexEdge;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
@@ -22,6 +23,7 @@ import civgame.util.UnitIconProvider;
 
 import javax.swing.JPanel;
 import javax.swing.ToolTipManager;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -30,6 +32,7 @@ import java.awt.Image;
 import java.awt.Polygon;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
+import java.util.Set;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -98,6 +101,7 @@ public class MapPanel extends JPanel {
         double centerY = getPanelCenterY();
 
         drawAllTiles(graphics2D, hexSize, centerX, centerY);
+        drawAllRivers(graphics2D, hexSize, centerX, centerY);
         drawTownHall(graphics2D, hexSize, centerX, centerY);
         drawAllBuildings(graphics2D, hexSize, centerX, centerY);
         drawAllSettlements(graphics2D, hexSize, centerX, centerY);
@@ -111,6 +115,46 @@ public class MapPanel extends JPanel {
         for (HexTile tile : allTiles.values()) {
             drawTile(graphics2D, tile, hexSize, centerX, centerY);
         }
+    }
+
+    private void drawAllRivers(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        HexMap hexMap = gameSession.getHexMap();
+        Set<HexEdge> riverEdges = hexMap.getRiverEdges();
+
+        graphics2D.setColor(new Color(50, 110, 200));
+        graphics2D.setStroke(new BasicStroke((float) (hexSize * 0.12)));
+
+        for (HexEdge edge : riverEdges) {
+            HexTile firstTile = hexMap.getTile(edge.getFirst());
+            HexTile secondTile = hexMap.getTile(edge.getSecond());
+
+            if (firstTile == null || secondTile == null) {
+                continue;
+            }
+            if (firstTile.getVisibility() == TileVisibility.UNSEEN && secondTile.getVisibility() == TileVisibility.UNSEEN) {
+                continue;
+            }
+
+            Point2D firstPixel = HexGeometry.axialToPixel(edge.getFirst(), hexSize);
+            Point2D secondPixel = HexGeometry.axialToPixel(edge.getSecond(), hexSize);
+
+            int x1 = (int) (centerX + firstPixel.getX());
+            int y1 = (int) (centerY + firstPixel.getY());
+            int x2 = (int) (centerX + secondPixel.getX());
+            int y2 = (int) (centerY + secondPixel.getY());
+
+            graphics2D.drawLine(x1, y1, x2, y2);
+        }
+
+        graphics2D.setStroke(new BasicStroke(1f));
+    }
+
+    private void drawRoadMarker(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
+        graphics2D.setColor(new Color(150, 110, 60));
+        int dotSize = (int) (hexSize * 0.18);
+        int dotX = (int) (centerX - dotSize / 2.0);
+        int dotY = (int) (centerY + hexSize * 0.55 - dotSize / 2.0);
+        graphics2D.fillOval(dotX, dotY, dotSize, dotSize);
     }
 
     private void drawTile(Graphics2D graphics2D, HexTile tile, double hexSize, double centerX, double centerY) {
@@ -139,6 +183,10 @@ public class MapPanel extends JPanel {
 
         if (tile.getTerrainType() == TerrainType.MOUNTAIN_RANGE && tile.getVisibility() != TileVisibility.UNSEEN) {
             drawMountainRangeOverlay(graphics2D, tileCenterX, tileCenterY, hexSize);
+        }
+
+        if (tile.isRoadPresent() && tile.getVisibility() != TileVisibility.UNSEEN) {
+            drawRoadMarker(graphics2D, tileCenterX, tileCenterY, hexSize);
         }
 
         boolean hasBuildingHere = gameSession.getBuildingAt(tile.getCoordinate()) != null;
