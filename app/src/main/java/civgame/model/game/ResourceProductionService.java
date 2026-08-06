@@ -13,6 +13,7 @@ public class ResourceProductionService {
 
     public List<String> applyProduction(GameSession gameSession) {
         List<String> depletedDescriptions = applyBuildingProduction(gameSession);
+        applyFarmSynergyBonus(gameSession);
         applyTownHallSafeguardProduction(gameSession);
         return depletedDescriptions;
     }
@@ -39,7 +40,10 @@ public class ResourceProductionService {
                 continue;
             }
 
-            gameSession.getResourceStorage().addResource(building.getResourceProduced(), producedAmount);
+            int adjacencyBonus = gameSession.getAdjacencyBonusService().getBuildingBonus(building);
+            int totalProducedAmount = producedAmount + adjacencyBonus;
+
+            gameSession.getResourceStorage().addResource(building.getResourceProduced(), totalProducedAmount);
             resourceTile.consumeResourceCapacity(producedAmount);
 
             if (!resourceTile.hasResource()) {
@@ -56,6 +60,13 @@ public class ResourceProductionService {
             return DockResourceFinder.findAdjacentFishTile(gameSession, building.getCoordinate());
         }
         return gameSession.getHexMap().getTile(building.getCoordinate());
+    }
+
+    private void applyFarmSynergyBonus(GameSession gameSession) {
+        int bonus = gameSession.getAdjacencyBonusService().getFarmSynergyBonus();
+        if (bonus > 0) {
+            gameSession.getResourceStorage().addResource(ResourceType.FOOD, bonus);
+        }
     }
 
     private void applyTownHallSafeguardProduction(GameSession gameSession) {

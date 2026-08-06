@@ -5,6 +5,7 @@ import civgame.model.map.HexEdge;
 import civgame.model.map.Wall;
 import civgame.model.resource.ResourceType;
 import civgame.util.Constants;
+import civgame.model.event.BuildingDestroyedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,7 @@ public class UpkeepService {
         building.clearAllStationedWorkers();
         building.destroy();
         gameSession.removeBuildingAt(building.getCoordinate());
+        gameSession.getEventBus().publish(new BuildingDestroyedEvent(building));
     }
 
     public List<HexEdge> applyWallUpkeep(GameSession gameSession) {

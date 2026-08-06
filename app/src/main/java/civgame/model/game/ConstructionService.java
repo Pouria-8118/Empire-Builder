@@ -11,7 +11,7 @@ import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Builder;
-
+import civgame.model.event.BuildingPlacedEvent;
 public class ConstructionService {
 
     private final BuildingFactory buildingFactory;
@@ -84,6 +84,7 @@ public class ConstructionService {
 
         Building newBuilding = buildingFactory.createBuilding(buildingType, targetCoordinate);
         gameSession.addBuilding(newBuilding);
+        gameSession.getEventBus().publish(new BuildingPlacedEvent(newBuilding));
 
         builder.consumeCharge();
         if (builder.isOutOfCharges()) {

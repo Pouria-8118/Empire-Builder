@@ -28,6 +28,7 @@ public class GameSession {
     private final TownHallLevelService townHallLevelService;
     private final TownHallProductionQueue townHallProductionQueue;
     private final GameEventBus eventBus;
+    private final AdjacencyBonusService adjacencyBonusService;
     private int unitCap;
     private int currentTurnNumber;
     private boolean inStarvation;
@@ -44,7 +45,9 @@ public class GameSession {
         this.townHallLevelService = new TownHallLevelService();
         this.townHallProductionQueue = new TownHallProductionQueue();
         this.eventBus = new GameEventBus();
+        this.adjacencyBonusService = new AdjacencyBonusService();
         this.unitCap = initialUnitCap;
+        this.adjacencyBonusService.subscribeTo(this);
         this.currentTurnNumber = 1;
         this.inStarvation = false;
         claimInitialBorderAroundTownHall();
@@ -155,6 +158,10 @@ public class GameSession {
 
     public GameEventBus getEventBus() {
         return eventBus;
+    }
+
+    public AdjacencyBonusService getAdjacencyBonusService() {
+        return adjacencyBonusService;
     }
     
     public int getCurrentTurnNumber() {

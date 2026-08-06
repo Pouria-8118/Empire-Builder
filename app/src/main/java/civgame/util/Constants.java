@@ -103,6 +103,11 @@ public class Constants {
 
     public static final int DOCK_MAX_HIT_POINTS = 45;
 
+    public static final int FARM_SYNERGY_BONUS_PER_PAIR = 1;
+    public static final int COASTAL_LUMBER_MILL_BONUS = 2;
+    public static final int DEEP_MINE_MIN_MOUNTAIN_NEIGHBORS = 2;
+    public static final int DEEP_MINE_BONUS = 1;
+
     public static final int WORKER_STATION_AP_COST = 1;
 
     public static final int BUILDING_UPKEEP_WOOD_AMOUNT = 1;
