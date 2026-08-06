@@ -4,6 +4,7 @@ import civgame.model.building.BuildingPlacementValidator;
 import civgame.model.building.BuildingType;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
+import civgame.model.map.HexMap;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ public class HexTileTooltipTextBuilder {
     private HexTileTooltipTextBuilder() {
     }
 
-    public static String build(HexTile tile) {
+    public static String build(HexTile tile, HexMap hexMap) {
         StringBuilder textBuilder = new StringBuilder();
         textBuilder.append("<html>");
         textBuilder.append("Terrain: ").append(tile.getTerrainType().name()).append("<br>");
@@ -21,7 +22,7 @@ public class HexTileTooltipTextBuilder {
         if (tile.isRoadPresent()) {
             textBuilder.append("Road: Yes<br>");
         }
-        textBuilder.append(buildBuildableLine(tile));
+        textBuilder.append(buildBuildableLine(tile, hexMap));
         textBuilder.append("</html>");
         return textBuilder.toString();
     }
@@ -44,8 +45,8 @@ public class HexTileTooltipTextBuilder {
         return "Resource: " + tile.getResourceType().name() + "<br>";
     }
 
-    private static String buildBuildableLine(HexTile tile) {
-        List<BuildingType> availableTypes = BuildingPlacementValidator.getAvailableBuildingTypes(tile);
+    private static String buildBuildableLine(HexTile tile, HexMap hexMap) {
+        List<BuildingType> availableTypes = BuildingPlacementValidator.getAvailableBuildingTypes(tile, hexMap);
         if (availableTypes.isEmpty()) {
             return "Buildable: None";
         }

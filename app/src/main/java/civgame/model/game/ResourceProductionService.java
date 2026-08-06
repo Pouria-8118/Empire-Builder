@@ -1,6 +1,7 @@
 package civgame.model.game;
 
 import civgame.model.building.Building;
+import civgame.model.building.Dock;
 import civgame.model.map.HexTile;
 import civgame.model.resource.ResourceType;
 import civgame.util.Constants;
@@ -26,8 +27,8 @@ public class ResourceProductionService {
                 continue;
             }
 
-            HexTile tile = gameSession.getHexMap().getTile(building.getCoordinate());
-            if (tile == null || !tile.hasResource()) {
+            HexTile resourceTile = resolveResourceTile(gameSession, building);
+            if (resourceTile == null || !resourceTile.hasResource()) {
                 continue;
             }
 
@@ -39,15 +40,22 @@ public class ResourceProductionService {
             }
 
             gameSession.getResourceStorage().addResource(building.getResourceProduced(), producedAmount);
-            tile.consumeResourceCapacity(producedAmount);
+            resourceTile.consumeResourceCapacity(producedAmount);
 
-            if (!tile.hasResource()) {
+            if (!resourceTile.hasResource()) {
                 building.clearAllStationedWorkers();
                 depletedDescriptions.add(building.getBuildingType().name() + " ran out of resources");
             }
         }
 
         return depletedDescriptions;
+    }
+
+    private HexTile resolveResourceTile(GameSession gameSession, Building building) {
+        if (building instanceof Dock) {
+            return DockResourceFinder.findAdjacentFishTile(gameSession, building.getCoordinate());
+        }
+        return gameSession.getHexMap().getTile(building.getCoordinate());
     }
 
     private void applyTownHallSafeguardProduction(GameSession gameSession) {

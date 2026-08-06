@@ -1,5 +1,7 @@
 package civgame.model.building;
 
+import civgame.model.map.HexCoordinate;
+import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TileResourceType;
@@ -12,7 +14,7 @@ public class BuildingPlacementValidator {
     private BuildingPlacementValidator() {
     }
 
-    public static boolean isTerrainValid(BuildingType buildingType, HexTile tile) {
+    public static boolean isTerrainValid(BuildingType buildingType, HexTile tile, HexMap hexMap) {
         if (buildingType == BuildingType.LUMBER_MILL) {
             return tile.getTerrainType() == TerrainType.FOREST;
         }
@@ -24,6 +26,9 @@ public class BuildingPlacementValidator {
         }
         if (buildingType == BuildingType.FARM) {
             return isFarmResourcePresent(tile);
+        }
+        if (buildingType == BuildingType.DOCK) {
+            return isCoastalTile(tile, hexMap);
         }
         return isStableResourcePresent(tile);
     }
@@ -42,12 +47,33 @@ public class BuildingPlacementValidator {
         return tile.getResourceType() == TileResourceType.CATTLE || tile.getResourceType() == TileResourceType.SHEEP;
     }
 
-    public static List<BuildingType> getAvailableBuildingTypes(HexTile tile) {
+    private static boolean isCoastalTile(HexTile tile, HexMap hexMap) {
+        if (tile.getTerrainType() == TerrainType.SEA || tile.getTerrainType() == TerrainType.MOUNTAIN_RANGE) {
+            return false;
+        }
+
+        List<HexCoordinate> neighbors = tile.getCoordinate().getNeighbors();
+        for (int i = 0; i < neighbors.size(); i++) {
+            HexCoordinate neighborCoordinate = neighbors.get(i);
+            if (!hexMap.containsCoordinate(neighborCoordinate)) {
+                continue;
+            }
+
+            HexTile neighborTile = hexMap.getTile(neighborCoordinate);
+            if (neighborTile.getTerrainType() == TerrainType.SEA) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static List<BuildingType> getAvailableBuildingTypes(HexTile tile, HexMap hexMap) {
         List<BuildingType> availableTypes = new ArrayList<BuildingType>();
         BuildingType[] allTypes = BuildingType.values();
 
         for (int i = 0; i < allTypes.length; i++) {
-            if (isTerrainValid(allTypes[i], tile)) {
+            if (isTerrainValid(allTypes[i], tile, hexMap)) {
                 availableTypes.add(allTypes[i]);
             }
         }

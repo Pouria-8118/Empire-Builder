@@ -50,7 +50,7 @@ public class ConstructionMenuFactory {
         PopupMenuStyler.style(popupMenu);
 
         HexTile tile = gameSession.getHexMap().getTile(builder.getCoordinate());
-        List<BuildingType> availableTypes = BuildingPlacementValidator.getAvailableBuildingTypes(tile);
+        List<BuildingType> availableTypes = BuildingPlacementValidator.getAvailableBuildingTypes(tile, gameSession.getHexMap());
 
         if (availableTypes.isEmpty()) {
             JMenuItem emptyItem = StyledMenuItemFactory.createItem(null, "No valid building here", "This tile has no matching resource", "", false, null);

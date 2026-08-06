@@ -5,6 +5,7 @@ import civgame.model.building.BuildingCostProvider;
 import civgame.model.building.BuildingFactory;
 import civgame.model.building.BuildingPlacementValidator;
 import civgame.model.building.BuildingType;
+import civgame.model.building.TownHallLevel;
 import civgame.model.building.TownHallUpgradeType;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
@@ -40,7 +41,7 @@ public class ConstructionService {
         if (targetTile == null) {
             return false;
         }
-        if (!BuildingPlacementValidator.isTerrainValid(buildingType, targetTile)) {
+        if (!BuildingPlacementValidator.isTerrainValid(buildingType, targetTile, gameSession.getHexMap())) {
             return false;
         }
 
@@ -63,6 +64,9 @@ public class ConstructionService {
         }
         if (buildingType == BuildingType.IRON_MINE) {
             return gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.IRON_MINE_TECH);
+        }
+        if (buildingType == BuildingType.DOCK) {
+            return gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.SETTLEMENT);
         }
         return true;
     }

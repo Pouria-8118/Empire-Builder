@@ -20,6 +20,9 @@ public class BuildingIconProvider {
         if (buildingType == BuildingType.FARM) {
             return Constants.FARM_ICON_PATH;
         }
+        if (buildingType == BuildingType.DOCK) {
+            return Constants.DOCK_ICON_PATH;
+        }
         return Constants.STABLE_ICON_PATH;
     }
 
@@ -35,6 +38,9 @@ public class BuildingIconProvider {
         }
         if (buildingType == BuildingType.FARM) {
             return "FM";
+        }
+        if (buildingType == BuildingType.DOCK) {
+            return "DK";
         }
         return "ST";
     }

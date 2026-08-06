@@ -1,6 +1,7 @@
 package civgame.model.game;
 
 import civgame.model.building.Building;
+import civgame.model.building.Dock;
 import civgame.model.map.HexTile;
 import civgame.model.unit.Worker;
 import civgame.util.Constants;
@@ -43,12 +44,19 @@ public class StationingService {
             return false;
         }
 
-        HexTile tile = gameSession.getHexMap().getTile(building.getCoordinate());
-        if (tile == null || !tile.hasResource()) {
+        HexTile resourceTile = resolveResourceTile(gameSession, building);
+        if (resourceTile == null || !resourceTile.hasResource()) {
             return false;
         }
 
         return true;
+    }
+
+    private HexTile resolveResourceTile(GameSession gameSession, Building building) {
+        if (building instanceof Dock) {
+            return DockResourceFinder.findAdjacentFishTile(gameSession, building.getCoordinate());
+        }
+        return gameSession.getHexMap().getTile(building.getCoordinate());
     }
 
     public boolean station(GameSession gameSession, Worker worker, Building building) {

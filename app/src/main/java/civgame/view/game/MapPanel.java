@@ -89,7 +89,7 @@ public class MapPanel extends JPanel {
             return null;
         }
 
-        return HexTileTooltipTextBuilder.build(tile);
+        return HexTileTooltipTextBuilder.build(tile, gameSession.getHexMap());
     }
 
     @Override

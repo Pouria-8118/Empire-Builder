@@ -22,6 +22,9 @@ public class BuildingColorProvider {
         if (buildingType == BuildingType.FARM) {
             return new Color(220, 200, 60);
         }
+        if (buildingType == BuildingType.DOCK) {
+            return new Color(90, 140, 160);
+        }
         return new Color(180, 130, 90);
     }
 

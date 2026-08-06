@@ -101,6 +101,8 @@ public class Constants {
 
     public static final int DEMOLITION_AP_COST = 1;
 
+    public static final int DOCK_MAX_HIT_POINTS = 45;
+
     public static final int WORKER_STATION_AP_COST = 1;
 
     public static final int BUILDING_UPKEEP_WOOD_AMOUNT = 1;
@@ -191,6 +193,7 @@ public class Constants {
     public static final String IRON_MINE_ICON_PATH = "/images/buildings/iron_mine.png";
     public static final String FARM_ICON_PATH = "/images/buildings/farm.png";
     public static final String STABLE_ICON_PATH = "/images/buildings/stable.png";
+    public static final String DOCK_ICON_PATH = "/images/buildings/dock.png";
     public static final String SETTLEMENT_ICON_PATH = "/images/buildings/settlement.png";
 
     public static final String FOOD_ICON_PATH = "/images/resources/food.png";

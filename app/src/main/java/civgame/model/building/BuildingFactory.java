@@ -22,6 +22,10 @@ public class BuildingFactory {
             String id = BuildingIdGenerator.generateNextId("FARM");
             return new Farm(id, coordinate);
         }
+        if (buildingType == BuildingType.DOCK) {
+            String id = BuildingIdGenerator.generateNextId("DOCK");
+            return new Dock(id, coordinate);
+        }
 
         String id = BuildingIdGenerator.generateNextId("STABLE");
         return new Stable(id, coordinate);

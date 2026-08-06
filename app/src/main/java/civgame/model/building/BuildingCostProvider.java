@@ -20,6 +20,9 @@ public class BuildingCostProvider {
         if (buildingType == BuildingType.FARM) {
             return Constants.FARM_WOOD_COST;
         }
+        if (buildingType == BuildingType.DOCK) {
+            return Constants.DOCK_WOOD_COST;
+        }
         return Constants.STABLE_WOOD_COST;
     }
 
@@ -35,6 +38,9 @@ public class BuildingCostProvider {
         }
         if (buildingType == BuildingType.FARM) {
             return Constants.FARM_CONSTRUCTION_AP_COST;
+        }
+        if (buildingType == BuildingType.DOCK) {
+            return Constants.DOCK_CONSTRUCTION_AP_COST;
         }
         return Constants.STABLE_CONSTRUCTION_AP_COST;
     }
