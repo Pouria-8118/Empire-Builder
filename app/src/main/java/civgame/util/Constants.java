@@ -56,24 +56,28 @@ public class Constants {
     public static final int IRON_MINE_WOOD_COST = 20;
     public static final int FARM_WOOD_COST = 10;
     public static final int STABLE_WOOD_COST = 15;
+    public static final int DOCK_WOOD_COST = 25;
 
     public static final int LUMBER_MILL_CONSTRUCTION_AP_COST = 1;
     public static final int STONE_MINE_CONSTRUCTION_AP_COST = 2;
     public static final int IRON_MINE_CONSTRUCTION_AP_COST = 2;
     public static final int FARM_CONSTRUCTION_AP_COST = 1;
     public static final int STABLE_CONSTRUCTION_AP_COST = 2;
+    public static final int DOCK_CONSTRUCTION_AP_COST = 2;
 
     public static final int LUMBER_MILL_WORKER_CAPACITY = 3;
     public static final int STONE_MINE_WORKER_CAPACITY = 3;
     public static final int IRON_MINE_WORKER_CAPACITY = 2;
     public static final int FARM_WORKER_CAPACITY = 3;
     public static final int STABLE_WORKER_CAPACITY = 2;
+    public static final int DOCK_WORKER_CAPACITY = 2;
 
     public static final int LUMBER_MILL_PRODUCTION_PER_WORKER = 3;
     public static final int STONE_MINE_PRODUCTION_PER_WORKER = 2;
     public static final int IRON_MINE_PRODUCTION_PER_WORKER = 1;
     public static final int FARM_PRODUCTION_PER_WORKER = 3;
     public static final int STABLE_PRODUCTION_PER_WORKER = 2;
+    public static final int DOCK_PRODUCTION_PER_WORKER = 3;
 
     public static final int LUMBER_MILL_MAX_HIT_POINTS = 40;
     public static final int STONE_MINE_MAX_HIT_POINTS = 50;
