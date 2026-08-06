@@ -3,9 +3,7 @@ package civgame.model.map;
 public class HexEdgeFeatures {
 
     private boolean riverPresent;
-
-    // TODO: add a wallPresent flag here once the Wall model is introduced,
-    // since a wall is also built on the edge between two hexes.
+    private Wall wall;
 
     public boolean isRiverPresent() {
         return riverPresent;
@@ -13,5 +11,17 @@ public class HexEdgeFeatures {
 
     public void setRiverPresent(boolean riverPresent) {
         this.riverPresent = riverPresent;
+    }
+
+    public boolean hasActiveWall() {
+        return wall != null && wall.isActive();
+    }
+
+    public Wall getWall() {
+        return wall;
+    }
+
+    public void setWall(Wall wall) {
+        this.wall = wall;
     }
 }

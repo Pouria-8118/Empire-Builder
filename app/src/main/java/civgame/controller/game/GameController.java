@@ -5,6 +5,7 @@ import civgame.model.building.TownHallUpgradeType;
 import civgame.model.game.BorderExpansionService;
 import civgame.model.game.ConstructionService;
 import civgame.model.game.RoadConstructionService;
+import civgame.model.game.WallConstructionService;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
@@ -78,7 +79,7 @@ public class GameController {
         this.movementAnimator = gameFrame.getMovementAnimator();
         this.gameSession = gameSession;
         this.pathFinder = new HexPathFinder();
-        this.constructionMenuFactory = new ConstructionMenuFactory(new ConstructionService(), new RoadConstructionService());
+        this.constructionMenuFactory = new ConstructionMenuFactory(new ConstructionService(), new RoadConstructionService(), new WallConstructionService());
         this.stationingService = new StationingService();
         this.stationingMenuFactory = new StationingMenuFactory(stationingService);
         this.townHallMenuFactory = new TownHallMenuFactory();

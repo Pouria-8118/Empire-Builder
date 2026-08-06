@@ -26,6 +26,7 @@ public class TurnEngine {
         String completedProductionDescription = processProductionQueue(gameSession);
 
         List<String> destroyedBuildingIds = upkeepService.applyBuildingUpkeep(gameSession);
+        upkeepService.applyWallUpkeep(gameSession);
         boolean starvationTriggered = upkeepService.applyUnitFoodConsumption(gameSession);
 
         gameSession.setInStarvation(starvationTriggered);

@@ -5,6 +5,7 @@ import civgame.model.building.TownHall;
 import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexEdge;
+import civgame.model.map.Wall;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
@@ -102,6 +103,7 @@ public class MapPanel extends JPanel {
 
         drawAllTiles(graphics2D, hexSize, centerX, centerY);
         drawAllRivers(graphics2D, hexSize, centerX, centerY);
+        drawAllWalls(graphics2D, hexSize, centerX, centerY);
         drawTownHall(graphics2D, hexSize, centerX, centerY);
         drawAllBuildings(graphics2D, hexSize, centerX, centerY);
         drawAllSettlements(graphics2D, hexSize, centerX, centerY);
@@ -125,6 +127,38 @@ public class MapPanel extends JPanel {
         graphics2D.setStroke(new BasicStroke((float) (hexSize * 0.12)));
 
         for (HexEdge edge : riverEdges) {
+            HexTile firstTile = hexMap.getTile(edge.getFirst());
+            HexTile secondTile = hexMap.getTile(edge.getSecond());
+
+            if (firstTile == null || secondTile == null) {
+                continue;
+            }
+            if (firstTile.getVisibility() == TileVisibility.UNSEEN && secondTile.getVisibility() == TileVisibility.UNSEEN) {
+                continue;
+            }
+
+            Point2D firstPixel = HexGeometry.axialToPixel(edge.getFirst(), hexSize);
+            Point2D secondPixel = HexGeometry.axialToPixel(edge.getSecond(), hexSize);
+
+            int x1 = (int) (centerX + firstPixel.getX());
+            int y1 = (int) (centerY + firstPixel.getY());
+            int x2 = (int) (centerX + secondPixel.getX());
+            int y2 = (int) (centerY + secondPixel.getY());
+
+            graphics2D.drawLine(x1, y1, x2, y2);
+        }
+
+        graphics2D.setStroke(new BasicStroke(1f));
+    }
+
+    private void drawAllWalls(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        HexMap hexMap = gameSession.getHexMap();
+        Map<HexEdge, Wall> walls = hexMap.getAllActiveWalls();
+
+        graphics2D.setColor(new Color(90, 80, 70));
+        graphics2D.setStroke(new BasicStroke((float) (hexSize * 0.18)));
+
+        for (HexEdge edge : walls.keySet()) {
             HexTile firstTile = hexMap.getTile(edge.getFirst());
             HexTile secondTile = hexMap.getTile(edge.getSecond());
 

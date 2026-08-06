@@ -98,4 +98,28 @@ public class HexMap {
 
         return riverEdges;
     }
+
+    public boolean hasActiveWall(HexCoordinate coordinateA, HexCoordinate coordinateB) {
+        HexEdgeFeatures features = getEdgeFeatures(coordinateA, coordinateB);
+        return features != null && features.hasActiveWall();
+    }
+
+    public Map<HexEdge, Wall> getAllActiveWalls() {
+        Map<HexEdge, Wall> walls = new HashMap<HexEdge, Wall>();
+
+        for (Map.Entry<HexEdge, HexEdgeFeatures> entry : edgeFeatures.entrySet()) {
+            if (entry.getValue().hasActiveWall()) {
+                walls.put(entry.getKey(), entry.getValue().getWall());
+            }
+        }
+
+        return walls;
+    }
+
+    public void removeWall(HexEdge edge) {
+        HexEdgeFeatures features = edgeFeatures.get(edge);
+        if (features != null) {
+            features.setWall(null);
+        }
+    }
 }
