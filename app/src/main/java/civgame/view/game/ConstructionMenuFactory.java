@@ -1,10 +1,12 @@
 package civgame.view.game;
 
+import civgame.model.building.Building;
 import civgame.model.building.BuildingCostProvider;
 import civgame.model.building.BuildingPlacementValidator;
 import civgame.model.building.BuildingType;
 import civgame.model.building.TownHallUpgradeType;
 import civgame.model.game.ConstructionService;
+import civgame.model.game.DemolitionService;
 import civgame.model.game.GameSession;
 import civgame.model.game.RoadConstructionService;
 import civgame.model.game.WallConstructionService;
@@ -20,8 +22,11 @@ import civgame.util.MenuIconResolver;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
+
+import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -31,11 +36,13 @@ public class ConstructionMenuFactory {
     private final ConstructionService constructionService;
     private final RoadConstructionService roadConstructionService;
     private final WallConstructionService wallConstructionService;
+    private final DemolitionService demolitionService;
 
-    public ConstructionMenuFactory(ConstructionService constructionService, RoadConstructionService roadConstructionService, WallConstructionService wallConstructionService) {
+    public ConstructionMenuFactory(ConstructionService constructionService, RoadConstructionService roadConstructionService, WallConstructionService wallConstructionService, DemolitionService demolitionService) {
         this.constructionService = constructionService;
         this.roadConstructionService = roadConstructionService;
         this.wallConstructionService = wallConstructionService;
+        this.demolitionService = demolitionService;
     }
 
     public JPopupMenu buildMenu(GameSession gameSession, Builder builder, Runnable onBuildSuccess) {
@@ -57,8 +64,122 @@ public class ConstructionMenuFactory {
         popupMenu.add(new JSeparator());
         popupMenu.add(createRoadMenuItem(gameSession, builder, onBuildSuccess));
         popupMenu.add(createWallMenu(gameSession, builder, onBuildSuccess));
+        popupMenu.add(createDemolishMenu(gameSession, builder, onBuildSuccess));
 
         return popupMenu;
+    }
+
+    private JMenu createDemolishMenu(GameSession gameSession, Builder builder, Runnable onActionSuccess) {
+        JMenu demolishMenu = new JMenu("Demolish");
+        boolean anyItemAdded = false;
+
+        List<HexCoordinate> selfAndNeighbors = new ArrayList<HexCoordinate>();
+        selfAndNeighbors.add(builder.getCoordinate());
+        selfAndNeighbors.addAll(builder.getCoordinate().getNeighbors());
+
+        for (int i = 0; i < selfAndNeighbors.size(); i++) {
+            HexCoordinate coordinate = selfAndNeighbors.get(i);
+            if (!gameSession.getHexMap().containsCoordinate(coordinate)) {
+                continue;
+            }
+
+            Building building = gameSession.getBuildingAt(coordinate);
+            if (building != null) {
+                demolishMenu.add(createDemolishBuildingItem(gameSession, builder, coordinate, building, onActionSuccess));
+                anyItemAdded = true;
+            }
+
+            HexTile tile = gameSession.getHexMap().getTile(coordinate);
+            if (tile.isRoadPresent()) {
+                demolishMenu.add(createDemolishRoadItem(gameSession, builder, coordinate, onActionSuccess));
+                anyItemAdded = true;
+            }
+        }
+
+        List<HexCoordinate> neighbors = builder.getCoordinate().getNeighbors();
+        for (int i = 0; i < neighbors.size(); i++) {
+            HexCoordinate neighborCoordinate = neighbors.get(i);
+            if (gameSession.getHexMap().hasActiveWall(builder.getCoordinate(), neighborCoordinate)) {
+                demolishMenu.add(createDemolishWallItem(gameSession, builder, neighborCoordinate, onActionSuccess));
+                anyItemAdded = true;
+            }
+        }
+
+        if (!anyItemAdded) {
+            demolishMenu.add(StyledMenuItemFactory.createItem(null, "Nothing to demolish", "No building, road or wall nearby", "", false, null));
+        }
+
+        return demolishMenu;
+    }
+
+    private JMenuItem createDemolishBuildingItem(GameSession gameSession, Builder builder, HexCoordinate targetCoordinate, Building building, Runnable onActionSuccess) {
+        String title = "Building: " + building.getBuildingType().name() + " at (" + targetCoordinate.getQ() + ", " + targetCoordinate.getR() + ")";
+        boolean canDemolish = demolitionService.canDemolishBuilding(gameSession, builder, targetCoordinate);
+        String reason = canDemolish ? "" : "Not enough Action Points";
+
+        ActionListener actionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                int confirmation = JOptionPane.showConfirmDialog(null, "Demolish this building permanently? Spent resources will not be refunded.", "Confirm Demolition", JOptionPane.YES_NO_OPTION);
+                if (confirmation != JOptionPane.YES_OPTION) {
+                    return;
+                }
+
+                boolean success = demolitionService.demolishBuilding(gameSession, builder, targetCoordinate);
+                if (success && onActionSuccess != null) {
+                    onActionSuccess.run();
+                }
+            }
+        };
+
+        return StyledMenuItemFactory.createItem(null, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
+    }
+
+    private JMenuItem createDemolishRoadItem(GameSession gameSession, Builder builder, HexCoordinate targetCoordinate, Runnable onActionSuccess) {
+        String title = "Road at (" + targetCoordinate.getQ() + ", " + targetCoordinate.getR() + ")";
+        boolean canDemolish = demolitionService.canDemolishRoad(gameSession, builder, targetCoordinate);
+        String reason = canDemolish ? "" : "Not enough Action Points";
+
+        ActionListener actionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                int confirmation = JOptionPane.showConfirmDialog(null, "Demolish this road permanently?", "Confirm Demolition", JOptionPane.YES_NO_OPTION);
+                if (confirmation != JOptionPane.YES_OPTION) {
+                    return;
+                }
+
+                boolean success = demolitionService.demolishRoad(gameSession, builder, targetCoordinate);
+                if (success && onActionSuccess != null) {
+                    onActionSuccess.run();
+                }
+            }
+        };
+
+        return StyledMenuItemFactory.createItem(null, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
+    }
+
+    private JMenuItem createDemolishWallItem(GameSession gameSession, Builder builder, HexCoordinate neighborCoordinate, Runnable onActionSuccess) {
+        HexCoordinate fromCoordinate = builder.getCoordinate();
+        String title = "Wall toward (" + neighborCoordinate.getQ() + ", " + neighborCoordinate.getR() + ")";
+        boolean canDemolish = demolitionService.canDemolishWall(gameSession, builder, fromCoordinate, neighborCoordinate);
+        String reason = canDemolish ? "" : "Not enough Action Points";
+
+        ActionListener actionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                int confirmation = JOptionPane.showConfirmDialog(null, "Demolish this wall permanently?", "Confirm Demolition", JOptionPane.YES_NO_OPTION);
+                if (confirmation != JOptionPane.YES_OPTION) {
+                    return;
+                }
+
+                boolean success = demolitionService.demolishWall(gameSession, builder, fromCoordinate, neighborCoordinate);
+                if (success && onActionSuccess != null) {
+                    onActionSuccess.run();
+                }
+            }
+        };
+
+        return StyledMenuItemFactory.createItem(null, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
     }
 
     private JMenu createWallMenu(GameSession gameSession, Builder builder, Runnable onBuildSuccess) {

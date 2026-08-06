@@ -10,6 +10,7 @@ import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
 import civgame.model.game.StationingService;
+import civgame.model.game.DemolitionService;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
@@ -79,7 +80,7 @@ public class GameController {
         this.movementAnimator = gameFrame.getMovementAnimator();
         this.gameSession = gameSession;
         this.pathFinder = new HexPathFinder();
-        this.constructionMenuFactory = new ConstructionMenuFactory(new ConstructionService(), new RoadConstructionService(), new WallConstructionService());
+        this.constructionMenuFactory = new ConstructionMenuFactory(new ConstructionService(), new RoadConstructionService(), new WallConstructionService(), new DemolitionService());
         this.stationingService = new StationingService();
         this.stationingMenuFactory = new StationingMenuFactory(stationingService);
         this.townHallMenuFactory = new TownHallMenuFactory();
