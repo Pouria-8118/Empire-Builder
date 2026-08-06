@@ -95,6 +95,8 @@ public class Constants {
     public static final int WALL_UPKEEP_WOOD_AMOUNT = 1;
     public static final int WALL_DEFENSE_DICE_BONUS = 2;
 
+    public static final int DEMOLITION_AP_COST = 1;
+
     public static final int WORKER_STATION_AP_COST = 1;
 
     public static final int BUILDING_UPKEEP_WOOD_AMOUNT = 1;
