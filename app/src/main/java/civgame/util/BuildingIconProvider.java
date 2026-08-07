@@ -23,6 +23,9 @@ public class BuildingIconProvider {
         if (buildingType == BuildingType.DOCK) {
             return Constants.DOCK_ICON_PATH;
         }
+        if (buildingType == BuildingType.MONUMENT) {
+            return Constants.MONUMENT_ICON_PATH;
+        }
         return Constants.STABLE_ICON_PATH;
     }
 
@@ -41,6 +44,9 @@ public class BuildingIconProvider {
         }
         if (buildingType == BuildingType.DOCK) {
             return "DK";
+        }
+        if (buildingType == BuildingType.MONUMENT) {
+            return "MN";
         }
         return "ST";
     }

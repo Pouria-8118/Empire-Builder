@@ -25,6 +25,9 @@ public class BuildingColorProvider {
         if (buildingType == BuildingType.DOCK) {
             return new Color(90, 140, 160);
         }
+        if (buildingType == BuildingType.MONUMENT) {
+            return new Color(200, 200, 210);
+        }
         return new Color(180, 130, 90);
     }
 

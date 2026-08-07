@@ -26,6 +26,10 @@ public class BuildingFactory {
             String id = BuildingIdGenerator.generateNextId("DOCK");
             return new Dock(id, coordinate);
         }
+        if (buildingType == BuildingType.MONUMENT) {
+            String id = BuildingIdGenerator.generateNextId("MONUMENT");
+            return new Monument(id, coordinate);
+        }
 
         String id = BuildingIdGenerator.generateNextId("STABLE");
         return new Stable(id, coordinate);
