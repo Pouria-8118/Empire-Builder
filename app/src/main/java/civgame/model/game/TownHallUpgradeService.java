@@ -88,6 +88,7 @@ public class TownHallUpgradeService {
 
         if (eligibleCoordinate != null) {
             gameSession.addSettlementTile(eligibleCoordinate);
+            gameSession.getHappinessService().applyOneTimeDelta(Constants.NEW_SETTLEMENT_HAPPINESS_PENALTY);
         }
     }
 

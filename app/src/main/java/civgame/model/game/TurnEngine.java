@@ -34,6 +34,8 @@ public class TurnEngine {
             applyStarvationPenalty(gameSession);
         }
 
+        gameSession.getHappinessService().applyPerTurnContributions(gameSession);
+
         gameSession.incrementTurnNumber();
         gameSession.getEventBus().publish(new TurnEndedEvent(gameSession.getCurrentTurnNumber()));
 

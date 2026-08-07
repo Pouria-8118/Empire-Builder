@@ -55,6 +55,11 @@ public class ConstructionService {
             return false;
         }
 
+        int stoneCost = BuildingCostProvider.getStoneCost(buildingType);
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.STONE, stoneCost)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -78,9 +83,11 @@ public class ConstructionService {
 
         int actionPointCost = BuildingCostProvider.getConstructionActionPointCost(buildingType);
         int woodCost = BuildingCostProvider.getWoodCost(buildingType);
+        int stoneCost = BuildingCostProvider.getStoneCost(buildingType);
 
         builder.consumeActionPoints(actionPointCost);
         gameSession.getResourceStorage().removeResource(ResourceType.WOOD, woodCost);
+        gameSession.getResourceStorage().removeResource(ResourceType.STONE, stoneCost);
 
         Building newBuilding = buildingFactory.createBuilding(buildingType, targetCoordinate);
         gameSession.addBuilding(newBuilding);
