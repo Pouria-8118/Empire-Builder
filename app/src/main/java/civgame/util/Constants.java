@@ -57,6 +57,9 @@ public class Constants {
     public static final int FARM_WOOD_COST = 10;
     public static final int STABLE_WOOD_COST = 15;
     public static final int DOCK_WOOD_COST = 25;
+    public static final int MONUMENT_WOOD_COST = 30;
+
+    public static final int MONUMENT_STONE_COST = 40;
 
     public static final int LUMBER_MILL_CONSTRUCTION_AP_COST = 1;
     public static final int STONE_MINE_CONSTRUCTION_AP_COST = 2;
@@ -64,6 +67,7 @@ public class Constants {
     public static final int FARM_CONSTRUCTION_AP_COST = 1;
     public static final int STABLE_CONSTRUCTION_AP_COST = 2;
     public static final int DOCK_CONSTRUCTION_AP_COST = 2;
+    public static final int MONUMENT_CONSTRUCTION_AP_COST = 2;
 
     public static final int LUMBER_MILL_WORKER_CAPACITY = 3;
     public static final int STONE_MINE_WORKER_CAPACITY = 3;
@@ -71,6 +75,7 @@ public class Constants {
     public static final int FARM_WORKER_CAPACITY = 3;
     public static final int STABLE_WORKER_CAPACITY = 2;
     public static final int DOCK_WORKER_CAPACITY = 2;
+    public static final int MONUMENT_WORKER_CAPACITY = 0;
 
     public static final int LUMBER_MILL_PRODUCTION_PER_WORKER = 3;
     public static final int STONE_MINE_PRODUCTION_PER_WORKER = 2;
@@ -102,11 +107,16 @@ public class Constants {
     public static final int DEMOLITION_AP_COST = 1;
 
     public static final int DOCK_MAX_HIT_POINTS = 45;
+    public static final int MONUMENT_MAX_HIT_POINTS = 30;
 
     public static final int FARM_SYNERGY_BONUS_PER_PAIR = 1;
     public static final int COASTAL_LUMBER_MILL_BONUS = 2;
     public static final int DEEP_MINE_MIN_MOUNTAIN_NEIGHBORS = 2;
     public static final int DEEP_MINE_BONUS = 1;
+
+    public static final int MONUMENT_HAPPINESS_BONUS = 2;
+    public static final int TOWN_HALL_GARRISON_HAPPINESS_BONUS = 1;
+    public static final int NEW_SETTLEMENT_HAPPINESS_PENALTY = -1;
 
     public static final int WORKER_STATION_AP_COST = 1;
 
@@ -199,6 +209,7 @@ public class Constants {
     public static final String FARM_ICON_PATH = "/images/buildings/farm.png";
     public static final String STABLE_ICON_PATH = "/images/buildings/stable.png";
     public static final String DOCK_ICON_PATH = "/images/buildings/dock.png";
+    public static final String MONUMENT_ICON_PATH = "/images/buildings/monument.png";
     public static final String SETTLEMENT_ICON_PATH = "/images/buildings/settlement.png";
 
     public static final String FOOD_ICON_PATH = "/images/resources/food.png";

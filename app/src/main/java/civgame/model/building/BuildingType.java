@@ -6,5 +6,6 @@ public enum BuildingType {
     IRON_MINE,
     FARM,
     STABLE,
-    DOCK
+    DOCK,
+    MONUMENT
 }
