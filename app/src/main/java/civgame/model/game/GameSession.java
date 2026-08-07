@@ -29,6 +29,7 @@ public class GameSession {
     private final TownHallProductionQueue townHallProductionQueue;
     private final GameEventBus eventBus;
     private final AdjacencyBonusService adjacencyBonusService;
+    private final HappinessService happinessService;
     private int unitCap;
     private int currentTurnNumber;
     private boolean inStarvation;
@@ -46,6 +47,7 @@ public class GameSession {
         this.townHallProductionQueue = new TownHallProductionQueue();
         this.eventBus = new GameEventBus();
         this.adjacencyBonusService = new AdjacencyBonusService();
+        this.happinessService = new HappinessService();
         this.unitCap = initialUnitCap;
         this.adjacencyBonusService.subscribeTo(this);
         this.currentTurnNumber = 1;
@@ -162,6 +164,10 @@ public class GameSession {
 
     public AdjacencyBonusService getAdjacencyBonusService() {
         return adjacencyBonusService;
+    }
+
+    public HappinessService getHappinessService() {
+        return happinessService;
     }
     
     public int getCurrentTurnNumber() {
