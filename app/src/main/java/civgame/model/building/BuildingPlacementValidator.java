@@ -30,6 +30,9 @@ public class BuildingPlacementValidator {
         if (buildingType == BuildingType.DOCK) {
             return isCoastalTile(tile, hexMap);
         }
+        if (buildingType == BuildingType.MONUMENT) {
+            return tile.getTerrainType() == TerrainType.PLAIN;
+        }
         return isStableResourcePresent(tile);
     }
 
