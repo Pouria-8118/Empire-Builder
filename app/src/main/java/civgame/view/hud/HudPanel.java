@@ -33,6 +33,7 @@ public class HudPanel extends JPanel {
 
     private final JLabel turnLabel;
     private final JLabel townHallLabel;
+    private final JLabel happinessLabel;
     private final JLabel foodLabel;
     private final JLabel woodLabel;
     private final JLabel stoneLabel;
@@ -46,6 +47,7 @@ public class HudPanel extends JPanel {
 
         turnLabel = createStyledLabel("Turn: 1", null);
         townHallLabel = createStyledLabel("Town Hall: BASE_CAMP (200/200 HP)  DEF:10", null);
+        happinessLabel = createStyledLabel("Happiness: 0", null);
         foodLabel = createStyledLabel("Food: 0/0", Constants.FOOD_ICON_PATH);
         woodLabel = createStyledLabel("Wood: 0/0", Constants.WOOD_ICON_PATH);
         stoneLabel = createStyledLabel("Stone: 0/0", Constants.STONE_ICON_PATH);
@@ -55,6 +57,7 @@ public class HudPanel extends JPanel {
 
         add(turnLabel);
         add(townHallLabel);
+        add(happinessLabel);
         add(foodLabel);
         add(woodLabel);
         add(stoneLabel);
@@ -98,6 +101,7 @@ public class HudPanel extends JPanel {
     public void refresh(GameSession gameSession, Map<ResourceType, Integer> netRates) {
         turnLabel.setText("Turn: " + gameSession.getCurrentTurnNumber());
         updateTownHallLabel(gameSession);
+        happinessLabel.setText("Happiness: " + gameSession.getHappinessService().getHappinessValue());
 
         updateResourceLabel(foodLabel, "Food", gameSession.getResourceStorage(), ResourceType.FOOD, netRates);
         updateResourceLabel(woodLabel, "Wood", gameSession.getResourceStorage(), ResourceType.WOOD, netRates);
