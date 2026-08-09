@@ -45,6 +45,24 @@ public class Constants {
     public static final int TOWN_HALL_VISION_RADIUS = 2;
     public static final int BUILDING_VISION_RADIUS = 1;
 
+    public static final int SWORDSMAN_MAX_ACTION_POINTS = 2;
+    public static final int SWORDSMAN_VISION_RADIUS = 1;
+    public static final int SWORDSMAN_MAX_HIT_POINTS = 1;
+    public static final int SWORDSMAN_ATTACK_RANGE = 1;
+    public static final int SWORDSMAN_STRUCTURE_ATTACK_POWER = 10;
+
+    public static final int ARCHER_MAX_ACTION_POINTS = 2;
+    public static final int ARCHER_VISION_RADIUS = 2;
+    public static final int ARCHER_MAX_HIT_POINTS = 1;
+    public static final int ARCHER_ATTACK_RANGE = 2;
+    public static final int ARCHER_STRUCTURE_ATTACK_POWER = 6;
+
+    public static final int CAVALRY_MAX_ACTION_POINTS = 4;
+    public static final int CAVALRY_VISION_RADIUS = 2;
+    public static final int CAVALRY_MAX_HIT_POINTS = 2;
+    public static final int CAVALRY_ATTACK_RANGE = 1;
+    public static final int CAVALRY_STRUCTURE_ATTACK_POWER = 8;
+
     public static final int BUILDER_STARTING_CHARGES = 3;
 
     public static final int STARTING_BUILDER_COUNT = 1;
@@ -201,12 +219,32 @@ public class Constants {
     public static final int BORDER_EXPANDER_PRODUCTION_FOOD_COST = 8;
     public static final int BORDER_EXPANDER_PRODUCTION_TURNS = 2;
 
+    public static final int SWORDSMAN_PRODUCTION_WOOD_COST = 10;
+    public static final int SWORDSMAN_PRODUCTION_FOOD_COST = 20;
+    public static final int SWORDSMAN_PRODUCTION_TURNS = 2;
+
+    public static final int ARCHER_PRODUCTION_WOOD_COST = 15;
+    public static final int ARCHER_PRODUCTION_FOOD_COST = 15;
+    public static final int ARCHER_PRODUCTION_TURNS = 2;
+
+    public static final int CAVALRY_PRODUCTION_WOOD_COST = 20;
+    public static final int CAVALRY_PRODUCTION_FOOD_COST = 25;
+    public static final int CAVALRY_PRODUCTION_TURNS = 3;
+
+    public static final int MILITARY_UNIT_CAP_LEVEL_1 = 5;
+    public static final int MILITARY_UNIT_CAP_LEVEL_2 = 10;
+    public static final int MILITARY_UNIT_CAP_LEVEL_3 = 15;
+    public static final int UNIT_CAP_REACHED_HAPPINESS_PENALTY = -1;
+
     public static final int RESOURCE_TILE_CAPACITY = 400;
 
     public static final String EXPLORER_ICON_PATH = "/images/units/explorer.png";
     public static final String BUILDER_ICON_PATH = "/images/units/builder.png";
     public static final String WORKER_ICON_PATH = "/images/units/worker.png";
     public static final String BORDER_EXPANDER_ICON_PATH = "/images/units/border_expander.png";
+    public static final String SWORDSMAN_ICON_PATH = "/images/units/swordsman.png";
+    public static final String ARCHER_ICON_PATH = "/images/units/archer.png";
+    public static final String CAVALRY_ICON_PATH = "/images/units/cavalry.png";
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
 
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";

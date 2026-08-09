@@ -17,6 +17,15 @@ public class UnitProductionCostProvider {
         if (unitType == UnitType.WORKER) {
             return Constants.WORKER_PRODUCTION_WOOD_COST;
         }
+        if (unitType == UnitType.SWORDSMAN) {
+            return Constants.SWORDSMAN_PRODUCTION_WOOD_COST;
+        }
+        if (unitType == UnitType.ARCHER) {
+            return Constants.ARCHER_PRODUCTION_WOOD_COST;
+        }
+        if (unitType == UnitType.CAVALRY) {
+            return Constants.CAVALRY_PRODUCTION_WOOD_COST;
+        }
         return Constants.BORDER_EXPANDER_PRODUCTION_WOOD_COST;
     }
 
@@ -30,6 +39,15 @@ public class UnitProductionCostProvider {
         if (unitType == UnitType.WORKER) {
             return Constants.WORKER_PRODUCTION_FOOD_COST;
         }
+        if (unitType == UnitType.SWORDSMAN) {
+            return Constants.SWORDSMAN_PRODUCTION_FOOD_COST;
+        }
+        if (unitType == UnitType.ARCHER) {
+            return Constants.ARCHER_PRODUCTION_FOOD_COST;
+        }
+        if (unitType == UnitType.CAVALRY) {
+            return Constants.CAVALRY_PRODUCTION_FOOD_COST;
+        }
         return Constants.BORDER_EXPANDER_PRODUCTION_FOOD_COST;
     }
 
@@ -42,6 +60,15 @@ public class UnitProductionCostProvider {
         }
         if (unitType == UnitType.WORKER) {
             return Constants.WORKER_PRODUCTION_TURNS;
+        }
+        if (unitType == UnitType.SWORDSMAN) {
+            return Constants.SWORDSMAN_PRODUCTION_TURNS;
+        }
+        if (unitType == UnitType.ARCHER) {
+            return Constants.ARCHER_PRODUCTION_TURNS;
+        }
+        if (unitType == UnitType.CAVALRY) {
+            return Constants.CAVALRY_PRODUCTION_TURNS;
         }
         return Constants.BORDER_EXPANDER_PRODUCTION_TURNS;
     }

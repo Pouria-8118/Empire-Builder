@@ -17,6 +17,15 @@ public class UnitIconProvider {
         if (unitType == UnitType.WORKER) {
             return Constants.WORKER_ICON_PATH;
         }
+        if (unitType == UnitType.SWORDSMAN) {
+            return Constants.SWORDSMAN_ICON_PATH;
+        }
+        if (unitType == UnitType.ARCHER) {
+            return Constants.ARCHER_ICON_PATH;
+        }
+        if (unitType == UnitType.CAVALRY) {
+            return Constants.CAVALRY_ICON_PATH;
+        }
         return Constants.BORDER_EXPANDER_ICON_PATH;
     }
 
@@ -29,6 +38,15 @@ public class UnitIconProvider {
         }
         if (unitType == UnitType.WORKER) {
             return "W";
+        }
+        if (unitType == UnitType.SWORDSMAN) {
+            return "S";
+        }
+        if (unitType == UnitType.ARCHER) {
+            return "A";
+        }
+        if (unitType == UnitType.CAVALRY) {
+            return "C";
         }
         return "X";
     }

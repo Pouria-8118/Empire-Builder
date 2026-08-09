@@ -16,6 +16,15 @@ public class UnitFactory {
         if (unitType == UnitType.WORKER) {
             return createWorker(coordinate);
         }
+        if (unitType == UnitType.SWORDSMAN) {
+            return createSwordsman(coordinate);
+        }
+        if (unitType == UnitType.ARCHER) {
+            return createArcher(coordinate);
+        }
+        if (unitType == UnitType.CAVALRY) {
+            return createCavalry(coordinate);
+        }
         return createBorderExpander(coordinate);
     }
 
@@ -37,5 +46,20 @@ public class UnitFactory {
     private BorderExpander createBorderExpander(HexCoordinate coordinate) {
         String id = UnitIdGenerator.generateNextId("BORDER_EXPANDER");
         return new BorderExpander(id, coordinate, Constants.BORDER_EXPANDER_MAX_ACTION_POINTS, Constants.BORDER_EXPANDER_VISION_RADIUS);
+    }
+
+    private Swordsman createSwordsman(HexCoordinate coordinate) {
+        String id = UnitIdGenerator.generateNextId("SWORDSMAN");
+        return new Swordsman(id, coordinate);
+    }
+
+    private Archer createArcher(HexCoordinate coordinate) {
+        String id = UnitIdGenerator.generateNextId("ARCHER");
+        return new Archer(id, coordinate);
+    }
+
+    private Cavalry createCavalry(HexCoordinate coordinate) {
+        String id = UnitIdGenerator.generateNextId("CAVALRY");
+        return new Cavalry(id, coordinate);
     }
 }

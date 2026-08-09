@@ -19,6 +19,15 @@ public class UnitColorProvider {
         if (unitType == UnitType.WORKER) {
             return new Color(230, 230, 230);
         }
+        if (unitType == UnitType.SWORDSMAN) {
+            return new Color(190, 40, 40);
+        }
+        if (unitType == UnitType.ARCHER) {
+            return new Color(60, 150, 70);
+        }
+        if (unitType == UnitType.CAVALRY) {
+            return new Color(120, 80, 30);
+        }
         return new Color(180, 60, 200);
     }
 

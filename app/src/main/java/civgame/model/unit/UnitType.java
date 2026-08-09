@@ -4,5 +4,8 @@ public enum UnitType {
     EXPLORER,
     BUILDER,
     WORKER,
-    BORDER_EXPANDER
+    BORDER_EXPANDER,
+    SWORDSMAN,
+    ARCHER,
+    CAVALRY
 }
