@@ -11,6 +11,8 @@ import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
 import civgame.model.game.StationingService;
 import civgame.model.game.DemolitionService;
+import civgame.model.game.CombatTargetService;
+import civgame.model.game.MilitaryStackingRules;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
@@ -20,9 +22,11 @@ import civgame.model.unit.Explorer;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitType;
 import civgame.model.unit.Worker;
+import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.util.HexGeometry;
 import civgame.util.TerrainMovementCostProvider;
 import civgame.util.EdgeMovementCostProvider;
+import java.util.HashSet;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
 import civgame.view.game.ConstructionMenuFactory;
@@ -33,6 +37,7 @@ import civgame.view.game.SelectionState;
 import civgame.view.game.StationingMenuFactory;
 import civgame.view.game.TownHallMenuFactory;
 import civgame.view.game.UnitMovementAnimator;
+import civgame.view.game.CombatMenuFactory;
 import civgame.view.hud.SelectedUnitPanel;
 
 import javax.swing.AbstractAction;
@@ -65,6 +70,8 @@ public class GameController {
     private final TownHallMenuFactory townHallMenuFactory;
     private final BorderExpansionMenuFactory borderExpansionMenuFactory;
     private final ExplorerMenuFactory explorerMenuFactory;
+    private final CombatMenuFactory combatMenuFactory;
+    private final CombatTargetService combatTargetService;
     private final SelectedUnitPanel selectedUnitPanel;
     private final FogOfWarCalculator fogOfWarCalculator;
     private final StationingService stationingService;
@@ -86,6 +93,8 @@ public class GameController {
         this.townHallMenuFactory = new TownHallMenuFactory();
         this.borderExpansionMenuFactory = new BorderExpansionMenuFactory(new BorderExpansionService());
         this.explorerMenuFactory = new ExplorerMenuFactory();
+        this.combatMenuFactory = new CombatMenuFactory();
+        this.combatTargetService = new CombatTargetService();
         this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
         this.fogOfWarCalculator = fogOfWarCalculator;
         this.gameFrame = gameFrame;
@@ -105,6 +114,11 @@ public class GameController {
         HexCoordinate clickedCoordinate = resolveClickedCoordinate(screenX, screenY);
 
         if (!gameSession.getHexMap().containsCoordinate(clickedCoordinate)) {
+            return;
+        }
+
+        if (selectionState.isAttackTargetingActive()) {
+            handleAttackTargetClick(clickedCoordinate);
             return;
         }
 
@@ -138,6 +152,23 @@ public class GameController {
         }
 
         return !findUnitsAtCoordinate(clickedCoordinate).isEmpty();
+    }
+
+    private void handleAttackTargetClick(HexCoordinate clickedCoordinate) {
+        Unit selectedUnit = selectionState.getSelectedUnit();
+
+        selectionState.setAttackTargetingActive(false);
+        selectionState.setAttackableTiles(new HashSet<HexCoordinate>());
+
+        if (selectedUnit != null && combatTargetService.isValidAttack(gameSession, selectedUnit.getCoordinate(), clickedCoordinate)) {
+            selectionState.setPendingAttackAttacker(selectedUnit.getCoordinate());
+            selectionState.setPendingAttackDefender(clickedCoordinate);
+        }
+
+        // TODO: consume the pending attack on SelectionState, roll the
+        // combat dice, and apply the results instead of just staging the selection.
+
+        mapPanel.repaint();
     }
 
     private void selectUnitFromStackOrToggle(List<Unit> unitsHere) {
@@ -206,6 +237,8 @@ public class GameController {
             showBorderExpansionMenu((BorderExpander) targetUnit, mouseEvent);
         } else if (targetUnit.getUnitType() == UnitType.EXPLORER) {
             showExplorerMenu((Explorer) targetUnit, mouseEvent);
+        } else if (MilitaryUnitCapProvider.isMilitaryUnitType(targetUnit.getUnitType())) {
+            showCombatMenu(targetUnit, mouseEvent);
         }
     }
 
@@ -237,6 +270,20 @@ public class GameController {
     private void showExplorerMenu(Explorer explorer, MouseEvent mouseEvent) {
         Runnable onSuccess = createRepaintRunnable();
         JPopupMenu popupMenu = explorerMenuFactory.buildMenu(explorer, onSuccess);
+        popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
+    }
+
+    private void showCombatMenu(Unit unit, MouseEvent mouseEvent) {
+        Runnable onAttackModeActivated = new Runnable() {
+            @Override
+            public void run() {
+                selectionState.setAttackableTiles(combatTargetService.getAttackableTargets(gameSession, unit.getCoordinate()));
+                selectionState.setAttackTargetingActive(true);
+                mapPanel.repaint();
+            }
+        };
+
+        JPopupMenu popupMenu = combatMenuFactory.buildMenu(gameSession, unit, onAttackModeActivated);
         popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
     }
 
@@ -305,6 +352,12 @@ public class GameController {
 
         if (!selectedUnit.hasEnoughActionPoints(movementCost)) {
             return;
+        }
+
+        if (MilitaryUnitCapProvider.isMilitaryUnitType(selectedUnit.getUnitType())) {
+            if (!MilitaryStackingRules.canAcceptUnit(gameSession, destination, selectedUnit.getUnitType())) {
+                return;
+            }
         }
 
         unstationIfWorkerIsLeavingItsBuilding(selectedUnit);
