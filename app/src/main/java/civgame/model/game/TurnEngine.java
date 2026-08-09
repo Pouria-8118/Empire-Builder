@@ -2,6 +2,7 @@ package civgame.model.game;
 
 import civgame.model.event.TurnEndedEvent;
 import civgame.model.unit.Unit;
+import civgame.model.unit.Worker;
 import civgame.util.Constants;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class TurnEngine {
 
     public TurnSummary executeTurn(GameSession gameSession) {
         refreshAllUnitActionPoints(gameSession);
+        applyRebellionMovementPenalty(gameSession);
         autoExploreService.runAutoExploreForAllUnits(gameSession);
 
         List<String> depletedResourceDescriptions = resourceProductionService.applyProduction(gameSession);
@@ -47,6 +49,21 @@ public class TurnEngine {
         for (int i = 0; i < units.size(); i++) {
             units.get(i).refreshActionPoints();
         }
+    }
+
+    private void applyRebellionMovementPenalty(GameSession gameSession) {
+        if (gameSession.getHappinessService().getCurrentLevel() != HappinessLevel.REBELLION) {
+            return;
+        }
+
+        List<Unit> units = gameSession.getUnits();
+        for (int i = 0; i < units.size(); i++) {
+            Unit unit = units.get(i);
+            if (unit instanceof Worker) {
+                unit.applyActionPointPenalty(Constants.REBELLION_ACTION_POINT_PENALTY);
+            }
+        }
+        // TODO: also apply this penalty to military units once they exist.
     }
 
     private void applyStarvationPenalty(GameSession gameSession) {
