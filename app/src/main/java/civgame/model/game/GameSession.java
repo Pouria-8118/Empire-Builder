@@ -1,6 +1,8 @@
 package civgame.model.game;
 
 import civgame.model.building.Building;
+import civgame.model.building.BuildingType;
+import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.model.building.TownHall;
 import civgame.model.event.GameEventBus;
 import civgame.model.map.HexCoordinate;
@@ -168,6 +170,32 @@ public class GameSession {
 
     public HappinessService getHappinessService() {
         return happinessService;
+    }
+
+    public boolean hasActiveStable() {
+        List<Building> allBuildings = getAllBuildings();
+        for (int i = 0; i < allBuildings.size(); i++) {
+            Building building = allBuildings.get(i);
+            if (!building.isDestroyed() && building.getBuildingType() == BuildingType.STABLE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int countActiveMilitaryUnits() {
+        int count = 0;
+        for (int i = 0; i < units.size(); i++) {
+            if (MilitaryUnitCapProvider.isMilitaryUnitType(units.get(i).getUnitType())) {
+                count = count + 1;
+            }
+        }
+        return count;
+    }
+
+    public boolean hasReachedMilitaryUnitCap() {
+        int cap = MilitaryUnitCapProvider.getCap(townHall.getLevel());
+        return countActiveMilitaryUnits() >= cap;
     }
     
     public int getCurrentTurnNumber() {

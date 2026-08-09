@@ -6,7 +6,6 @@ import civgame.model.map.HexTile;
 import civgame.model.map.TileVisibility;
 import civgame.util.TerrainMovementCostProvider;
 import civgame.util.EdgeMovementCostProvider;
-import civgame.util.TerrainMovementCostProvider;
 
 import java.util.ArrayList;
 import java.util.Comparator;

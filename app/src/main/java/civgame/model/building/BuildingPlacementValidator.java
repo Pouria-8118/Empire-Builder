@@ -44,10 +44,7 @@ public class BuildingPlacementValidator {
     }
 
     private static boolean isStableResourcePresent(HexTile tile) {
-        if (tile.getTerrainType() != TerrainType.PLAIN) {
-            return false;
-        }
-        return tile.getResourceType() == TileResourceType.CATTLE || tile.getResourceType() == TileResourceType.SHEEP;
+        return tile.getTerrainType() == TerrainType.PLAIN;
     }
 
     private static boolean isCoastalTile(HexTile tile, HexMap hexMap) {

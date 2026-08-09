@@ -1,9 +1,11 @@
 package civgame.model.game;
 
 import civgame.model.map.HexCoordinate;
+import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitFactory;
 import civgame.model.unit.UnitType;
+import civgame.util.Constants;
 
 public class UnitProductionCommand implements ProductionCommand {
 
@@ -23,13 +25,23 @@ public class UnitProductionCommand implements ProductionCommand {
 
     @Override
     public void execute(GameSession gameSession) {
-        if (gameSession.hasReachedUnitCap()) {
+        boolean isMilitary = MilitaryUnitCapProvider.isMilitaryUnitType(unitType);
+
+        if (isMilitary) {
+            if (gameSession.hasReachedMilitaryUnitCap()) {
+                return;
+            }
+        } else if (gameSession.hasReachedUnitCap()) {
             return;
         }
 
         HexCoordinate spawnCoordinate = spawnPositionFinder.findFreeNeighbor(gameSession, gameSession.getTownHall().getCoordinate());
         Unit newUnit = unitFactory.createUnit(unitType, spawnCoordinate);
         gameSession.addUnit(newUnit);
+
+        if (isMilitary && gameSession.hasReachedMilitaryUnitCap()) {
+            gameSession.getHappinessService().applyOneTimeDelta(Constants.UNIT_CAP_REACHED_HAPPINESS_PENALTY);
+        }
     }
 
     @Override
