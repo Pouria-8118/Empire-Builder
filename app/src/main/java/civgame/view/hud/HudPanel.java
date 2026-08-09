@@ -101,7 +101,7 @@ public class HudPanel extends JPanel {
     public void refresh(GameSession gameSession, Map<ResourceType, Integer> netRates) {
         turnLabel.setText("Turn: " + gameSession.getCurrentTurnNumber());
         updateTownHallLabel(gameSession);
-        happinessLabel.setText("Happiness: " + gameSession.getHappinessService().getHappinessValue());
+        happinessLabel.setText("Happiness: " + gameSession.getHappinessService().getHappinessValue() + " (" + gameSession.getHappinessService().getCurrentLevel().name() + ")");
 
         updateResourceLabel(foodLabel, "Food", gameSession.getResourceStorage(), ResourceType.FOOD, netRates);
         updateResourceLabel(woodLabel, "Wood", gameSession.getResourceStorage(), ResourceType.WOOD, netRates);
