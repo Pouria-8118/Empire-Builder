@@ -236,6 +236,11 @@ public class Constants {
     public static final int MILITARY_UNIT_CAP_LEVEL_3 = 15;
     public static final int UNIT_CAP_REACHED_HAPPINESS_PENALTY = -1;
 
+    public static final int HEX_MAX_SWORDSMEN = 2;
+    public static final int HEX_MAX_ARCHERS = 2;
+    public static final int HEX_MAX_CAVALRY = 1;
+    public static final int ATTACK_ACTION_POINT_COST = 1;
+
     public static final int RESOURCE_TILE_CAPACITY = 400;
 
     public static final String EXPLORER_ICON_PATH = "/images/units/explorer.png";
