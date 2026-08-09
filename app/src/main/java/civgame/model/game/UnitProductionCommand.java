@@ -13,6 +13,7 @@ public class UnitProductionCommand implements ProductionCommand {
     private final int totalTurns;
     private final UnitFactory unitFactory;
     private final SpawnPositionFinder spawnPositionFinder;
+    private final MilitarySpawnFinder militarySpawnFinder;
     private int turnsRemaining;
 
     public UnitProductionCommand(UnitType unitType, int totalTurns) {
@@ -21,6 +22,7 @@ public class UnitProductionCommand implements ProductionCommand {
         this.turnsRemaining = totalTurns;
         this.unitFactory = new UnitFactory();
         this.spawnPositionFinder = new SpawnPositionFinder();
+        this.militarySpawnFinder = new MilitarySpawnFinder();
     }
 
     @Override
@@ -35,7 +37,13 @@ public class UnitProductionCommand implements ProductionCommand {
             return;
         }
 
-        HexCoordinate spawnCoordinate = spawnPositionFinder.findFreeNeighbor(gameSession, gameSession.getTownHall().getCoordinate());
+        HexCoordinate spawnCoordinate;
+        if (isMilitary) {
+            spawnCoordinate = militarySpawnFinder.findSpawnCoordinate(gameSession, unitType);
+        } else {
+            spawnCoordinate = spawnPositionFinder.findFreeNeighbor(gameSession, gameSession.getTownHall().getCoordinate());
+        }
+
         Unit newUnit = unitFactory.createUnit(unitType, spawnCoordinate);
         gameSession.addUnit(newUnit);
 
