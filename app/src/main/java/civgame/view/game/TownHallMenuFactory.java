@@ -11,6 +11,7 @@ import civgame.model.game.TownHallUpgradeCommand;
 import civgame.model.game.TownHallUpgradeService;
 import civgame.model.game.UnitProductionCommand;
 import civgame.model.resource.ResourceType;
+import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.model.unit.UnitProductionCostProvider;
 import civgame.model.unit.UnitType;
 import civgame.util.MenuIconResolver;
@@ -64,6 +65,9 @@ public class TownHallMenuFactory {
         popupMenu.add(createUnitItem(gameSession, UnitType.BUILDER, onActionSuccess));
         popupMenu.add(createUnitItem(gameSession, UnitType.WORKER, onActionSuccess));
         popupMenu.add(createUnitItem(gameSession, UnitType.BORDER_EXPANDER, onActionSuccess));
+        popupMenu.add(createUnitItem(gameSession, UnitType.SWORDSMAN, onActionSuccess));
+        popupMenu.add(createUnitItem(gameSession, UnitType.ARCHER, onActionSuccess));
+        popupMenu.add(createUnitItem(gameSession, UnitType.CAVALRY, onActionSuccess));
     }
 
     private JMenuItem createUnitItem(GameSession gameSession, UnitType unitType, Runnable onActionSuccess) {
@@ -72,7 +76,11 @@ public class TownHallMenuFactory {
         int turns = UnitProductionCostProvider.getDurationInTurns(unitType);
 
         String detailText = "Wood: " + woodCost + "   Food: " + foodCost + "   " + turns + " turns";
-        String reason = buildUnitUnavailabilityReason(gameSession, woodCost, foodCost);
+        if (MilitaryUnitCapProvider.isMilitaryUnitType(unitType)) {
+            int cap = MilitaryUnitCapProvider.getCap(gameSession.getTownHall().getLevel());
+            detailText = detailText + "   Military: " + gameSession.countActiveMilitaryUnits() + "/" + cap;
+        }
+        String reason = buildUnitUnavailabilityReason(gameSession, unitType, woodCost, foodCost);
 
         ActionListener actionListener = new ActionListener() {
             @Override
@@ -98,19 +106,46 @@ public class TownHallMenuFactory {
         );
     }
 
-    private String buildUnitUnavailabilityReason(GameSession gameSession, int woodCost, int foodCost) {
+    private String buildUnitUnavailabilityReason(GameSession gameSession, UnitType unitType, int woodCost, int foodCost) {
         TownHallProductionQueue queue = gameSession.getTownHallProductionQueue();
         if (queue.isBusy()) {
             return "Production queue is busy";
         }
-        if (gameSession.hasReachedUnitCap()) {
+
+        if (MilitaryUnitCapProvider.isMilitaryUnitType(unitType)) {
+            if (gameSession.hasReachedMilitaryUnitCap()) {
+                return "Military unit cap reached";
+            }
+            String prerequisiteReason = buildMilitaryPrerequisiteReason(gameSession, unitType);
+            if (!prerequisiteReason.isEmpty()) {
+                return prerequisiteReason;
+            }
+        } else if (gameSession.hasReachedUnitCap()) {
             return "Unit cap reached";
         }
+
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, woodCost)) {
             return "Not enough Wood";
         }
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.FOOD, foodCost)) {
             return "Not enough Food";
+        }
+        return "";
+    }
+
+    private String buildMilitaryPrerequisiteReason(GameSession gameSession, UnitType unitType) {
+        if (unitType == UnitType.ARCHER) {
+            if (!gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.SETTLEMENT)) {
+                return "Requires Town Hall level 2";
+            }
+        }
+        if (unitType == UnitType.CAVALRY) {
+            if (!gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.SETTLEMENT)) {
+                return "Requires Town Hall level 2";
+            }
+            if (!gameSession.hasActiveStable()) {
+                return "Requires an active Stable";
+            }
         }
         return "";
     }
