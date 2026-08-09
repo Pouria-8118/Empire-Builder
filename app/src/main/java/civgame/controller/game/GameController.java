@@ -13,6 +13,8 @@ import civgame.model.game.StationingService;
 import civgame.model.game.DemolitionService;
 import civgame.model.game.CombatTargetService;
 import civgame.model.game.MilitaryStackingRules;
+import civgame.model.game.AttackExecutionService;
+import civgame.model.game.AttackOutcome;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
@@ -38,6 +40,7 @@ import civgame.view.game.StationingMenuFactory;
 import civgame.view.game.TownHallMenuFactory;
 import civgame.view.game.UnitMovementAnimator;
 import civgame.view.game.CombatMenuFactory;
+import civgame.view.game.CombatResultDialog;
 import civgame.view.hud.SelectedUnitPanel;
 
 import javax.swing.AbstractAction;
@@ -72,6 +75,7 @@ public class GameController {
     private final ExplorerMenuFactory explorerMenuFactory;
     private final CombatMenuFactory combatMenuFactory;
     private final CombatTargetService combatTargetService;
+    private final AttackExecutionService attackExecutionService;
     private final SelectedUnitPanel selectedUnitPanel;
     private final FogOfWarCalculator fogOfWarCalculator;
     private final StationingService stationingService;
@@ -95,6 +99,7 @@ public class GameController {
         this.explorerMenuFactory = new ExplorerMenuFactory();
         this.combatMenuFactory = new CombatMenuFactory();
         this.combatTargetService = new CombatTargetService();
+        this.attackExecutionService = new AttackExecutionService();
         this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
         this.fogOfWarCalculator = fogOfWarCalculator;
         this.gameFrame = gameFrame;
@@ -160,14 +165,23 @@ public class GameController {
         selectionState.setAttackTargetingActive(false);
         selectionState.setAttackableTiles(new HashSet<HexCoordinate>());
 
-        if (selectedUnit != null && combatTargetService.isValidAttack(gameSession, selectedUnit.getCoordinate(), clickedCoordinate)) {
-            selectionState.setPendingAttackAttacker(selectedUnit.getCoordinate());
-            selectionState.setPendingAttackDefender(clickedCoordinate);
+        if (selectedUnit == null) {
+            mapPanel.repaint();
+            return;
         }
 
-        // TODO: consume the pending attack on SelectionState, roll the
-        // combat dice, and apply the results instead of just staging the selection.
+        AttackOutcome outcome = attackExecutionService.executeAttack(gameSession, selectedUnit.getCoordinate(), clickedCoordinate);
+        if (outcome == null) {
+            mapPanel.repaint();
+            return;
+        }
 
+        if (!outcome.isAutoCaptured()) {
+            CombatResultDialog resultDialog = new CombatResultDialog(outcome.getCombatResult());
+            resultDialog.setVisible(true);
+        }
+
+        refreshSelectedUnitDisplay();
         mapPanel.repaint();
     }
 

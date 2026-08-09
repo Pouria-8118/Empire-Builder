@@ -35,6 +35,9 @@ public class CombatTargetService {
         if (attackerCoordinate.equals(defenderCoordinate)) {
             return false;
         }
+        if (gameSession.isWithinBorder(defenderCoordinate)) {
+            return false;
+        }
         if (!hasAnyMilitaryUnit(gameSession, attackerCoordinate)) {
             return false;
         }
