@@ -215,6 +215,11 @@ public class MapPanel extends JPanel {
             graphics2D.drawPolygon(hexagonPolygon);
         }
 
+        if (selectionState.getAttackableTiles().contains(tile.getCoordinate())) {
+            graphics2D.setColor(new Color(220, 40, 40));
+            graphics2D.drawPolygon(hexagonPolygon);
+        }
+
         if (tile.getTerrainType() == TerrainType.MOUNTAIN_RANGE && tile.getVisibility() != TileVisibility.UNSEEN) {
             drawMountainRangeOverlay(graphics2D, tileCenterX, tileCenterY, hexSize);
         }
