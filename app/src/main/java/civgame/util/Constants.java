@@ -118,6 +118,13 @@ public class Constants {
     public static final int TOWN_HALL_GARRISON_HAPPINESS_BONUS = 1;
     public static final int NEW_SETTLEMENT_HAPPINESS_PENALTY = -1;
 
+    public static final int GOLDEN_AGE_MIN_HAPPINESS = 3;
+    public static final int DISCONTENT_MAX_HAPPINESS = -3;
+    public static final int REBELLION_MAX_HAPPINESS = -5;
+    public static final double GOLDEN_AGE_PRODUCTION_MULTIPLIER = 1.1;
+    public static final int WORKER_STRIKE_PRODUCTION_PENALTY = 1;
+    public static final int REBELLION_ACTION_POINT_PENALTY = 1;
+
     public static final int WORKER_STATION_AP_COST = 1;
 
     public static final int BUILDING_UPKEEP_WOOD_AMOUNT = 1;
