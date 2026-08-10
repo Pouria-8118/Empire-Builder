@@ -3,26 +3,31 @@ package civgame.model.game;
 import civgame.model.event.TurnEndedEvent;
 import civgame.model.unit.Unit;
 import civgame.model.unit.Worker;
+import civgame.model.animal.WildAnimal;
 import civgame.util.Constants;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class TurnEngine {
 
     private final ResourceProductionService resourceProductionService;
     private final UpkeepService upkeepService;
     private final AutoExploreService autoExploreService;
+    private final WildAnimalCombatService wildAnimalCombatService;
 
     public TurnEngine() {
         this.resourceProductionService = new ResourceProductionService();
         this.upkeepService = new UpkeepService();
         this.autoExploreService = new AutoExploreService();
+        this.wildAnimalCombatService = new WildAnimalCombatService();
     }
 
     public TurnSummary executeTurn(GameSession gameSession) {
         refreshAllUnitActionPoints(gameSession);
         applyRebellionMovementPenalty(gameSession);
         autoExploreService.runAutoExploreForAllUnits(gameSession);
+        processWildAnimalTurns(gameSession);
 
         List<String> depletedResourceDescriptions = resourceProductionService.applyProduction(gameSession);
         String completedProductionDescription = processProductionQueue(gameSession);
@@ -65,6 +70,14 @@ public class TurnEngine {
         }
         // TODO: also apply this penalty to military units once they exist.
     }
+
+    private void processWildAnimalTurns(GameSession gameSession) {
+        List<WildAnimal> wildAnimalsSnapshot = new ArrayList<WildAnimal>(gameSession.getWildAnimals());
+        for (int i = 0; i < wildAnimalsSnapshot.size(); i++) {
+            wildAnimalCombatService.processWildAnimalTurn(gameSession, wildAnimalsSnapshot.get(i));
+        }
+    }
+    
 
     private void applyStarvationPenalty(GameSession gameSession) {
         List<Unit> units = gameSession.getUnits();
