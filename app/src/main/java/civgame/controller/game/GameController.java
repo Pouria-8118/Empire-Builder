@@ -49,6 +49,7 @@ import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
+import javax.swing.JOptionPane;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -170,19 +171,46 @@ public class GameController {
             return;
         }
 
-        AttackOutcome outcome = attackExecutionService.executeAttack(gameSession, selectedUnit.getCoordinate(), clickedCoordinate);
+        HexCoordinate attackerCoordinate = selectedUnit.getCoordinate();
+
+        if (!combatTargetService.isValidAttack(gameSession, attackerCoordinate, clickedCoordinate)) {
+            mapPanel.repaint();
+            return;
+        }
+
+        AttackOutcome outcome;
+        if (gameSession.getHexMap().hasActiveWall(attackerCoordinate, clickedCoordinate)) {
+            outcome = resolveWallChoiceAndAttack(attackerCoordinate, clickedCoordinate);
+        } else {
+            outcome = attackExecutionService.executeAttack(gameSession, attackerCoordinate, clickedCoordinate);
+        }
+
         if (outcome == null) {
             mapPanel.repaint();
             return;
         }
 
-        if (!outcome.isAutoCaptured()) {
+        if (outcome.getCombatResult() != null) {
             CombatResultDialog resultDialog = new CombatResultDialog(outcome.getCombatResult());
             resultDialog.setVisible(true);
         }
 
         refreshSelectedUnitDisplay();
         mapPanel.repaint();
+    }
+
+    private AttackOutcome resolveWallChoiceAndAttack(HexCoordinate attackerCoordinate, HexCoordinate defenderCoordinate) {
+        String[] options = {"Attack the Wall", "Attack Through (+2 defense penalty)", "Cancel"};
+        int choice = JOptionPane.showOptionDialog(mapPanel, "A wall separates you from this hex.", "Wall Encountered",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
+        if (choice == 0) {
+            return attackExecutionService.executeWallAttack(gameSession, attackerCoordinate, defenderCoordinate);
+        }
+        if (choice == 1) {
+            return attackExecutionService.executeAttack(gameSession, attackerCoordinate, defenderCoordinate);
+        }
+        return null;
     }
 
     private void selectUnitFromStackOrToggle(List<Unit> unitsHere) {
