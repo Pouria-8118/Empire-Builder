@@ -28,6 +28,9 @@ public class UnitColorProvider {
         if (unitType == UnitType.CAVALRY) {
             return new Color(120, 80, 30);
         }
+        if (unitType == UnitType.CATAPULT) {
+            return new Color(90, 90, 90);
+        }
         return new Color(180, 60, 200);
     }
 

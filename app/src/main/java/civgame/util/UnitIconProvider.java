@@ -26,6 +26,9 @@ public class UnitIconProvider {
         if (unitType == UnitType.CAVALRY) {
             return Constants.CAVALRY_ICON_PATH;
         }
+        if (unitType == UnitType.CATAPULT) {
+            return Constants.CATAPULT_ICON_PATH;
+        }
         return Constants.BORDER_EXPANDER_ICON_PATH;
     }
 
@@ -47,6 +50,9 @@ public class UnitIconProvider {
         }
         if (unitType == UnitType.CAVALRY) {
             return "C";
+        }
+        if (unitType == UnitType.CATAPULT) {
+            return "P";
         }
         return "X";
     }

@@ -25,6 +25,9 @@ public class UnitFactory {
         if (unitType == UnitType.CAVALRY) {
             return createCavalry(coordinate);
         }
+        if (unitType == UnitType.CATAPULT) {
+            return createCatapult(coordinate);
+        }
         return createBorderExpander(coordinate);
     }
 
@@ -61,5 +64,10 @@ public class UnitFactory {
     private Cavalry createCavalry(HexCoordinate coordinate) {
         String id = UnitIdGenerator.generateNextId("CAVALRY");
         return new Cavalry(id, coordinate);
+    }
+
+    private Catapult createCatapult(HexCoordinate coordinate) {
+        String id = UnitIdGenerator.generateNextId("CATAPULT");
+        return new Catapult(id, coordinate);
     }
 }

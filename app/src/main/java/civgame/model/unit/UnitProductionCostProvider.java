@@ -26,6 +26,9 @@ public class UnitProductionCostProvider {
         if (unitType == UnitType.CAVALRY) {
             return Constants.CAVALRY_PRODUCTION_WOOD_COST;
         }
+        if (unitType == UnitType.CATAPULT) {
+            return Constants.CATAPULT_PRODUCTION_WOOD_COST;
+        }
         return Constants.BORDER_EXPANDER_PRODUCTION_WOOD_COST;
     }
 
@@ -48,6 +51,9 @@ public class UnitProductionCostProvider {
         if (unitType == UnitType.CAVALRY) {
             return Constants.CAVALRY_PRODUCTION_FOOD_COST;
         }
+        if (unitType == UnitType.CATAPULT) {
+            return Constants.CATAPULT_PRODUCTION_FOOD_COST;
+        }
         return Constants.BORDER_EXPANDER_PRODUCTION_FOOD_COST;
     }
 
@@ -69,6 +75,9 @@ public class UnitProductionCostProvider {
         }
         if (unitType == UnitType.CAVALRY) {
             return Constants.CAVALRY_PRODUCTION_TURNS;
+        }
+        if (unitType == UnitType.CATAPULT) {
+            return Constants.CATAPULT_PRODUCTION_TURNS;
         }
         return Constants.BORDER_EXPANDER_PRODUCTION_TURNS;
     }
