@@ -16,14 +16,14 @@ public class CombatTargetService {
 
     public Set<HexCoordinate> getAttackableTargets(GameSession gameSession, HexCoordinate attackerCoordinate) {
         Set<HexCoordinate> targets = new HashSet<HexCoordinate>();
-        boolean hasArcher = hasUnitOfType(gameSession, attackerCoordinate, UnitType.ARCHER);
+        boolean hasRangedUnit = hasRangedUnit(gameSession, attackerCoordinate);
         HexMap hexMap = gameSession.getHexMap();
 
         for (HexCoordinate coordinate : hexMap.getAllTiles().keySet()) {
             int distance = attackerCoordinate.distanceTo(coordinate);
             if (distance == 1) {
                 targets.add(coordinate);
-            } else if (distance == 2 && hasArcher) {
+            } else if (distance == 2 && hasRangedUnit) {
                 targets.add(coordinate);
             }
         }
@@ -46,7 +46,7 @@ public class CombatTargetService {
         if (distance != 1 && distance != 2) {
             return false;
         }
-        if (distance == 2 && !hasUnitOfType(gameSession, attackerCoordinate, UnitType.ARCHER)) {
+        if (distance == 2 && !hasRangedUnit(gameSession, attackerCoordinate)) {
             return false;
         }
 
@@ -79,12 +79,20 @@ public class CombatTargetService {
 
             if (distance == 1) {
                 participants.add(unit);
-            } else if (distance == 2 && unit.getUnitType() == UnitType.ARCHER) {
+            } else if (distance == 2 && isRangedType(unit.getUnitType())) {
                 participants.add(unit);
             }
         }
 
         return participants;
+    }
+
+    private boolean isRangedType(UnitType unitType) {
+        return unitType == UnitType.ARCHER || unitType == UnitType.CATAPULT;
+    }
+
+    private boolean hasRangedUnit(GameSession gameSession, HexCoordinate coordinate) {
+        return hasUnitOfType(gameSession, coordinate, UnitType.ARCHER) || hasUnitOfType(gameSession, coordinate, UnitType.CATAPULT);
     }
 
     private boolean hasAnyMilitaryUnit(GameSession gameSession, HexCoordinate coordinate) {
