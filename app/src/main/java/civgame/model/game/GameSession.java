@@ -9,6 +9,7 @@ import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.resource.ResourceStorage;
 import civgame.model.unit.Unit;
+import civgame.model.animal.WildAnimal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +33,7 @@ public class GameSession {
     private final GameEventBus eventBus;
     private final AdjacencyBonusService adjacencyBonusService;
     private final HappinessService happinessService;
+    private final List<WildAnimal> wildAnimals;
     private int unitCap;
     private int currentTurnNumber;
     private boolean inStarvation;
@@ -50,6 +52,7 @@ public class GameSession {
         this.eventBus = new GameEventBus();
         this.adjacencyBonusService = new AdjacencyBonusService();
         this.happinessService = new HappinessService();
+        this.wildAnimals = new ArrayList<WildAnimal>();
         this.unitCap = initialUnitCap;
         this.adjacencyBonusService.subscribeTo(this);
         this.currentTurnNumber = 1;
@@ -196,6 +199,18 @@ public class GameSession {
     public boolean hasReachedMilitaryUnitCap() {
         int cap = MilitaryUnitCapProvider.getCap(townHall.getLevel());
         return countActiveMilitaryUnits() >= cap;
+    }
+
+    public void addWildAnimal(WildAnimal wildAnimal) {
+        wildAnimals.add(wildAnimal);
+    }
+
+    public void removeWildAnimal(WildAnimal wildAnimal) {
+        wildAnimals.remove(wildAnimal);
+    }
+
+    public List<WildAnimal> getWildAnimals() {
+        return wildAnimals;
     }
     
     public int getCurrentTurnNumber() {
