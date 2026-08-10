@@ -68,6 +68,7 @@ public class TownHallMenuFactory {
         popupMenu.add(createUnitItem(gameSession, UnitType.SWORDSMAN, onActionSuccess));
         popupMenu.add(createUnitItem(gameSession, UnitType.ARCHER, onActionSuccess));
         popupMenu.add(createUnitItem(gameSession, UnitType.CAVALRY, onActionSuccess));
+        popupMenu.add(createUnitItem(gameSession, UnitType.CATAPULT, onActionSuccess));
     }
 
     private JMenuItem createUnitItem(GameSession gameSession, UnitType unitType, Runnable onActionSuccess) {
@@ -145,6 +146,11 @@ public class TownHallMenuFactory {
             }
             if (!gameSession.hasActiveStable()) {
                 return "Requires an active Stable";
+            }
+        }
+        if (unitType == UnitType.CATAPULT) {
+            if (!gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.CAPITAL)) {
+                return "Requires Town Hall level 3";
             }
         }
         return "";
