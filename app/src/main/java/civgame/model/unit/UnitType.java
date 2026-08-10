@@ -7,5 +7,6 @@ public enum UnitType {
     BORDER_EXPANDER,
     SWORDSMAN,
     ARCHER,
-    CAVALRY
+    CAVALRY,
+    CATAPULT
 }

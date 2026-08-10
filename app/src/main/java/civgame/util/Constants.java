@@ -242,6 +242,16 @@ public class Constants {
     public static final int ATTACK_ACTION_POINT_COST = 1;
     public static final int WILD_ANIMAL_DEFENSE_DICE_COUNT = 2;
 
+    public static final int CATAPULT_MAX_ACTION_POINTS = 2;
+    public static final int CATAPULT_VISION_RADIUS = 2;
+    public static final int CATAPULT_MAX_HIT_POINTS = 50;
+    public static final int CATAPULT_ATTACK_RANGE = 2;
+    public static final int CATAPULT_STRUCTURE_ATTACK_POWER = 20;
+    public static final int CATAPULT_PRODUCTION_WOOD_COST = 40;
+    public static final int CATAPULT_PRODUCTION_FOOD_COST = 10;
+    public static final int CATAPULT_PRODUCTION_TURNS = 4;
+    public static final int HEX_MAX_CATAPULTS = 1;
+
     public static final int RESOURCE_TILE_CAPACITY = 400;
 
     public static final String EXPLORER_ICON_PATH = "/images/units/explorer.png";
@@ -251,6 +261,7 @@ public class Constants {
     public static final String SWORDSMAN_ICON_PATH = "/images/units/swordsman.png";
     public static final String ARCHER_ICON_PATH = "/images/units/archer.png";
     public static final String CAVALRY_ICON_PATH = "/images/units/cavalry.png";
+    public static final String CATAPULT_ICON_PATH = "/images/units/catapult.png";
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
 
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";

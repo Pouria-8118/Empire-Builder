@@ -19,6 +19,11 @@ public class MilitaryUnitCapProvider {
     }
 
     public static boolean isMilitaryUnitType(UnitType unitType) {
+        return unitType == UnitType.SWORDSMAN || unitType == UnitType.ARCHER
+                || unitType == UnitType.CAVALRY || unitType == UnitType.CATAPULT;
+    }
+
+    public static boolean isDiceParticipant(UnitType unitType) {
         return unitType == UnitType.SWORDSMAN || unitType == UnitType.ARCHER || unitType == UnitType.CAVALRY;
     }
 }
