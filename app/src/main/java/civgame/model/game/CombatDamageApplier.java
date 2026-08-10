@@ -41,6 +41,7 @@ public class CombatDamageApplier {
         addByType(units, ordered, UnitType.SWORDSMAN);
         addByType(units, ordered, UnitType.ARCHER);
         addByType(units, ordered, UnitType.CAVALRY);
+        addByType(units, ordered, UnitType.CATAPULT);
         return ordered;
     }
 

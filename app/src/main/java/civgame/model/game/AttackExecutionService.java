@@ -50,8 +50,8 @@ public class AttackExecutionService {
             return new AttackOutcome(null, true, new ArrayList<Unit>(), new ArrayList<Unit>());
         }
 
-        int attackerDiceCount = countDistinctTypes(attackerParticipants);
-        int defenderDiceCount = countDistinctTypes(defenderUnits);
+        int attackerDiceCount = countDiceParticipantTypes(attackerParticipants);
+        int defenderDiceCount = countDiceParticipantTypes(defenderUnits);
         int wallBonus = gameSession.getHexMap().hasActiveWall(attackerCoordinate, defenderCoordinate) ? Constants.WALL_DEFENSE_DICE_BONUS : 0;
 
         CombatResult combatResult = combatResolutionService.resolveCombat(attackerDiceCount, defenderDiceCount, wallBonus);
@@ -128,10 +128,13 @@ public class AttackExecutionService {
         return result;
     }
 
-    private int countDistinctTypes(List<Unit> units) {
+    private int countDiceParticipantTypes(List<Unit> units) {
         Set<UnitType> types = new HashSet<UnitType>();
         for (int i = 0; i < units.size(); i++) {
-            types.add(units.get(i).getUnitType());
+            UnitType unitType = units.get(i).getUnitType();
+            if (MilitaryUnitCapProvider.isDiceParticipant(unitType)) {
+                types.add(unitType);
+            }
         }
         return types.size();
     }

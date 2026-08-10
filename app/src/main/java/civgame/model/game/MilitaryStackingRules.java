@@ -28,6 +28,9 @@ public class MilitaryStackingRules {
         if (unitType == UnitType.CAVALRY) {
             return Constants.HEX_MAX_CAVALRY;
         }
+        if (unitType == UnitType.CATAPULT) {
+            return Constants.HEX_MAX_CATAPULTS;
+        }
         return Integer.MAX_VALUE;
     }
 
