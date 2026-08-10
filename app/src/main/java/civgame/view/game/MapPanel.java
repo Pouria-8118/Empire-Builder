@@ -3,13 +3,14 @@ package civgame.view.game;
 import civgame.model.building.Building;
 import civgame.model.building.TownHall;
 import civgame.model.game.GameSession;
+import civgame.model.animal.WildAnimal;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexEdge;
-import civgame.model.map.Wall;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TileVisibility;
+import civgame.model.map.Wall;
 import civgame.model.unit.Unit;
 import civgame.util.BuildingColorProvider;
 import civgame.util.BuildingIconProvider;
@@ -105,6 +106,7 @@ public class MapPanel extends JPanel {
         drawAllRivers(graphics2D, hexSize, centerX, centerY);
         drawAllWalls(graphics2D, hexSize, centerX, centerY);
         drawTownHall(graphics2D, hexSize, centerX, centerY);
+        drawAllWildAnimals(graphics2D, hexSize, centerX, centerY);
         drawAllBuildings(graphics2D, hexSize, centerX, centerY);
         drawAllSettlements(graphics2D, hexSize, centerX, centerY);
         drawAllUnits(graphics2D, hexSize, centerX, centerY);
@@ -181,6 +183,27 @@ public class MapPanel extends JPanel {
         }
 
         graphics2D.setStroke(new BasicStroke(1f));
+    }
+
+    private void drawAllWildAnimals(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        List<WildAnimal> wildAnimals = gameSession.getWildAnimals();
+
+        for (int i = 0; i < wildAnimals.size(); i++) {
+            WildAnimal wildAnimal = wildAnimals.get(i);
+            Point2D pixelPosition = HexGeometry.axialToPixel(wildAnimal.getCoordinate(), hexSize);
+            double drawX = centerX + pixelPosition.getX();
+            double drawY = centerY + pixelPosition.getY();
+            int iconSize = (int) (hexSize * UNIT_SIZE_FACTOR);
+
+            graphics2D.setColor(new Color(101, 67, 33));
+            graphics2D.fillOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+            graphics2D.setColor(Color.BLACK);
+            graphics2D.drawOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+
+            graphics2D.setColor(Color.WHITE);
+            graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (iconSize * 0.4)));
+            graphics2D.drawString(String.valueOf(wildAnimal.getCurrentHitPoints()), (int) (drawX - iconSize * 0.15), (int) (drawY + iconSize * 0.15));
+        }
     }
 
     private void drawRoadMarker(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
