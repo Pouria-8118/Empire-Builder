@@ -16,7 +16,7 @@ public class Constants {
 
     public static final int DEFAULT_VOLUME_PERCENT = 70;
 
-    public static final int HEX_SIZE = 40;
+    public static final int HEX_SIZE = 80;
     public static final double[] ZOOM_LEVELS = {0.5, 0.75, 1.0, 1.25, 1.5, 2.0};
     public static final int DEFAULT_ZOOM_INDEX = 2;
     public static final int DEFAULT_MAP_RADIUS = 14;
@@ -95,7 +95,7 @@ public class Constants {
     public static final int DOCK_WORKER_CAPACITY = 2;
     public static final int MONUMENT_WORKER_CAPACITY = 0;
 
-    public static final int LUMBER_MILL_PRODUCTION_PER_WORKER = 3;
+    public static final int LUMBER_MILL_PRODUCTION_PER_WORKER = 10;
     public static final int STONE_MINE_PRODUCTION_PER_WORKER = 2;
     public static final int IRON_MINE_PRODUCTION_PER_WORKER = 1;
     public static final int FARM_PRODUCTION_PER_WORKER = 3;
@@ -252,6 +252,18 @@ public class Constants {
     public static final int CATAPULT_PRODUCTION_TURNS = 4;
     public static final int HEX_MAX_CATAPULTS = 1;
 
+    public static final int BAZAAR_WOOD_COST = 30;
+    public static final int BAZAAR_CONSTRUCTION_AP_COST = 2;
+    public static final int BAZAAR_WORKER_CAPACITY = 0;
+    public static final int BAZAAR_MAX_HIT_POINTS = 40;
+
+    public static final int BAZAAR_TIER_1_AMOUNT = 10;
+    public static final double BAZAAR_TIER_1_RATE = 0.5;
+    public static final int BAZAAR_TIER_2_AMOUNT = 100;
+    public static final double BAZAAR_TIER_2_RATE = 0.6;
+    public static final int BAZAAR_TIER_3_AMOUNT = 500;
+    public static final double BAZAAR_TIER_3_RATE = 0.7;
+
     public static final int RESOURCE_TILE_CAPACITY = 400;
 
     public static final String EXPLORER_ICON_PATH = "/images/units/explorer.png";
@@ -262,6 +274,7 @@ public class Constants {
     public static final String ARCHER_ICON_PATH = "/images/units/archer.png";
     public static final String CAVALRY_ICON_PATH = "/images/units/cavalry.png";
     public static final String CATAPULT_ICON_PATH = "/images/units/catapult.png";
+    public static final String BAZAAR_ICON_PATH = "/images/buildings/bazaar.png";
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
 
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";

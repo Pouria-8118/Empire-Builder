@@ -29,6 +29,9 @@ public class BuildingHitPointsProvider {
         if (buildingType == BuildingType.MONUMENT) {
             return Constants.MONUMENT_MAX_HIT_POINTS;
         }
+        if (buildingType == BuildingType.BAZAAR) {
+            return Constants.BAZAAR_MAX_HIT_POINTS;
+        }
         return Constants.DEFAULT_BUILDING_MAX_HIT_POINTS;
     }
 }

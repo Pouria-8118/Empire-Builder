@@ -26,6 +26,9 @@ public class BuildingIconProvider {
         if (buildingType == BuildingType.MONUMENT) {
             return Constants.MONUMENT_ICON_PATH;
         }
+        if (buildingType == BuildingType.BAZAAR) {
+            return Constants.BAZAAR_ICON_PATH;
+        }
         return Constants.STABLE_ICON_PATH;
     }
 
@@ -47,6 +50,9 @@ public class BuildingIconProvider {
         }
         if (buildingType == BuildingType.MONUMENT) {
             return "MN";
+        }
+        if (buildingType == BuildingType.BAZAAR) {
+            return "BZ";
         }
         return "ST";
     }

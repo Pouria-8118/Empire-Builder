@@ -26,6 +26,9 @@ public class BuildingCostProvider {
         if (buildingType == BuildingType.MONUMENT) {
             return Constants.MONUMENT_WOOD_COST;
         }
+        if (buildingType == BuildingType.BAZAAR) {
+            return Constants.BAZAAR_WOOD_COST;
+        }
         return Constants.STABLE_WOOD_COST;
     }
 
@@ -54,6 +57,9 @@ public class BuildingCostProvider {
         }
         if (buildingType == BuildingType.MONUMENT) {
             return Constants.MONUMENT_CONSTRUCTION_AP_COST;
+        }
+        if (buildingType == BuildingType.BAZAAR) {
+            return Constants.BAZAAR_CONSTRUCTION_AP_COST;
         }
         return Constants.STABLE_CONSTRUCTION_AP_COST;
     }

@@ -30,6 +30,10 @@ public class BuildingFactory {
             String id = BuildingIdGenerator.generateNextId("MONUMENT");
             return new Monument(id, coordinate);
         }
+        if (buildingType == BuildingType.BAZAAR) {
+            String id = BuildingIdGenerator.generateNextId("BAZAAR");
+            return new Bazaar(id, coordinate);
+        }
 
         String id = BuildingIdGenerator.generateNextId("STABLE");
         return new Stable(id, coordinate);
