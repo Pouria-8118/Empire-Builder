@@ -14,6 +14,11 @@ import civgame.model.resource.ResourceType;
 import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.model.unit.UnitProductionCostProvider;
 import civgame.model.unit.UnitType;
+import civgame.model.game.BazaarTradeService;
+import civgame.model.trade.BazaarTradeStrategyProvider;
+import civgame.model.trade.BazaarTradeTier;
+import civgame.model.trade.TradeStrategy;
+import javax.swing.JMenu;
 import civgame.util.MenuIconResolver;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -22,6 +27,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class TownHallMenuFactory {
+
+    private final BazaarTradeService bazaarTradeService = new BazaarTradeService();
 
     public JPopupMenu buildMenu(GameSession gameSession, Runnable onActionSuccess) {
         JPopupMenu popupMenu = new JPopupMenu();
@@ -34,8 +41,89 @@ public class TownHallMenuFactory {
         addLevelUpItem(popupMenu, gameSession, onActionSuccess);
         popupMenu.add(new JSeparator());
         addUpgradeItems(popupMenu, gameSession, onActionSuccess);
+        popupMenu.add(new JSeparator());
+        popupMenu.add(createTradeMenu(gameSession, onActionSuccess));
 
         return popupMenu;
+    }
+
+    private JMenu createTradeMenu(GameSession gameSession, Runnable onActionSuccess) {
+        JMenu tradeMenu = new JMenu("Trade (Bazaar)");
+        tradeMenu.add(createTierMenu(gameSession, BazaarTradeTier.TIER_1, onActionSuccess));
+        tradeMenu.add(createTierMenu(gameSession, BazaarTradeTier.TIER_2, onActionSuccess));
+        tradeMenu.add(createTierMenu(gameSession, BazaarTradeTier.TIER_3, onActionSuccess));
+        return tradeMenu;
+    }
+
+    private JMenu createTierMenu(GameSession gameSession, BazaarTradeTier tier, Runnable onActionSuccess) {
+        TradeStrategy strategy = BazaarTradeStrategyProvider.getStrategy(tier);
+        int requiredAmount = strategy.getRequiredOfferedAmount();
+        int rateAsPercent = strategy.calculateReceivedAmount(100);
+
+        JMenu tierMenu = new JMenu(tier.name() + " (" + requiredAmount + " units, " + rateAsPercent + "%)");
+
+        ResourceType[] resourceTypes = ResourceType.values();
+        for (int i = 0; i < resourceTypes.length; i++) {
+            tierMenu.add(createOfferedResourceMenu(gameSession, tier, resourceTypes[i], onActionSuccess));
+        }
+
+        return tierMenu;
+    }
+
+    private JMenu createOfferedResourceMenu(GameSession gameSession, BazaarTradeTier tier, ResourceType offeredType, Runnable onActionSuccess) {
+        TradeStrategy strategy = BazaarTradeStrategyProvider.getStrategy(tier);
+        int requiredAmount = strategy.getRequiredOfferedAmount();
+
+        JMenu offeredMenu = new JMenu("Sell " + offeredType.name() + " (" + requiredAmount + ")");
+
+        ResourceType[] resourceTypes = ResourceType.values();
+        for (int i = 0; i < resourceTypes.length; i++) {
+            ResourceType requestedType = resourceTypes[i];
+            if (requestedType == offeredType) {
+                continue;
+            }
+            offeredMenu.add(createTradeItem(gameSession, tier, offeredType, requestedType, onActionSuccess));
+        }
+
+        return offeredMenu;
+    }
+
+    private JMenuItem createTradeItem(GameSession gameSession, BazaarTradeTier tier, ResourceType offeredType, ResourceType requestedType, Runnable onActionSuccess) {
+        TradeStrategy strategy = BazaarTradeStrategyProvider.getStrategy(tier);
+        int requiredAmount = strategy.getRequiredOfferedAmount();
+        int receivedAmount = strategy.calculateReceivedAmount(requiredAmount);
+
+        String title = "Get " + requestedType.name() + " (+" + receivedAmount + ")";
+        boolean canTrade = bazaarTradeService.canTrade(gameSession, offeredType, requestedType, tier);
+        String reason = buildTradeUnavailabilityReason(gameSession, offeredType, requiredAmount, canTrade);
+
+        ActionListener actionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                boolean success = bazaarTradeService.trade(gameSession, offeredType, requestedType, tier);
+                if (success && onActionSuccess != null) {
+                    onActionSuccess.run();
+                }
+            }
+        };
+
+        return StyledMenuItemFactory.createItem(null, title, "Cost: " + requiredAmount + " " + offeredType.name(), reason, canTrade, actionListener);
+    }
+
+    private String buildTradeUnavailabilityReason(GameSession gameSession, ResourceType offeredType, int requiredAmount, boolean canTrade) {
+        if (canTrade) {
+            return "";
+        }
+        if (!gameSession.hasActiveBazaar()) {
+            return "Requires an active Bazaar";
+        }
+        if (gameSession.hasBazaarTradedThisTurn()) {
+            return "Already traded this turn";
+        }
+        if (!gameSession.getResourceStorage().hasEnough(offeredType, requiredAmount)) {
+            return "Not enough " + offeredType.name();
+        }
+        return "Unavailable";
     }
 
     private JMenuItem createCancelItem(GameSession gameSession, Runnable onActionSuccess) {
