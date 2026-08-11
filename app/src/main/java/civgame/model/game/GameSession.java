@@ -34,6 +34,7 @@ public class GameSession {
     private final AdjacencyBonusService adjacencyBonusService;
     private final HappinessService happinessService;
     private final List<WildAnimal> wildAnimals;
+    private boolean bazaarTradedThisTurn;
     private int unitCap;
     private int currentTurnNumber;
     private boolean inStarvation;
@@ -53,6 +54,7 @@ public class GameSession {
         this.adjacencyBonusService = new AdjacencyBonusService();
         this.happinessService = new HappinessService();
         this.wildAnimals = new ArrayList<WildAnimal>();
+        this.bazaarTradedThisTurn = false;
         this.unitCap = initialUnitCap;
         this.adjacencyBonusService.subscribeTo(this);
         this.currentTurnNumber = 1;
@@ -211,6 +213,29 @@ public class GameSession {
 
     public List<WildAnimal> getWildAnimals() {
         return wildAnimals;
+    }
+
+    public boolean hasActiveBazaar() {
+        List<Building> allBuildings = getAllBuildings();
+        for (int i = 0; i < allBuildings.size(); i++) {
+            Building building = allBuildings.get(i);
+            if (!building.isDestroyed() && building.getBuildingType() == BuildingType.BAZAAR) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasBazaarTradedThisTurn() {
+        return bazaarTradedThisTurn;
+    }
+
+    public void markBazaarTradedThisTurn() {
+        this.bazaarTradedThisTurn = true;
+    }
+
+    public void resetBazaarTradeFlag() {
+        this.bazaarTradedThisTurn = false;
     }
     
     public int getCurrentTurnNumber() {

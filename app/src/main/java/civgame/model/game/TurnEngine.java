@@ -42,6 +42,7 @@ public class TurnEngine {
         }
 
         gameSession.getHappinessService().applyPerTurnContributions(gameSession);
+        gameSession.resetBazaarTradeFlag();
 
         gameSession.incrementTurnNumber();
         gameSession.getEventBus().publish(new TurnEndedEvent(gameSession.getCurrentTurnNumber()));
