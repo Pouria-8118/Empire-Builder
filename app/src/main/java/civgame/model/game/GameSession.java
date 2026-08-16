@@ -40,6 +40,7 @@ public class GameSession {
     private final List<Tribe> tribes;
     private final List<String> tribeNotifications;
     private final SeasonService seasonService;
+    private final List<ActiveDisasterEffect> activeDisasterEffects;
     private boolean bazaarTradedThisTurn;
     private boolean tradingPostTradedThisTurn;
     private boolean pendingDockDiscount;
@@ -66,6 +67,7 @@ public class GameSession {
         this.tribes = new ArrayList<Tribe>();
         this.tribeNotifications = new ArrayList<String>();
         this.seasonService = new SeasonService();
+        this.activeDisasterEffects = new ArrayList<ActiveDisasterEffect>();
         this.bazaarTradedThisTurn = false;
         this.pendingDockDiscount = false;
         this.tradingPostTradedThisTurn = false;
@@ -291,6 +293,26 @@ public class GameSession {
 
     public SeasonType getCurrentSeason() {
         return seasonService.getCurrentSeason(getCurrentTurnNumber());
+    }
+
+    public void addActiveDisasterEffect(ActiveDisasterEffect effect) {
+        activeDisasterEffects.add(effect);
+    }
+
+    public List<ActiveDisasterEffect> getActiveDisasterEffects() {
+        return activeDisasterEffects;
+    }
+
+    public void tickActiveDisasterEffects() {
+        List<ActiveDisasterEffect> finished = new ArrayList<ActiveDisasterEffect>();
+        for (int i = 0; i < activeDisasterEffects.size(); i++) {
+            ActiveDisasterEffect effect = activeDisasterEffects.get(i);
+            effect.decrementTicks();
+            if (effect.isFinished()) {
+                finished.add(effect);
+            }
+        }
+        activeDisasterEffects.removeAll(finished);
     }
 
     public void addTribeNotification(String message) {
