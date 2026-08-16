@@ -275,6 +275,8 @@ public class Constants {
     public static final String CAVALRY_ICON_PATH = "/images/units/cavalry.png";
     public static final String CATAPULT_ICON_PATH = "/images/units/catapult.png";
     public static final String BAZAAR_ICON_PATH = "/images/buildings/bazaar.png";
+
+    public static final double TRADING_POST_RATE = 0.8;
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
 
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";

@@ -7,6 +7,7 @@ import civgame.model.building.TownHall;
 import civgame.model.event.GameEventBus;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
+import civgame.model.map.TradingPost;
 import civgame.model.resource.ResourceStorage;
 import civgame.model.unit.Unit;
 import civgame.model.animal.WildAnimal;
@@ -34,7 +35,9 @@ public class GameSession {
     private final AdjacencyBonusService adjacencyBonusService;
     private final HappinessService happinessService;
     private final List<WildAnimal> wildAnimals;
+    private final List<TradingPost> tradingPosts;
     private boolean bazaarTradedThisTurn;
+    private boolean tradingPostTradedThisTurn;
     private int unitCap;
     private int currentTurnNumber;
     private boolean inStarvation;
@@ -54,7 +57,9 @@ public class GameSession {
         this.adjacencyBonusService = new AdjacencyBonusService();
         this.happinessService = new HappinessService();
         this.wildAnimals = new ArrayList<WildAnimal>();
+        this.tradingPosts = new ArrayList<TradingPost>();
         this.bazaarTradedThisTurn = false;
+        this.tradingPostTradedThisTurn = false;
         this.unitCap = initialUnitCap;
         this.adjacencyBonusService.subscribeTo(this);
         this.currentTurnNumber = 1;
@@ -236,6 +241,35 @@ public class GameSession {
 
     public void resetBazaarTradeFlag() {
         this.bazaarTradedThisTurn = false;
+    }
+
+    public void addTradingPost(TradingPost tradingPost) {
+        tradingPosts.add(tradingPost);
+    }
+
+    public TradingPost getTradingPostAt(HexCoordinate coordinate) {
+        for (int i = 0; i < tradingPosts.size(); i++) {
+            if (tradingPosts.get(i).getCoordinate().equals(coordinate)) {
+                return tradingPosts.get(i);
+            }
+        }
+        return null;
+    }
+
+    public List<TradingPost> getTradingPosts() {
+        return tradingPosts;
+    }
+
+    public boolean hasTradingPostTradedThisTurn() {
+        return tradingPostTradedThisTurn;
+    }
+
+    public void markTradingPostTradedThisTurn() {
+        this.tradingPostTradedThisTurn = true;
+    }
+
+    public void resetTradingPostTradeFlag() {
+        this.tradingPostTradedThisTurn = false;
     }
     
     public int getCurrentTurnNumber() {
