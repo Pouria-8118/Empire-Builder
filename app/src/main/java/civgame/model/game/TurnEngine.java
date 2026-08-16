@@ -1,6 +1,7 @@
 package civgame.model.game;
 
 import civgame.model.event.TurnEndedEvent;
+import civgame.model.tribe.Tribe;
 import civgame.model.unit.Unit;
 import civgame.model.unit.Worker;
 import civgame.model.animal.WildAnimal;
@@ -44,6 +45,7 @@ public class TurnEngine {
         gameSession.getHappinessService().applyPerTurnContributions(gameSession);
         gameSession.resetBazaarTradeFlag();
         gameSession.resetTradingPostTradeFlag();
+        resetTribeTradeFlags(gameSession);
 
         gameSession.incrementTurnNumber();
         gameSession.getEventBus().publish(new TurnEndedEvent(gameSession.getCurrentTurnNumber()));
@@ -77,6 +79,13 @@ public class TurnEngine {
         List<WildAnimal> wildAnimalsSnapshot = new ArrayList<WildAnimal>(gameSession.getWildAnimals());
         for (int i = 0; i < wildAnimalsSnapshot.size(); i++) {
             wildAnimalCombatService.processWildAnimalTurn(gameSession, wildAnimalsSnapshot.get(i));
+        }
+    }
+    
+    private void resetTribeTradeFlags(GameSession gameSession) {
+        List<Tribe> tribes = gameSession.getTribes();
+        for (int i = 0; i < tribes.size(); i++) {
+            tribes.get(i).setTradedThisTurn(false);
         }
     }
     

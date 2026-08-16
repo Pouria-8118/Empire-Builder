@@ -16,10 +16,14 @@ import civgame.model.game.MilitaryStackingRules;
 import civgame.model.game.AttackExecutionService;
 import civgame.model.game.AttackOutcome;
 import civgame.model.game.TradingPostTradeService;
+import civgame.model.game.TribeDiplomacyService;
+import civgame.model.game.TribeGiftService;
+import civgame.model.game.TribeTradeService;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TradingPost;
+import civgame.model.tribe.Tribe;
 import civgame.model.unit.BorderExpander;
 import civgame.model.unit.Builder;
 import civgame.model.unit.Explorer;
@@ -44,6 +48,7 @@ import civgame.view.game.UnitMovementAnimator;
 import civgame.view.game.CombatMenuFactory;
 import civgame.view.game.CombatResultDialog;
 import civgame.view.game.TradingPostMenuFactory;
+import civgame.view.game.TribeMenuFactory;
 import civgame.view.hud.SelectedUnitPanel;
 
 import javax.swing.AbstractAction;
@@ -81,6 +86,7 @@ public class GameController {
     private final CombatTargetService combatTargetService;
     private final AttackExecutionService attackExecutionService;
     private final TradingPostMenuFactory tradingPostMenuFactory;
+    private final TribeMenuFactory tribeMenuFactory;
     private final SelectedUnitPanel selectedUnitPanel;
     private final FogOfWarCalculator fogOfWarCalculator;
     private final StationingService stationingService;
@@ -106,6 +112,7 @@ public class GameController {
         this.combatTargetService = new CombatTargetService();
         this.attackExecutionService = new AttackExecutionService();
         this.tradingPostMenuFactory = new TradingPostMenuFactory(new TradingPostTradeService());
+        this.tribeMenuFactory = new TribeMenuFactory(new TribeGiftService(), new TribeTradeService(), new TribeDiplomacyService());
         this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
         this.fogOfWarCalculator = fogOfWarCalculator;
         this.gameFrame = gameFrame;
@@ -271,6 +278,12 @@ public class GameController {
             return;
         }
 
+        Tribe tribe = gameSession.getTribeAt(clickedCoordinate);
+        if (tribe != null && tribe.isDiscovered()) {
+            showTribeMenu(tribe, mouseEvent);
+            return;
+        }
+
         List<Unit> unitsHere = findUnitsAtCoordinate(clickedCoordinate);
         if (unitsHere.isEmpty()) {
             return;
@@ -343,6 +356,12 @@ public class GameController {
     private void showTradingPostMenu(TradingPost tradingPost, MouseEvent mouseEvent) {
         Runnable onSuccess = createRepaintRunnable();
         JPopupMenu popupMenu = tradingPostMenuFactory.buildMenu(gameSession, tradingPost, onSuccess);
+        popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
+    }
+
+    private void showTribeMenu(Tribe tribe, MouseEvent mouseEvent) {
+        Runnable onSuccess = createRepaintRunnable();
+        JPopupMenu popupMenu = tribeMenuFactory.buildMenu(gameSession, tribe, onSuccess);
         popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
     }
 
