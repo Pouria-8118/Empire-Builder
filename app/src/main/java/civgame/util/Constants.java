@@ -357,6 +357,18 @@ public class Constants {
     public static final int SPRING_FARM_STABLE_BONUS = 1;
     public static final int WINTER_FARM_PENALTY = 1;
 
+    public static final int CIVILIAN_UNIT_MAX_HIT_POINTS = 20;
+
+    public static final double NATURAL_DISASTER_CHANCE_PER_TURN = 0.05;
+    public static final int DISASTER_EFFECT_DURATION_TICKS = 60;
+
+    public static final int EARTHQUAKE_RADIUS = 2;
+    public static final int EARTHQUAKE_UNIT_DAMAGE = 10;
+    public static final int EARTHQUAKE_TOWN_HALL_DAMAGE = 50;
+
+    public static final int FLOOD_UNIT_DAMAGE = 20;
+    public static final int FLOOD_BUILDING_DAMAGE = 30;
+
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";

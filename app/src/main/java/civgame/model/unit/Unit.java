@@ -1,8 +1,10 @@
 package civgame.model.unit;
 
+import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
+import civgame.util.Constants;
 
-public abstract class Unit {
+public abstract class Unit implements Attackable {
 
     private final String id;
     private HexCoordinate coordinate;
@@ -10,6 +12,8 @@ public abstract class Unit {
     private int currentActionPoints;
     private final int visionRadius;
     private boolean floating;
+    private int currentHitPoints;
+    private int maxHitPoints;
 
     public Unit(String id, HexCoordinate coordinate, int maxActionPoints, int visionRadius) {
         this.id = id;
@@ -18,6 +22,8 @@ public abstract class Unit {
         this.currentActionPoints = maxActionPoints;
         this.visionRadius = visionRadius;
         this.floating = false;
+        this.maxHitPoints = Constants.CIVILIAN_UNIT_MAX_HIT_POINTS;
+        this.currentHitPoints = maxHitPoints;
     }
 
     public abstract UnitType getUnitType();
@@ -71,10 +77,10 @@ public abstract class Unit {
     }
 
     public void applyActionPointPenalty(int amount) {
-            currentActionPoints = currentActionPoints - amount;
-            if (currentActionPoints < 0) {
-                currentActionPoints = 0;
-            }
+        currentActionPoints = currentActionPoints - amount;
+        if (currentActionPoints < 0) {
+            currentActionPoints = 0;
+        }
     }
 
     public boolean isFloating() {
@@ -83,5 +89,33 @@ public abstract class Unit {
 
     public void setFloating(boolean floating) {
         this.floating = floating;
+    }
+
+    protected void setMaxHitPoints(int maxHitPoints) {
+        this.maxHitPoints = maxHitPoints;
+        this.currentHitPoints = maxHitPoints;
+    }
+
+    @Override
+    public int getCurrentHitPoints() {
+        return currentHitPoints;
+    }
+
+    @Override
+    public int getMaxHitPoints() {
+        return maxHitPoints;
+    }
+
+    @Override
+    public boolean isDestroyedByCombat() {
+        return currentHitPoints <= 0;
+    }
+
+    @Override
+    public void applyCombatDamage(int amount) {
+        currentHitPoints = currentHitPoints - amount;
+        if (currentHitPoints < 0) {
+            currentHitPoints = 0;
+        }
     }
 }
