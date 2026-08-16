@@ -15,6 +15,7 @@ public class Tribe implements Attackable {
     private int relationshipValue;
     private boolean discovered;
     private boolean allied;
+    private boolean tradedThisTurn;
 
     public Tribe(String id, String name, TribeType tribeType, HexCoordinate campCoordinate) {
         this.id = id;
@@ -26,6 +27,7 @@ public class Tribe implements Attackable {
         this.relationshipValue = 0;
         this.discovered = false;
         this.allied = false;
+        this.tradedThisTurn = false;
     }
 
     public String getId() {
@@ -79,6 +81,14 @@ public class Tribe implements Attackable {
 
     public boolean isAllied() {
         return allied;
+    }
+
+    public boolean hasTradedThisTurn() {
+        return tradedThisTurn;
+    }
+
+    public void setTradedThisTurn(boolean tradedThisTurn) {
+        this.tradedThisTurn = tradedThisTurn;
     }
 
     public void setAllied(boolean allied) {
