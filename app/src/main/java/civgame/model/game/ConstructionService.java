@@ -1,5 +1,7 @@
 package civgame.model.game;
 
+import java.util.List;
+
 import civgame.model.building.Building;
 import civgame.model.building.BuildingCostProvider;
 import civgame.model.building.BuildingFactory;
@@ -10,6 +12,7 @@ import civgame.model.building.TownHallUpgradeType;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.resource.ResourceType;
+import civgame.model.tribe.Tribe;
 import civgame.model.unit.Builder;
 import civgame.model.event.BuildingPlacedEvent;
 public class ConstructionService {
@@ -31,6 +34,9 @@ public class ConstructionService {
             return false;
         }
         if (!gameSession.isWithinBorder(targetCoordinate)) {
+            return false;
+        }
+        if (isWithinAnyTribeTerritory(gameSession, targetCoordinate)) {
             return false;
         }
         if (!isTechnologyUnlockedFor(gameSession, buildingType)) {
@@ -102,5 +108,19 @@ public class ConstructionService {
         }
 
         return true;
+    }
+    
+    private boolean isWithinAnyTribeTerritory(GameSession gameSession, HexCoordinate coordinate) {
+        List<Tribe> tribes = gameSession.getTribes();
+        for (int i = 0; i < tribes.size(); i++) {
+            Tribe tribe = tribes.get(i);
+            if (tribe.isAllied()) {
+                continue;
+            }
+            if (tribe.getCampCoordinate().equals(coordinate) || tribe.getCampCoordinate().getNeighbors().contains(coordinate)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
