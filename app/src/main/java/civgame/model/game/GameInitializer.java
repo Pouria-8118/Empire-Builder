@@ -34,8 +34,16 @@ public class GameInitializer {
         setupInitialResources(gameSession);
         setupInitialUnits(gameSession, townHallCoordinate);
         setupTradingPost(gameSession, mapGenerator, hexMap, townHallCoordinate);
+        setupTribes(gameSession, mapGenerator, hexMap, townHallCoordinate);
 
         return gameSession;
+    }
+
+    private void setupTribes(GameSession gameSession, HexMapGenerator mapGenerator, HexMap hexMap, HexCoordinate townHallCoordinate) {
+        List<civgame.model.tribe.Tribe> tribes = mapGenerator.placeTribes(hexMap, townHallCoordinate);
+        for (int i = 0; i < tribes.size(); i++) {
+            gameSession.addTribe(tribes.get(i));
+        }
     }
 
     private void setupTradingPost(GameSession gameSession, HexMapGenerator mapGenerator, HexMap hexMap, HexCoordinate townHallCoordinate) {

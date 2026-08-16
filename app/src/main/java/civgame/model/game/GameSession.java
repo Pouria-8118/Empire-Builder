@@ -9,6 +9,7 @@ import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.TradingPost;
 import civgame.model.resource.ResourceStorage;
+import civgame.model.tribe.Tribe;
 import civgame.model.unit.Unit;
 import civgame.model.animal.WildAnimal;
 
@@ -36,6 +37,7 @@ public class GameSession {
     private final HappinessService happinessService;
     private final List<WildAnimal> wildAnimals;
     private final List<TradingPost> tradingPosts;
+    private final List<Tribe> tribes;
     private boolean bazaarTradedThisTurn;
     private boolean tradingPostTradedThisTurn;
     private int unitCap;
@@ -58,6 +60,7 @@ public class GameSession {
         this.happinessService = new HappinessService();
         this.wildAnimals = new ArrayList<WildAnimal>();
         this.tradingPosts = new ArrayList<TradingPost>();
+        this.tribes = new ArrayList<Tribe>();
         this.bazaarTradedThisTurn = false;
         this.tradingPostTradedThisTurn = false;
         this.unitCap = initialUnitCap;
@@ -270,6 +273,23 @@ public class GameSession {
 
     public void resetTradingPostTradeFlag() {
         this.tradingPostTradedThisTurn = false;
+    }
+
+    public void addTribe(Tribe tribe) {
+        tribes.add(tribe);
+    }
+
+    public List<Tribe> getTribes() {
+        return tribes;
+    }
+
+    public Tribe getTribeAt(HexCoordinate coordinate) {
+        for (int i = 0; i < tribes.size(); i++) {
+            if (tribes.get(i).getCampCoordinate().equals(coordinate)) {
+                return tribes.get(i);
+            }
+        }
+        return null;
     }
     
     public int getCurrentTurnNumber() {

@@ -9,6 +9,10 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
+import civgame.model.tribe.Tribe;
+import civgame.model.tribe.TribeType;
+import civgame.util.UnitIdGenerator;
+
 public class HexMapGenerator {
 
     private static final int FOREST_PATCH_MIN_SIZE = 4;
@@ -39,6 +43,9 @@ public class HexMapGenerator {
     private static final int RIVER_MIN_DISTANCE_FROM_TOWN_HALL = 3;
 
     private static final int TRADING_POST_MIN_DISTANCE_FROM_TOWN_HALL = 4;
+
+    private static final int TRIBE_MIN_DISTANCE_FROM_TOWN_HALL = 6;
+    private static final int TRIBE_MIN_DISTANCE_BETWEEN_CAMPS = 4;
 
     private static final double IRON_DEPOSIT_CHANCE = 0.3;
     private static final double GRASSLAND_RESOURCE_CHANCE = 0.5;
@@ -129,6 +136,97 @@ public class HexMapGenerator {
         }
 
         return candidates.get(random.nextInt(candidates.size()));
+    }
+    public List<Tribe> placeTribes(HexMap hexMap, HexCoordinate townHallCoordinate) {
+        List<Tribe> tribes = new ArrayList<Tribe>();
+        List<HexCoordinate> usedCoordinates = new ArrayList<HexCoordinate>();
+
+        addTribeIfPossible(tribes, usedCoordinates, hexMap, townHallCoordinate, TribeType.FARMER, "Farmer Tribe");
+        addTribeIfPossible(tribes, usedCoordinates, hexMap, townHallCoordinate, TribeType.WARRIOR, "Warrior Tribe");
+        addTribeIfPossible(tribes, usedCoordinates, hexMap, townHallCoordinate, TribeType.TRADER, "Trader Tribe");
+        addTribeIfPossible(tribes, usedCoordinates, hexMap, townHallCoordinate, TribeType.MOUNTAIN, "Mountain Tribe");
+        addTribeIfPossible(tribes, usedCoordinates, hexMap, townHallCoordinate, TribeType.COASTAL, "Coastal Tribe");
+
+        return tribes;
+    }
+
+    private void addTribeIfPossible(List<Tribe> tribes, List<HexCoordinate> usedCoordinates, HexMap hexMap, HexCoordinate townHallCoordinate, TribeType tribeType, String tribeName) {
+        HexCoordinate campCoordinate = pickTribeCampCoordinate(hexMap, townHallCoordinate, usedCoordinates, tribeType);
+        if (campCoordinate == null) {
+            return;
+        }
+
+        usedCoordinates.add(campCoordinate);
+        String id = UnitIdGenerator.generateNextId("TRIBE");
+        tribes.add(new Tribe(id, tribeName, tribeType, campCoordinate));
+    }
+
+    private HexCoordinate pickTribeCampCoordinate(HexMap hexMap, HexCoordinate townHallCoordinate, List<HexCoordinate> usedCoordinates, TribeType tribeType) {
+        List<HexCoordinate> candidates = new ArrayList<HexCoordinate>();
+        List<HexCoordinate> preferredCandidates = new ArrayList<HexCoordinate>();
+
+        for (HexCoordinate coordinate : hexMap.getAllTiles().keySet()) {
+            if (townHallCoordinate.distanceTo(coordinate) < TRIBE_MIN_DISTANCE_FROM_TOWN_HALL) {
+                continue;
+            }
+            if (isTooCloseToUsedCoordinates(coordinate, usedCoordinates)) {
+                continue;
+            }
+
+            HexTile tile = hexMap.getTile(coordinate);
+            if (tile.getTerrainType() == TerrainType.SEA || tile.getTerrainType() == TerrainType.MOUNTAIN_RANGE) {
+                continue;
+            }
+
+            candidates.add(coordinate);
+            if (matchesTribeTerrainPreference(hexMap, coordinate, tribeType)) {
+                preferredCandidates.add(coordinate);
+            }
+        }
+
+        List<HexCoordinate> pool = preferredCandidates.isEmpty() ? candidates : preferredCandidates;
+        if (pool.isEmpty()) {
+            return null;
+        }
+
+        return pool.get(random.nextInt(pool.size()));
+    }
+
+    private boolean isTooCloseToUsedCoordinates(HexCoordinate coordinate, List<HexCoordinate> usedCoordinates) {
+        for (int i = 0; i < usedCoordinates.size(); i++) {
+            if (coordinate.distanceTo(usedCoordinates.get(i)) < TRIBE_MIN_DISTANCE_BETWEEN_CAMPS) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesTribeTerrainPreference(HexMap hexMap, HexCoordinate coordinate, TribeType tribeType) {
+        HexTile tile = hexMap.getTile(coordinate);
+
+        if (tribeType == TribeType.FARMER) {
+            return tile.getTerrainType() == TerrainType.PLAIN || tile.getTerrainType() == TerrainType.GRASSLAND;
+        }
+        if (tribeType == TribeType.MOUNTAIN) {
+            return hasNeighborOfTerrain(hexMap, coordinate, TerrainType.MOUNTAIN);
+        }
+        if (tribeType == TribeType.COASTAL) {
+            return hasNeighborOfTerrain(hexMap, coordinate, TerrainType.SEA);
+        }
+        return true;
+    }
+
+    private boolean hasNeighborOfTerrain(HexMap hexMap, HexCoordinate coordinate, TerrainType terrainType) {
+        List<HexCoordinate> neighbors = coordinate.getNeighbors();
+        for (int i = 0; i < neighbors.size(); i++) {
+            if (!hexMap.containsCoordinate(neighbors.get(i))) {
+                continue;
+            }
+            if (hexMap.getTile(neighbors.get(i)).getTerrainType() == terrainType) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Set<HexCoordinate> generateForestPatches(HexMap hexMap, HexCoordinate townHallCoordinate) {
