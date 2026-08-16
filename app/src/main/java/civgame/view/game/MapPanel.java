@@ -11,6 +11,7 @@ import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TileVisibility;
 import civgame.model.map.Wall;
+import civgame.model.map.TradingPost;
 import civgame.model.unit.Unit;
 import civgame.util.BuildingColorProvider;
 import civgame.util.BuildingIconProvider;
@@ -107,6 +108,7 @@ public class MapPanel extends JPanel {
         drawAllWalls(graphics2D, hexSize, centerX, centerY);
         drawTownHall(graphics2D, hexSize, centerX, centerY);
         drawAllWildAnimals(graphics2D, hexSize, centerX, centerY);
+        drawAllTradingPosts(graphics2D, hexSize, centerX, centerY);
         drawAllBuildings(graphics2D, hexSize, centerX, centerY);
         drawAllSettlements(graphics2D, hexSize, centerX, centerY);
         drawAllUnits(graphics2D, hexSize, centerX, centerY);
@@ -203,6 +205,33 @@ public class MapPanel extends JPanel {
             graphics2D.setColor(Color.WHITE);
             graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (iconSize * 0.4)));
             graphics2D.drawString(String.valueOf(wildAnimal.getCurrentHitPoints()), (int) (drawX - iconSize * 0.15), (int) (drawY + iconSize * 0.15));
+        }
+    }
+    private void drawAllTradingPosts(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        List<TradingPost> tradingPosts = gameSession.getTradingPosts();
+
+        for (int i = 0; i < tradingPosts.size(); i++) {
+            TradingPost tradingPost = tradingPosts.get(i);
+            HexTile tile = gameSession.getHexMap().getTile(tradingPost.getCoordinate());
+            if (tile == null || tile.getVisibility() == TileVisibility.UNSEEN) {
+                continue;
+            }
+
+            Point2D pixelPosition = HexGeometry.axialToPixel(tradingPost.getCoordinate(), hexSize);
+            double drawX = centerX + pixelPosition.getX();
+            double drawY = centerY + pixelPosition.getY();
+            int markerSize = (int) (hexSize * 0.7);
+
+            Polygon diamond = new Polygon();
+            diamond.addPoint((int) drawX, (int) (drawY - markerSize / 2.0));
+            diamond.addPoint((int) (drawX + markerSize / 2.0), (int) drawY);
+            diamond.addPoint((int) drawX, (int) (drawY + markerSize / 2.0));
+            diamond.addPoint((int) (drawX - markerSize / 2.0), (int) drawY);
+
+            graphics2D.setColor(new Color(180, 140, 40));
+            graphics2D.fillPolygon(diamond);
+            graphics2D.setColor(Color.BLACK);
+            graphics2D.drawPolygon(diamond);
         }
     }
 
