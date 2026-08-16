@@ -40,6 +40,7 @@ public class GameSession {
     private final List<Tribe> tribes;
     private boolean bazaarTradedThisTurn;
     private boolean tradingPostTradedThisTurn;
+    private boolean pendingDockDiscount;
     private int unitCap;
     private int currentTurnNumber;
     private boolean inStarvation;
@@ -62,6 +63,7 @@ public class GameSession {
         this.tradingPosts = new ArrayList<TradingPost>();
         this.tribes = new ArrayList<Tribe>();
         this.bazaarTradedThisTurn = false;
+        this.pendingDockDiscount = false;
         this.tradingPostTradedThisTurn = false;
         this.unitCap = initialUnitCap;
         this.adjacencyBonusService.subscribeTo(this);
@@ -290,6 +292,14 @@ public class GameSession {
             }
         }
         return null;
+    }
+
+    public boolean hasPendingDockDiscount() {
+        return pendingDockDiscount;
+    }
+
+    public void setPendingDockDiscount(boolean pendingDockDiscount) {
+        this.pendingDockDiscount = pendingDockDiscount;
     }
     
     public int getCurrentTurnNumber() {

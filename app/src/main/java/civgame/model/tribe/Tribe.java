@@ -16,6 +16,9 @@ public class Tribe implements Attackable {
     private boolean discovered;
     private boolean allied;
     private boolean tradedThisTurn;
+    private TribeMission activeMission;
+    private int missionCooldownUntilTurn;
+    private double tradeRateBonus;
 
     public Tribe(String id, String name, TribeType tribeType, HexCoordinate campCoordinate) {
         this.id = id;
@@ -28,6 +31,9 @@ public class Tribe implements Attackable {
         this.discovered = false;
         this.allied = false;
         this.tradedThisTurn = false;
+        this.activeMission = null;
+        this.missionCooldownUntilTurn = 0;
+        this.tradeRateBonus = 0.0;
     }
 
     public String getId() {
@@ -89,6 +95,30 @@ public class Tribe implements Attackable {
 
     public void setTradedThisTurn(boolean tradedThisTurn) {
         this.tradedThisTurn = tradedThisTurn;
+    }
+
+    public TribeMission getActiveMission() {
+        return activeMission;
+    }
+
+    public void setActiveMission(TribeMission activeMission) {
+        this.activeMission = activeMission;
+    }
+
+    public int getMissionCooldownUntilTurn() {
+        return missionCooldownUntilTurn;
+    }
+
+    public void setMissionCooldownUntilTurn(int missionCooldownUntilTurn) {
+        this.missionCooldownUntilTurn = missionCooldownUntilTurn;
+    }
+
+    public double getTradeRateBonus() {
+        return tradeRateBonus;
+    }
+
+    public void setTradeRateBonus(double tradeRateBonus) {
+        this.tradeRateBonus = tradeRateBonus;
     }
 
     public void setAllied(boolean allied) {

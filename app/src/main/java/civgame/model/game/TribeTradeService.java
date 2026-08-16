@@ -42,7 +42,7 @@ public class TribeTradeService {
         }
 
         TribeTradeStrategy strategy = TribeTradeStrategyProvider.getStrategy(tribe.getTribeType());
-        int receivedAmount = (int) (offeredAmount * strategy.getRate());
+        int receivedAmount = (int) (offeredAmount * (strategy.getRate() + tribe.getTradeRateBonus()));
 
         gameSession.getResourceStorage().removeResource(offeredType, offeredAmount);
         gameSession.getResourceStorage().addResource(requestedType, receivedAmount);

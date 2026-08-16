@@ -16,12 +16,14 @@ public class TurnEngine {
     private final UpkeepService upkeepService;
     private final AutoExploreService autoExploreService;
     private final WildAnimalCombatService wildAnimalCombatService;
+    private final TribeMissionService tribeMissionService;
 
     public TurnEngine() {
         this.resourceProductionService = new ResourceProductionService();
         this.upkeepService = new UpkeepService();
         this.autoExploreService = new AutoExploreService();
         this.wildAnimalCombatService = new WildAnimalCombatService();
+        this.tribeMissionService = new TribeMissionService();
     }
 
     public TurnSummary executeTurn(GameSession gameSession) {
@@ -46,6 +48,7 @@ public class TurnEngine {
         gameSession.resetBazaarTradeFlag();
         gameSession.resetTradingPostTradeFlag();
         resetTribeTradeFlags(gameSession);
+        tribeMissionService.checkAllActiveMissionConditions(gameSession);
 
         gameSession.incrementTurnNumber();
         gameSession.getEventBus().publish(new TurnEndedEvent(gameSession.getCurrentTurnNumber()));

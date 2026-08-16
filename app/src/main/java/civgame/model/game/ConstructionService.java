@@ -14,6 +14,7 @@ import civgame.model.map.HexTile;
 import civgame.model.resource.ResourceType;
 import civgame.model.tribe.Tribe;
 import civgame.model.unit.Builder;
+import civgame.util.Constants;
 import civgame.model.event.BuildingPlacedEvent;
 public class ConstructionService {
 
@@ -56,7 +57,7 @@ public class ConstructionService {
             return false;
         }
 
-        int woodCost = BuildingCostProvider.getWoodCost(buildingType);
+        int woodCost = getEffectiveWoodCost(gameSession, buildingType);
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, woodCost)) {
             return false;
         }
@@ -91,12 +92,16 @@ public class ConstructionService {
         }
 
         int actionPointCost = BuildingCostProvider.getConstructionActionPointCost(buildingType);
-        int woodCost = BuildingCostProvider.getWoodCost(buildingType);
+        int woodCost = getEffectiveWoodCost(gameSession, buildingType);
         int stoneCost = BuildingCostProvider.getStoneCost(buildingType);
 
         builder.consumeActionPoints(actionPointCost);
         gameSession.getResourceStorage().removeResource(ResourceType.WOOD, woodCost);
         gameSession.getResourceStorage().removeResource(ResourceType.STONE, stoneCost);
+
+        if (buildingType == BuildingType.DOCK && gameSession.hasPendingDockDiscount()) {
+            gameSession.setPendingDockDiscount(false);
+        }
 
         Building newBuilding = buildingFactory.createBuilding(buildingType, targetCoordinate);
         gameSession.addBuilding(newBuilding);
@@ -123,4 +128,14 @@ public class ConstructionService {
         }
         return false;
     }
+
+    private int getEffectiveWoodCost(GameSession gameSession, BuildingType buildingType) {
+        int baseCost = BuildingCostProvider.getWoodCost(buildingType);
+        if (buildingType == BuildingType.DOCK && gameSession.hasPendingDockDiscount()) {
+            int discounted = baseCost - Constants.COASTAL_MISSION_DOCK_DISCOUNT;
+            return Math.max(0, discounted);
+        }
+        return baseCost;
+    }
+    
 }

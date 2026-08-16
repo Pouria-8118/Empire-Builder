@@ -7,6 +7,8 @@ import civgame.util.Constants;
 
 public class TribeDiplomacyService {
 
+    private final TribeMissionService tribeMissionService = new TribeMissionService();
+
     public boolean declareWar(GameSession gameSession, Tribe tribe) {
         if (tribe.getRelationState().isAtWar()) {
             return false;
@@ -17,6 +19,7 @@ public class TribeDiplomacyService {
 
         tribe.setAllied(false);
         tribe.setRelationshipValue(-100);
+        tribeMissionService.cancelMissionDueToWar(tribe);
 
         if (wasAllied) {
             gameSession.getHappinessService().applyOneTimeDelta(Constants.TRIBE_WAR_ON_ALLY_HAPPINESS_PENALTY);

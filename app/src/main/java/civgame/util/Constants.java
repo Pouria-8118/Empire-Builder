@@ -305,6 +305,38 @@ public class Constants {
     public static final int TRIBE_PEACE_IRON_COST = 30;
     public static final int TRIBE_PEACE_RESULTING_RELATIONSHIP = -10;
 
+    public static final int TRIBE_MISSION_MIN_RELATIONSHIP = 20;
+    public static final int MISSION_CANCEL_RELATIONSHIP_PENALTY = -5;
+    public static final int MISSION_FAILURE_RELATIONSHIP_PENALTY = -10;
+    public static final int MISSION_FAILURE_COOLDOWN_TURNS = 5;
+
+    public static final int FARMER_MISSION_WOOD_COST = 20;
+    public static final int FARMER_MISSION_STONE_COST = 10;
+    public static final int FARMER_MISSION_DEADLINE_TURNS = 5;
+    public static final int FARMER_MISSION_REWARD_FOOD = 30;
+    public static final int FARMER_MISSION_REWARD_RELATIONSHIP = 15;
+
+    public static final int TRADER_MISSION_DEADLINE_TURNS = 10;
+    public static final double TRADER_MISSION_TRADE_RATE_BONUS = 0.1;
+    public static final int TRADER_MISSION_REWARD_RELATIONSHIP = 20;
+
+    public static final int WARRIOR_MISSION_DEADLINE_TURNS = 8;
+    public static final int WARRIOR_MISSION_REQUIRED_KILLS = 2;
+    public static final int WARRIOR_MISSION_RADIUS = 5;
+    public static final int WARRIOR_MISSION_REWARD_SWORDSMEN_COUNT = 3;
+    public static final int WARRIOR_MISSION_REWARD_RELATIONSHIP = 20;
+
+    public static final int MOUNTAIN_MISSION_WOOD_COST = 15;
+    public static final int MOUNTAIN_MISSION_IRON_COST = 10;
+    public static final int MOUNTAIN_MISSION_DEADLINE_TURNS = 6;
+    public static final int MOUNTAIN_MISSION_REWARD_STONE = 20;
+    public static final int MOUNTAIN_MISSION_REWARD_RELATIONSHIP = 15;
+
+    public static final int COASTAL_MISSION_DEADLINE_TURNS = 10;
+    public static final int COASTAL_MISSION_DOCK_RADIUS = 4;
+    public static final int COASTAL_MISSION_REWARD_FOOD = 30;
+    public static final int COASTAL_MISSION_DOCK_DISCOUNT = 10;
+
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";

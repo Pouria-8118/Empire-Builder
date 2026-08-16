@@ -24,11 +24,13 @@ public class AttackExecutionService {
     private final CombatTargetService combatTargetService;
     private final CombatResolutionService combatResolutionService;
     private final CombatDamageApplier combatDamageApplier;
+    private final TribeMissionService tribeMissionService;
 
     public AttackExecutionService() {
         this.combatTargetService = new CombatTargetService();
         this.combatResolutionService = new CombatResolutionService();
         this.combatDamageApplier = new CombatDamageApplier();
+        this.tribeMissionService = new TribeMissionService();
     }
 
     public AttackOutcome executeAttack(GameSession gameSession, HexCoordinate attackerCoordinate, HexCoordinate defenderCoordinate) {
@@ -58,6 +60,10 @@ public class AttackExecutionService {
 
         List<Unit> attackerLosses = combatDamageApplier.applyHitsToUnits(gameSession, attackerParticipants, combatResult.getAttackerHits());
         List<Unit> defenderLosses = combatDamageApplier.applyHitsToUnits(gameSession, defenderUnits, combatResult.getDefenderHits());
+
+        if (!defenderLosses.isEmpty()) {
+            tribeMissionService.registerWarriorMissionKill(gameSession, defenderCoordinate);
+        }
 
         return new AttackOutcome(combatResult, false, attackerLosses, defenderLosses);
     }
