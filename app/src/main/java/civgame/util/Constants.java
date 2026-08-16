@@ -337,6 +337,10 @@ public class Constants {
     public static final int COASTAL_MISSION_REWARD_FOOD = 30;
     public static final int COASTAL_MISSION_DOCK_DISCOUNT = 10;
 
+    public static final int TRIBE_GUARD_SWORDSMAN_HIT_POINTS = 1;
+    public static final int TRIBE_GUARD_ARCHER_HIT_POINTS = 1;
+    public static final int TRIBE_DEFEAT_LOOT_AMOUNT = 40;
+
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";

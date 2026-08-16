@@ -1,5 +1,7 @@
 package civgame.model.tribe;
 
+import java.util.List;
+
 import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 import civgame.util.Constants;
@@ -19,6 +21,8 @@ public class Tribe implements Attackable {
     private TribeMission activeMission;
     private int missionCooldownUntilTurn;
     private double tradeRateBonus;
+    private final List<TribeGuardUnit> guards;
+    private boolean defeated;
 
     public Tribe(String id, String name, TribeType tribeType, HexCoordinate campCoordinate) {
         this.id = id;
@@ -34,6 +38,8 @@ public class Tribe implements Attackable {
         this.activeMission = null;
         this.missionCooldownUntilTurn = 0;
         this.tradeRateBonus = 0.0;
+        this.guards = TribeGuardProvider.createDefaultGuards(tribeType);
+        this.defeated = false;
     }
 
     public String getId() {
@@ -119,6 +125,18 @@ public class Tribe implements Attackable {
 
     public void setTradeRateBonus(double tradeRateBonus) {
         this.tradeRateBonus = tradeRateBonus;
+    }
+
+    public List<TribeGuardUnit> getGuards() {
+        return guards;
+    }
+
+    public boolean isDefeated() {
+        return defeated;
+    }
+
+    public void setDefeated(boolean defeated) {
+        this.defeated = defeated;
     }
 
     public void setAllied(boolean allied) {
