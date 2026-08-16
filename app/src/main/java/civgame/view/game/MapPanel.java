@@ -2,7 +2,9 @@ package civgame.view.game;
 
 import civgame.model.building.Building;
 import civgame.model.building.TownHall;
+import civgame.model.game.ActiveDisasterEffect;
 import civgame.model.game.GameSession;
+import civgame.model.game.NaturalDisasterType;
 import civgame.model.game.SeasonType;
 import civgame.model.animal.WildAnimal;
 import civgame.model.map.HexCoordinate;
@@ -82,6 +84,7 @@ public class MapPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 weatherEffectRenderer.advance(gameSession.getCurrentSeason());
+                gameSession.tickActiveDisasterEffects();
                 repaint();
             }
         });
@@ -130,6 +133,7 @@ public class MapPanel extends JPanel {
         drawAllTribeCamps(graphics2D, hexSize, centerX, centerY);
         weatherEffectRenderer.draw(graphics2D, gameSession.getCurrentSeason(), getWidth(), getHeight());
         drawSeasonBanner(graphics2D);
+        drawActiveDisasterEffects(graphics2D, hexSize, centerX, centerY);
         drawAllBuildings(graphics2D, hexSize, centerX, centerY);
         drawAllSettlements(graphics2D, hexSize, centerX, centerY);
         drawAllUnits(graphics2D, hexSize, centerX, centerY);
@@ -295,6 +299,46 @@ public class MapPanel extends JPanel {
         graphics2D.drawRoundRect(10, 10, 130, 30, 10, 10);
         graphics2D.setFont(new Font("SansSerif", Font.BOLD, 14));
         graphics2D.drawString(season.name(), 22, 30);
+    }
+
+    private void drawActiveDisasterEffects(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        List<ActiveDisasterEffect> effects = gameSession.getActiveDisasterEffects();
+
+        for (int i = 0; i < effects.size(); i++) {
+            ActiveDisasterEffect effect = effects.get(i);
+            Point2D pixelPosition = HexGeometry.axialToPixel(effect.getCenterCoordinate(), hexSize);
+            double effectX = centerX + pixelPosition.getX();
+            double effectY = centerY + pixelPosition.getY();
+
+            if (effect.getType() == NaturalDisasterType.EARTHQUAKE) {
+                drawEarthquakeEffect(graphics2D, effectX, effectY, hexSize);
+            } else if (effect.getType() == NaturalDisasterType.FLOOD) {
+                drawFloodEffect(graphics2D, effectX, effectY, hexSize, effect.getRemainingTicks());
+            }
+        }
+    }
+
+    private void drawEarthquakeEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
+        graphics2D.setColor(new Color(90, 60, 30));
+        graphics2D.setStroke(new BasicStroke(2f));
+
+        for (int i = 0; i < 4; i++) {
+            double angle = Math.random() * 360.0;
+            double length = hexSize * 1.5;
+            int endX = (int) (centerX + length * Math.cos(Math.toRadians(angle)));
+            int endY = (int) (centerY + length * Math.sin(Math.toRadians(angle)));
+            graphics2D.drawLine((int) centerX, (int) centerY, endX, endY);
+        }
+
+        graphics2D.setStroke(new BasicStroke(1f));
+    }
+
+    private void drawFloodEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize, int remainingTicks) {
+        double progress = 1.0 - (remainingTicks / (double) Constants.DISASTER_EFFECT_DURATION_TICKS);
+        int radius = (int) (hexSize * 2 * progress);
+
+        graphics2D.setColor(new Color(40, 100, 180, 120));
+        graphics2D.fillOval((int) (centerX - radius), (int) (centerY - radius), radius * 2, radius * 2);
     }
 
     private Color getSeasonBannerColor(SeasonType season) {
