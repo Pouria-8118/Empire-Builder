@@ -243,7 +243,7 @@ public class MapPanel extends JPanel {
 
         for (int i = 0; i < tribes.size(); i++) {
             Tribe tribe = tribes.get(i);
-            if (!tribe.isDiscovered()) {
+            if (!tribe.isDiscovered() || tribe.isDefeated()) {
                 continue;
             }
 
