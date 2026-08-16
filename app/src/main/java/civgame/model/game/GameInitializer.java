@@ -4,6 +4,7 @@ import civgame.model.building.TownHall;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexMapGenerator;
+import civgame.model.map.TradingPost;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitFactory;
@@ -32,8 +33,16 @@ public class GameInitializer {
 
         setupInitialResources(gameSession);
         setupInitialUnits(gameSession, townHallCoordinate);
+        setupTradingPost(gameSession, mapGenerator, hexMap, townHallCoordinate);
 
         return gameSession;
+    }
+
+    private void setupTradingPost(GameSession gameSession, HexMapGenerator mapGenerator, HexMap hexMap, HexCoordinate townHallCoordinate) {
+        HexCoordinate tradingPostCoordinate = mapGenerator.pickTradingPostCoordinate(hexMap, townHallCoordinate);
+        if (tradingPostCoordinate != null) {
+            gameSession.addTradingPost(new TradingPost(tradingPostCoordinate));
+        }
     }
 
     private void setupInitialResources(GameSession gameSession) {

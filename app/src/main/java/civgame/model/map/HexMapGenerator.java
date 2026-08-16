@@ -38,6 +38,8 @@ public class HexMapGenerator {
     private static final int RIVER_MAX_LENGTH = 10;
     private static final int RIVER_MIN_DISTANCE_FROM_TOWN_HALL = 3;
 
+    private static final int TRADING_POST_MIN_DISTANCE_FROM_TOWN_HALL = 4;
+
     private static final double IRON_DEPOSIT_CHANCE = 0.3;
     private static final double GRASSLAND_RESOURCE_CHANCE = 0.5;
     private static final double PLAIN_RESOURCE_CHANCE = 0.4;
@@ -104,6 +106,29 @@ public class HexMapGenerator {
             visited.add(nextCoordinate);
             current = nextCoordinate;
         }
+    }
+    
+    public HexCoordinate pickTradingPostCoordinate(HexMap hexMap, HexCoordinate townHallCoordinate) {
+        List<HexCoordinate> candidates = new ArrayList<HexCoordinate>();
+
+        for (HexCoordinate coordinate : hexMap.getAllTiles().keySet()) {
+            if (townHallCoordinate.distanceTo(coordinate) < TRADING_POST_MIN_DISTANCE_FROM_TOWN_HALL) {
+                continue;
+            }
+
+            HexTile tile = hexMap.getTile(coordinate);
+            if (tile.getTerrainType() == TerrainType.SEA || tile.getTerrainType() == TerrainType.MOUNTAIN_RANGE) {
+                continue;
+            }
+
+            candidates.add(coordinate);
+        }
+
+        if (candidates.isEmpty()) {
+            return null;
+        }
+
+        return candidates.get(random.nextInt(candidates.size()));
     }
 
     private Set<HexCoordinate> generateForestPatches(HexMap hexMap, HexCoordinate townHallCoordinate) {
