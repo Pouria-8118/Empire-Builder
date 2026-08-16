@@ -23,6 +23,10 @@ public class Tribe implements Attackable {
     private double tradeRateBonus;
     private final List<TribeGuardUnit> guards;
     private boolean defeated;
+    private boolean zoneWarningIssued;
+    private boolean missionOfferAvailable;
+    private int nextMissionCheckTurn;
+    private int nextGuardSpawnTurn;
 
     public Tribe(String id, String name, TribeType tribeType, HexCoordinate campCoordinate) {
         this.id = id;
@@ -40,6 +44,10 @@ public class Tribe implements Attackable {
         this.tradeRateBonus = 0.0;
         this.guards = TribeGuardProvider.createDefaultGuards(tribeType);
         this.defeated = false;
+        this.zoneWarningIssued = false;
+        this.missionOfferAvailable = true;
+        this.nextMissionCheckTurn = 0;
+        this.nextGuardSpawnTurn = 0;
     }
 
     public String getId() {
@@ -137,6 +145,38 @@ public class Tribe implements Attackable {
 
     public void setDefeated(boolean defeated) {
         this.defeated = defeated;
+    }
+
+    public boolean isZoneWarningIssued() {
+        return zoneWarningIssued;
+    }
+
+    public void setZoneWarningIssued(boolean zoneWarningIssued) {
+        this.zoneWarningIssued = zoneWarningIssued;
+    }
+
+    public boolean isMissionOfferAvailable() {
+        return missionOfferAvailable;
+    }
+
+    public void setMissionOfferAvailable(boolean missionOfferAvailable) {
+        this.missionOfferAvailable = missionOfferAvailable;
+    }
+
+    public int getNextMissionCheckTurn() {
+        return nextMissionCheckTurn;
+    }
+
+    public void setNextMissionCheckTurn(int nextMissionCheckTurn) {
+        this.nextMissionCheckTurn = nextMissionCheckTurn;
+    }
+
+    public int getNextGuardSpawnTurn() {
+        return nextGuardSpawnTurn;
+    }
+
+    public void setNextGuardSpawnTurn(int nextGuardSpawnTurn) {
+        this.nextGuardSpawnTurn = nextGuardSpawnTurn;
     }
 
     public void setAllied(boolean allied) {

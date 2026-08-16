@@ -1,8 +1,12 @@
 package civgame.model.game;
 
+import civgame.model.map.HexCoordinate;
 import civgame.model.resource.ResourceType;
 import civgame.model.tribe.Tribe;
 import civgame.model.tribe.TribeAllianceRules;
+import civgame.model.tribe.TribeType;
+import civgame.model.unit.UnitFactory;
+import civgame.model.unit.UnitType;
 import civgame.util.Constants;
 
 public class TribeDiplomacyService {
@@ -70,6 +74,19 @@ public class TribeDiplomacyService {
         }
 
         tribe.setAllied(true);
+        applyAllianceSigningBonus(gameSession, tribe);
+
         return true;
+    }
+
+    private void applyAllianceSigningBonus(GameSession gameSession, Tribe tribe) {
+        if (tribe.getTribeType() == TribeType.WARRIOR) {
+            MilitarySpawnFinder spawnFinder = new MilitarySpawnFinder();
+            UnitFactory unitFactory = new UnitFactory();
+            HexCoordinate spawnCoordinate = spawnFinder.findSpawnCoordinate(gameSession, UnitType.SWORDSMAN);
+            gameSession.addUnit(unitFactory.createUnit(UnitType.SWORDSMAN, spawnCoordinate));
+        } else if (tribe.getTribeType() == TribeType.TRADER) {
+            tribe.setTradeRateBonus(tribe.getTradeRateBonus() + Constants.TRADER_ALLY_TRADE_RATE_BONUS);
+        }
     }
 }

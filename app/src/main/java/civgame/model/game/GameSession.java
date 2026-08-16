@@ -38,6 +38,7 @@ public class GameSession {
     private final List<WildAnimal> wildAnimals;
     private final List<TradingPost> tradingPosts;
     private final List<Tribe> tribes;
+    private final List<String> tribeNotifications;
     private boolean bazaarTradedThisTurn;
     private boolean tradingPostTradedThisTurn;
     private boolean pendingDockDiscount;
@@ -62,6 +63,7 @@ public class GameSession {
         this.wildAnimals = new ArrayList<WildAnimal>();
         this.tradingPosts = new ArrayList<TradingPost>();
         this.tribes = new ArrayList<Tribe>();
+        this.tribeNotifications = new ArrayList<String>();
         this.bazaarTradedThisTurn = false;
         this.pendingDockDiscount = false;
         this.tradingPostTradedThisTurn = false;
@@ -283,6 +285,28 @@ public class GameSession {
 
     public List<Tribe> getTribes() {
         return tribes;
+    }
+
+    public void addTribeNotification(String message) {
+        tribeNotifications.add(message);
+    }
+
+    public void clearTribeNotifications() {
+        tribeNotifications.clear();
+    }
+
+    public List<String> getTribeNotifications() {
+        return tribeNotifications;
+    }
+
+    public boolean hasAlliedCoastalTribe() {
+        for (int i = 0; i < tribes.size(); i++) {
+            Tribe tribe = tribes.get(i);
+            if (tribe.isAllied() && tribe.getTribeType() == civgame.model.tribe.TribeType.COASTAL) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Tribe getTribeAt(HexCoordinate coordinate) {

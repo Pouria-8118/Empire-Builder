@@ -34,6 +34,7 @@ public class HudPanel extends JPanel {
     private final JLabel turnLabel;
     private final JLabel townHallLabel;
     private final JLabel happinessLabel;
+    private final JLabel tribeNotificationLabel;
     private final JLabel foodLabel;
     private final JLabel woodLabel;
     private final JLabel stoneLabel;
@@ -48,6 +49,7 @@ public class HudPanel extends JPanel {
         turnLabel = createStyledLabel("Turn: 1", null);
         townHallLabel = createStyledLabel("Town Hall: BASE_CAMP (200/200 HP)  DEF:10", null);
         happinessLabel = createStyledLabel("Happiness: 0", null);
+        tribeNotificationLabel = createStyledLabel("", null);
         foodLabel = createStyledLabel("Food: 0/0", Constants.FOOD_ICON_PATH);
         woodLabel = createStyledLabel("Wood: 0/0", Constants.WOOD_ICON_PATH);
         stoneLabel = createStyledLabel("Stone: 0/0", Constants.STONE_ICON_PATH);
@@ -58,6 +60,7 @@ public class HudPanel extends JPanel {
         add(turnLabel);
         add(townHallLabel);
         add(happinessLabel);
+        add(tribeNotificationLabel);
         add(foodLabel);
         add(woodLabel);
         add(stoneLabel);
@@ -102,6 +105,7 @@ public class HudPanel extends JPanel {
         turnLabel.setText("Turn: " + gameSession.getCurrentTurnNumber());
         updateTownHallLabel(gameSession);
         happinessLabel.setText("Happiness: " + gameSession.getHappinessService().getHappinessValue() + " (" + gameSession.getHappinessService().getCurrentLevel().name() + ")");
+        updateTribeNotificationLabel(gameSession);
 
         updateResourceLabel(foodLabel, "Food", gameSession.getResourceStorage(), ResourceType.FOOD, netRates);
         updateResourceLabel(woodLabel, "Wood", gameSession.getResourceStorage(), ResourceType.WOOD, netRates);
@@ -136,6 +140,15 @@ public class HudPanel extends JPanel {
         TownHall townHall = gameSession.getTownHall();
         String labelText = "Town Hall: " + townHall.getLevel().name() + " (" + townHall.getCurrentHitPoints() + "/" + townHall.getMaxHitPoints() + " HP)  DEF:" + townHall.getDefense();
         townHallLabel.setText(labelText);
+    }
+
+    private void updateTribeNotificationLabel(GameSession gameSession) {
+        java.util.List<String> notifications = gameSession.getTribeNotifications();
+        if (notifications.isEmpty()) {
+            tribeNotificationLabel.setText("");
+            return;
+        }
+        tribeNotificationLabel.setText(String.join("  |  ", notifications));
     }
 
     private void updateUnitCountLabel(GameSession gameSession) {

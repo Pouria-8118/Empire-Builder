@@ -341,6 +341,19 @@ public class Constants {
     public static final int TRIBE_GUARD_ARCHER_HIT_POINTS = 1;
     public static final int TRIBE_DEFEAT_LOOT_AMOUNT = 40;
 
+    public static final int TRIBE_ZONE_INTRUSION_NEUTRAL_PENALTY = -5;
+    public static final int TRIBE_ZONE_INTRUSION_DISPLEASED_PENALTY = -8;
+    public static final int TRIBE_MISSION_OFFER_INTERVAL_TURNS = 5;
+    public static final int TRIBE_ENEMY_GUARD_SPAWN_INTERVAL_TURNS = 3;
+    public static final int TRIBE_ENEMY_DEFAULT_GUARD_CAP = 3;
+    public static final int TRIBE_ENEMY_WARRIOR_GUARD_CAP = 5;
+
+    public static final int FARMER_ALLY_FOOD_BONUS_PER_TURN = 2;
+    public static final int MOUNTAIN_ALLY_STONE_BONUS_PER_TURN = 1;
+    public static final int MOUNTAIN_ALLY_IRON_BONUS_PER_TURN = 1;
+    public static final double TRADER_ALLY_TRADE_RATE_BONUS = 0.1;
+    public static final int COASTAL_ALLY_DOCK_DISCOUNT = 10;
+
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";

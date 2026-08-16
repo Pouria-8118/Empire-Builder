@@ -27,6 +27,9 @@ public class TribeMissionService {
         if (tribe.getActiveMission() != null) {
             return false;
         }
+        if (!tribe.isMissionOfferAvailable()) {
+            return false;
+        }
         return gameSession.getCurrentTurnNumber() >= tribe.getMissionCooldownUntilTurn();
     }
 
@@ -38,6 +41,7 @@ public class TribeMissionService {
         String title = TribeMissionDefinitionProvider.getTitle(tribe.getTribeType());
         int deadlineTurn = gameSession.getCurrentTurnNumber() + TribeMissionDefinitionProvider.getDeadlineTurns(tribe.getTribeType());
         tribe.setActiveMission(new TribeMission(tribe.getTribeType(), title, deadlineTurn));
+        tribe.setMissionOfferAvailable(false);
 
         return true;
     }
@@ -157,6 +161,7 @@ public class TribeMissionService {
 
         mission.setStatus(MissionStatus.CANCELLED);
         tribe.setActiveMission(null);
+        tribe.setMissionOfferAvailable(false);
         tribe.changeRelationship(Constants.MISSION_CANCEL_RELATIONSHIP_PENALTY);
 
         return true;

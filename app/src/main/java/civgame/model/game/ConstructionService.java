@@ -131,11 +131,17 @@ public class ConstructionService {
 
     private int getEffectiveWoodCost(GameSession gameSession, BuildingType buildingType) {
         int baseCost = BuildingCostProvider.getWoodCost(buildingType);
-        if (buildingType == BuildingType.DOCK && gameSession.hasPendingDockDiscount()) {
-            int discounted = baseCost - Constants.COASTAL_MISSION_DOCK_DISCOUNT;
-            return Math.max(0, discounted);
+
+        if (buildingType == BuildingType.DOCK) {
+            if (gameSession.hasPendingDockDiscount()) {
+                baseCost = baseCost - Constants.COASTAL_MISSION_DOCK_DISCOUNT;
+            }
+            if (gameSession.hasAlliedCoastalTribe()) {
+                baseCost = baseCost - Constants.COASTAL_ALLY_DOCK_DISCOUNT;
+            }
         }
-        return baseCost;
+
+        return Math.max(0, baseCost);
     }
     
 }
