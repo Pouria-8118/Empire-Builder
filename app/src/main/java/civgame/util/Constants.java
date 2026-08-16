@@ -287,8 +287,25 @@ public class Constants {
     public static final int TRIBE_CAMP_FARMER_MAX_HIT_POINTS = 40;
     public static final int TRIBE_CAMP_WARRIOR_MAX_HIT_POINTS = 70;
     public static final int TRIBE_CAMP_DEFAULT_MAX_HIT_POINTS = 50;
-    public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
 
+    public static final int TRIBE_GIFT_FOOD_WOOD_RELATIONSHIP_PER_UNIT = 2;
+    public static final int TRIBE_GIFT_STONE_RELATIONSHIP_PER_UNIT = 3;
+    public static final int TRIBE_GIFT_IRON_RELATIONSHIP_PER_UNIT = 3;
+
+    public static final int TRIBE_TRADE_MIN_RELATIONSHIP = 20;
+    public static final double FARMER_TRIBE_TRADE_RATE = 0.75;
+    public static final double MOUNTAIN_TRIBE_TRADE_RATE = 0.75;
+    public static final double COASTAL_TRIBE_TRADE_RATE = 0.75;
+    public static final double TRADER_TRIBE_TRADE_RATE = 0.80;
+
+    public static final int TRIBE_WAR_ON_ALLY_HAPPINESS_PENALTY = -15;
+    public static final int TRIBE_WAR_ON_FRIENDLY_HAPPINESS_PENALTY = -5;
+    public static final int TRIBE_PEACE_FOOD_COST = 30;
+    public static final int TRIBE_PEACE_WOOD_COST = 30;
+    public static final int TRIBE_PEACE_IRON_COST = 30;
+    public static final int TRIBE_PEACE_RESULTING_RELATIONSHIP = -10;
+
+    public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";
     public static final String STONE_MINE_ICON_PATH = "/images/buildings/stone_mine.png";
