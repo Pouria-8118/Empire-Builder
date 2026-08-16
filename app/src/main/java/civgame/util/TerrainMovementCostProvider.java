@@ -1,5 +1,6 @@
 package civgame.util;
 
+import civgame.model.game.SeasonType;
 import civgame.model.map.TerrainType;
 
 public class TerrainMovementCostProvider {
@@ -23,6 +24,19 @@ public class TerrainMovementCostProvider {
             return SEA_MOVEMENT_COST;
         }
         return DEFAULT_MOVEMENT_COST;
+    }
+
+    public static int getMovementCost(TerrainType terrainType, SeasonType season) {
+        int cost = getMovementCost(terrainType);
+
+        if (season == SeasonType.AUTUMN && terrainType == TerrainType.SEA) {
+            cost = cost + 1;
+        }
+        if (season == SeasonType.WINTER && terrainType != TerrainType.SEA) {
+            cost = cost + 1;
+        }
+
+        return cost;
     }
 
     public static boolean isPassable(TerrainType terrainType, boolean navalTechUnlocked) {

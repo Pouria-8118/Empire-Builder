@@ -52,12 +52,13 @@ public class AutoExploreService {
         }
 
         boolean navalTechUnlocked = gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.NAVAL_TECHNIQUES);
-        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), explorer.getCoordinate(), targetCoordinate, true, navalTechUnlocked);
+        SeasonType currentSeason = gameSession.getCurrentSeason();
+        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), explorer.getCoordinate(), targetCoordinate, true, navalTechUnlocked, currentSeason);
         if (fullPath == null || fullPath.isEmpty()) {
             return;
         }
 
-        MovementPlan movementPlan = pathFinder.truncateToAffordablePath(gameSession.getHexMap(), explorer.getCoordinate(), fullPath, explorer.getCurrentActionPoints());
+        MovementPlan movementPlan = pathFinder.truncateToAffordablePath(gameSession.getHexMap(), explorer.getCoordinate(), fullPath, explorer.getCurrentActionPoints(), currentSeason);
         if (movementPlan.getPath().isEmpty()) {
             return;
         }

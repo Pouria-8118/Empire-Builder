@@ -1,6 +1,7 @@
 package civgame.model.game;
 
 import civgame.model.building.Building;
+import civgame.model.building.BuildingType;
 import civgame.model.building.Dock;
 import civgame.model.map.HexTile;
 import civgame.model.resource.ResourceType;
@@ -21,6 +22,8 @@ public class ResourceProductionService {
     private List<String> applyBuildingProduction(GameSession gameSession) {
         List<String> depletedDescriptions = new ArrayList<String>();
         List<Building> allBuildings = gameSession.getAllBuildings();
+        HappinessLevel happinessLevel = gameSession.getHappinessService().getCurrentLevel();
+        SeasonType currentSeason = gameSession.getCurrentSeason();
 
         for (int i = 0; i < allBuildings.size(); i++) {
             Building building = allBuildings.get(i);
@@ -33,15 +36,19 @@ public class ResourceProductionService {
                 continue;
             }
 
-            double multiplier = gameSession.getTownHallUpgradeService().getProductionMultiplier(building.getBuildingType());
-            int producedAmount = (int) (building.calculateProduction() * multiplier);
+            int baseProduced = applyWorkerStrikePenalty(building, happinessLevel);
 
+            double multiplier = gameSession.getTownHallUpgradeService().getProductionMultiplier(building.getBuildingType());
+            multiplier = multiplier * getHappinessProductionMultiplier(happinessLevel);
+
+            int producedAmount = (int) (baseProduced * multiplier);
             if (producedAmount <= 0) {
                 continue;
             }
 
+            int seasonAdjustedAmount = applySeasonalAdjustment(building, currentSeason, producedAmount);
             int adjacencyBonus = gameSession.getAdjacencyBonusService().getBuildingBonus(building);
-            int totalProducedAmount = producedAmount + adjacencyBonus;
+            int totalProducedAmount = seasonAdjustedAmount + adjacencyBonus;
 
             gameSession.getResourceStorage().addResource(building.getResourceProduced(), totalProducedAmount);
             resourceTile.consumeResourceCapacity(producedAmount);
@@ -53,6 +60,42 @@ public class ResourceProductionService {
         }
 
         return depletedDescriptions;
+    }
+
+    private int applySeasonalAdjustment(Building building, SeasonType season, int producedAmount) {
+        BuildingType buildingType = building.getBuildingType();
+        boolean isFarmOrStable = buildingType == BuildingType.FARM || buildingType == BuildingType.STABLE;
+
+        if (season == SeasonType.SPRING && isFarmOrStable) {
+            return producedAmount + Constants.SPRING_FARM_STABLE_BONUS;
+        }
+        if (season == SeasonType.WINTER && buildingType == BuildingType.FARM) {
+            int adjusted = producedAmount - Constants.WINTER_FARM_PENALTY;
+            return Math.max(0, adjusted);
+        }
+
+        return producedAmount;
+    }
+
+    private int applyWorkerStrikePenalty(Building building, HappinessLevel happinessLevel) {
+        int baseProduced = building.calculateProduction();
+
+        if (happinessLevel == HappinessLevel.DISCONTENT || happinessLevel == HappinessLevel.REBELLION) {
+            int strikePenalty = building.getStationedWorkers().size() * Constants.WORKER_STRIKE_PRODUCTION_PENALTY;
+            baseProduced = baseProduced - strikePenalty;
+            if (baseProduced < 0) {
+                baseProduced = 0;
+            }
+        }
+
+        return baseProduced;
+    }
+
+    private double getHappinessProductionMultiplier(HappinessLevel happinessLevel) {
+        if (happinessLevel == HappinessLevel.GOLDEN_AGE) {
+            return Constants.GOLDEN_AGE_PRODUCTION_MULTIPLIER;
+        }
+        return 1.0;
     }
 
     private HexTile resolveResourceTile(GameSession gameSession, Building building) {

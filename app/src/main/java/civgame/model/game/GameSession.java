@@ -39,6 +39,7 @@ public class GameSession {
     private final List<TradingPost> tradingPosts;
     private final List<Tribe> tribes;
     private final List<String> tribeNotifications;
+    private final SeasonService seasonService;
     private boolean bazaarTradedThisTurn;
     private boolean tradingPostTradedThisTurn;
     private boolean pendingDockDiscount;
@@ -64,6 +65,7 @@ public class GameSession {
         this.tradingPosts = new ArrayList<TradingPost>();
         this.tribes = new ArrayList<Tribe>();
         this.tribeNotifications = new ArrayList<String>();
+        this.seasonService = new SeasonService();
         this.bazaarTradedThisTurn = false;
         this.pendingDockDiscount = false;
         this.tradingPostTradedThisTurn = false;
@@ -285,6 +287,10 @@ public class GameSession {
 
     public List<Tribe> getTribes() {
         return tribes;
+    }
+
+    public SeasonType getCurrentSeason() {
+        return seasonService.getCurrentSeason(getCurrentTurnNumber());
     }
 
     public void addTribeNotification(String message) {

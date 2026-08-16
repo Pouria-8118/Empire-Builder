@@ -354,6 +354,9 @@ public class Constants {
     public static final double TRADER_ALLY_TRADE_RATE_BONUS = 0.1;
     public static final int COASTAL_ALLY_DOCK_DISCOUNT = 10;
 
+    public static final int SPRING_FARM_STABLE_BONUS = 1;
+    public static final int WINTER_FARM_PENALTY = 1;
+
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";

@@ -5,6 +5,7 @@ import civgame.model.building.TownHallUpgradeType;
 import civgame.model.game.BorderExpansionService;
 import civgame.model.game.ConstructionService;
 import civgame.model.game.RoadConstructionService;
+import civgame.model.game.SeasonType;
 import civgame.model.game.WallConstructionService;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
@@ -256,7 +257,8 @@ public class GameController {
                 selectedUnit.getCoordinate(),
                 selectedUnit.getCurrentActionPoints(),
                 allowUnseenTiles,
-                navalTechUnlocked
+                navalTechUnlocked,
+                gameSession.getCurrentSeason()
         );
         selectionState.setReachableTiles(reachableTiles);
     }
@@ -421,7 +423,7 @@ public class GameController {
         boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
         boolean navalTechUnlocked = gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.NAVAL_TECHNIQUES);
 
-        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination, allowUnseenTiles, navalTechUnlocked);
+        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination, allowUnseenTiles, navalTechUnlocked, gameSession.getCurrentSeason());
 
         if (fullPath == null || fullPath.isEmpty()) {
             return;
@@ -461,11 +463,12 @@ public class GameController {
     private int recalculatePathCost(HexCoordinate startCoordinate, List<HexCoordinate> path) {
         int totalCost = 0;
         HexCoordinate previousCoordinate = startCoordinate;
+        SeasonType currentSeason = gameSession.getCurrentSeason();
 
         for (int i = 0; i < path.size(); i++) {
             HexCoordinate currentCoordinate = path.get(i);
             HexTile tile = gameSession.getHexMap().getTile(currentCoordinate);
-            int baseCost = TerrainMovementCostProvider.getMovementCost(tile.getTerrainType());
+            int baseCost = TerrainMovementCostProvider.getMovementCost(tile.getTerrainType(), currentSeason);
             totalCost = totalCost + EdgeMovementCostProvider.getStepCost(gameSession.getHexMap(), previousCoordinate, currentCoordinate, baseCost);
             previousCoordinate = currentCoordinate;
         }
