@@ -18,6 +18,7 @@ public class TurnEngine {
     private final WildAnimalCombatService wildAnimalCombatService;
     private final TribeMissionService tribeMissionService;
     private final TribeBehaviorService tribeBehaviorService;
+    private final BearBehaviorService bearBehaviorService;
     private final NaturalDisasterService naturalDisasterService;
 
     public TurnEngine() {
@@ -27,11 +28,13 @@ public class TurnEngine {
         this.wildAnimalCombatService = new WildAnimalCombatService();
         this.tribeMissionService = new TribeMissionService();
         this.tribeBehaviorService = new TribeBehaviorService();
-        this.naturalDisasterService = new NaturalDisasterService();
+        this.bearBehaviorService = new BearBehaviorService();
+        this.naturalDisasterService = new NaturalDisasterService(bearBehaviorService);
     }
 
     public TurnSummary executeTurn(GameSession gameSession) {
         naturalDisasterService.rollForDisaster(gameSession);
+        bearBehaviorService.processAllBearTurns(gameSession);
         refreshAllUnitActionPoints(gameSession);
         applyRebellionMovementPenalty(gameSession);
         autoExploreService.runAutoExploreForAllUnits(gameSession);

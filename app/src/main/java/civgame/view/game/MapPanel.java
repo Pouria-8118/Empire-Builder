@@ -6,6 +6,7 @@ import civgame.model.game.ActiveDisasterEffect;
 import civgame.model.game.GameSession;
 import civgame.model.game.NaturalDisasterType;
 import civgame.model.game.SeasonType;
+import civgame.model.animal.Bear;
 import civgame.model.animal.WildAnimal;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexEdge;
@@ -222,14 +223,16 @@ public class MapPanel extends JPanel {
             double drawY = centerY + pixelPosition.getY();
             int iconSize = (int) (hexSize * UNIT_SIZE_FACTOR);
 
-            graphics2D.setColor(new Color(101, 67, 33));
+            boolean isBear = wildAnimal instanceof Bear;
+            graphics2D.setColor(isBear ? new Color(60, 40, 20) : new Color(101, 67, 33));
             graphics2D.fillOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
             graphics2D.setColor(Color.BLACK);
             graphics2D.drawOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
 
             graphics2D.setColor(Color.WHITE);
-            graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (iconSize * 0.4)));
-            graphics2D.drawString(String.valueOf(wildAnimal.getCurrentHitPoints()), (int) (drawX - iconSize * 0.15), (int) (drawY + iconSize * 0.15));
+            graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (iconSize * 0.35)));
+            String label = isBear ? "BEAR " + wildAnimal.getCurrentHitPoints() : String.valueOf(wildAnimal.getCurrentHitPoints());
+            graphics2D.drawString(label, (int) (drawX - iconSize * 0.4), (int) (drawY + iconSize * 0.15));
         }
     }
     private void drawAllTradingPosts(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
