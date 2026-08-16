@@ -369,6 +369,14 @@ public class Constants {
     public static final int FLOOD_UNIT_DAMAGE = 20;
     public static final int FLOOD_BUILDING_DAMAGE = 30;
 
+    public static final int BEAR_MAX_HIT_POINTS = 120;
+    public static final int BEAR_ATTACK_POWER = 35;
+    public static final int BEAR_MAX_ACTION_POINTS = 2;
+    public static final int BEAR_ATTACK_RANGE = 1;
+    public static final int BEAR_TARGET_RADIUS = 3;
+    public static final int BEAR_TRIGGER_UNIT_COUNT = 3;
+    public static final int BEAR_ATTACK_COOLDOWN_TURNS = 5;
+
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";

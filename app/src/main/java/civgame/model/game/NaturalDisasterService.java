@@ -16,9 +16,11 @@ import java.util.Random;
 public class NaturalDisasterService {
 
     private final Random random;
+    private final BearBehaviorService bearBehaviorService;
 
-    public NaturalDisasterService() {
+    public NaturalDisasterService(BearBehaviorService bearBehaviorService) {
         this.random = new Random();
+        this.bearBehaviorService = bearBehaviorService;
     }
 
     public void rollForDisaster(GameSession gameSession) {
@@ -31,12 +33,17 @@ public class NaturalDisasterService {
         if (gameSession.getCurrentSeason() == SeasonType.AUTUMN && pickFloodCenter(gameSession) != null) {
             availableTypes.add(NaturalDisasterType.FLOOD);
         }
+        if (bearBehaviorService.isEligible(gameSession)) {
+            availableTypes.add(NaturalDisasterType.BEAR_ATTACK);
+        }
 
         NaturalDisasterType chosenType = availableTypes.get(random.nextInt(availableTypes.size()));
         if (chosenType == NaturalDisasterType.EARTHQUAKE) {
             triggerEarthquake(gameSession);
-        } else {
+        } else if (chosenType == NaturalDisasterType.FLOOD) {
             triggerFlood(gameSession);
+        } else {
+            bearBehaviorService.triggerBearAttack(gameSession);
         }
     }
 

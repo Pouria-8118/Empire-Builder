@@ -21,15 +21,18 @@ public class WildAnimalCombatService {
     }
 
     public void processWildAnimalTurn(GameSession gameSession, WildAnimal wildAnimal) {
-        HexCoordinate coordinate = wildAnimal.getCoordinate();
-        List<Unit> militaryUnits = findMilitaryUnitsAt(gameSession, coordinate);
+        processWildAnimalAttack(gameSession, wildAnimal, wildAnimal.getCoordinate());
+    }
+
+    public void processWildAnimalAttack(GameSession gameSession, WildAnimal wildAnimal, HexCoordinate targetCoordinate) {
+        List<Unit> militaryUnits = findMilitaryUnitsAt(gameSession, targetCoordinate);
 
         if (!militaryUnits.isEmpty()) {
             resolveMilitaryDefense(gameSession, wildAnimal, militaryUnits);
             return;
         }
 
-        List<Unit> civilianUnits = findCivilianUnitsAt(gameSession, coordinate);
+        List<Unit> civilianUnits = findCivilianUnitsAt(gameSession, targetCoordinate);
         attackCivilianUnits(gameSession, civilianUnits);
     }
 

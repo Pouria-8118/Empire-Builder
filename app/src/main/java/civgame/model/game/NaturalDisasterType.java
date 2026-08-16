@@ -2,5 +2,6 @@ package civgame.model.game;
 
 public enum NaturalDisasterType {
     EARTHQUAKE,
-    FLOOD
+    FLOOD,
+    BEAR_ATTACK
 }
