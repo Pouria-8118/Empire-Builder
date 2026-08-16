@@ -3,6 +3,7 @@ package civgame.view.game;
 import civgame.model.building.Building;
 import civgame.model.building.TownHall;
 import civgame.model.game.GameSession;
+import civgame.model.game.SeasonType;
 import civgame.model.animal.WildAnimal;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexEdge;
@@ -26,9 +27,12 @@ import civgame.util.TribeColorProvider;
 import civgame.util.UnitColorProvider;
 import civgame.util.UnitIconProvider;
 
+import javax.swing.Timer;
 import javax.swing.JPanel;
 import javax.swing.ToolTipManager;
 import java.awt.BasicStroke;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -58,7 +62,8 @@ public class MapPanel extends JPanel {
     private static final Color DEPLETED_RESOURCE_TINT = new Color(180, 30, 30, 70);
     private static final Font FALLBACK_LABEL_FONT = new Font("SansSerif", Font.BOLD, 12);
     private static final Font AP_BADGE_FONT = new Font("SansSerif", Font.BOLD, 10);
-    
+
+    private final WeatherEffectRenderer weatherEffectRenderer = new WeatherEffectRenderer();
     private final GameSession gameSession;
     private final CameraState cameraState;
     private final SelectionState selectionState;
@@ -72,7 +77,18 @@ public class MapPanel extends JPanel {
         setBackground(Color.BLACK);
         setToolTipText("");
         ToolTipManager.sharedInstance().registerComponent(this);
+
+        Timer weatherTimer = new Timer(50, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                weatherEffectRenderer.advance(gameSession.getCurrentSeason());
+                repaint();
+            }
+        });
+        weatherTimer.start();
+
     }
+
 
     @Override
     public String getToolTipText(MouseEvent mouseEvent) {
@@ -112,6 +128,8 @@ public class MapPanel extends JPanel {
         drawAllWildAnimals(graphics2D, hexSize, centerX, centerY);
         drawAllTradingPosts(graphics2D, hexSize, centerX, centerY);
         drawAllTribeCamps(graphics2D, hexSize, centerX, centerY);
+        weatherEffectRenderer.draw(graphics2D, gameSession.getCurrentSeason(), getWidth(), getHeight());
+        drawSeasonBanner(graphics2D);
         drawAllBuildings(graphics2D, hexSize, centerX, centerY);
         drawAllSettlements(graphics2D, hexSize, centerX, centerY);
         drawAllUnits(graphics2D, hexSize, centerX, centerY);
@@ -266,6 +284,30 @@ public class MapPanel extends JPanel {
             graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (markerSize * 0.5)));
             graphics2D.drawString(TribeColorProvider.getLetter(tribe.getTribeType()), (int) (drawX - markerSize * 0.18), (int) (drawY + markerSize * 0.18));
         }
+    }
+
+    private void drawSeasonBanner(Graphics2D graphics2D) {
+        SeasonType season = gameSession.getCurrentSeason();
+
+        graphics2D.setColor(getSeasonBannerColor(season));
+        graphics2D.fillRoundRect(10, 10, 130, 30, 10, 10);
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawRoundRect(10, 10, 130, 30, 10, 10);
+        graphics2D.setFont(new Font("SansSerif", Font.BOLD, 14));
+        graphics2D.drawString(season.name(), 22, 30);
+    }
+
+    private Color getSeasonBannerColor(SeasonType season) {
+        if (season == SeasonType.SPRING) {
+            return new Color(150, 220, 130);
+        }
+        if (season == SeasonType.SUMMER) {
+            return new Color(230, 210, 90);
+        }
+        if (season == SeasonType.AUTUMN) {
+            return new Color(210, 140, 60);
+        }
+        return new Color(190, 220, 240);
     }
 
     private void drawRoadMarker(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
