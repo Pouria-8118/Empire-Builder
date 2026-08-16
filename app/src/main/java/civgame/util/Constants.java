@@ -277,6 +277,16 @@ public class Constants {
     public static final String BAZAAR_ICON_PATH = "/images/buildings/bazaar.png";
 
     public static final double TRADING_POST_RATE = 0.8;
+
+    public static final int TRIBE_ENEMY_MAX_RELATIONSHIP = -50;
+    public static final int TRIBE_DISPLEASED_MAX_RELATIONSHIP = -20;
+    public static final int TRIBE_NEUTRAL_MAX_RELATIONSHIP = 19;
+    public static final int TRIBE_FRIENDLY_MAX_RELATIONSHIP = 69;
+    public static final int TRIBE_ALLIANCE_MIN_RELATIONSHIP = 70;
+
+    public static final int TRIBE_CAMP_FARMER_MAX_HIT_POINTS = 40;
+    public static final int TRIBE_CAMP_WARRIOR_MAX_HIT_POINTS = 70;
+    public static final int TRIBE_CAMP_DEFAULT_MAX_HIT_POINTS = 50;
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
 
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
