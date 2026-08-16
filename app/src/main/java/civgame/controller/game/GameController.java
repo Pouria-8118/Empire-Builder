@@ -19,6 +19,7 @@ import civgame.model.game.TradingPostTradeService;
 import civgame.model.game.TribeDiplomacyService;
 import civgame.model.game.TribeGiftService;
 import civgame.model.game.TribeTradeService;
+import civgame.model.game.TribeMissionService;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
@@ -112,7 +113,7 @@ public class GameController {
         this.combatTargetService = new CombatTargetService();
         this.attackExecutionService = new AttackExecutionService();
         this.tradingPostMenuFactory = new TradingPostMenuFactory(new TradingPostTradeService());
-        this.tribeMenuFactory = new TribeMenuFactory(new TribeGiftService(), new TribeTradeService(), new TribeDiplomacyService());
+        this.tribeMenuFactory = new TribeMenuFactory(new TribeGiftService(), new TribeTradeService(), new TribeDiplomacyService(), new TribeMissionService());
         this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
         this.fogOfWarCalculator = fogOfWarCalculator;
         this.gameFrame = gameFrame;

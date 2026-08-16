@@ -3,9 +3,13 @@ package civgame.view.game;
 import civgame.model.game.GameSession;
 import civgame.model.game.TribeDiplomacyService;
 import civgame.model.game.TribeGiftService;
+import civgame.model.game.TribeMissionService;
 import civgame.model.game.TribeTradeService;
 import civgame.model.resource.ResourceType;
+import civgame.model.tribe.MissionStatus;
 import civgame.model.tribe.Tribe;
+import civgame.model.tribe.TribeMission;
+import civgame.model.tribe.TribeMissionDefinitionProvider;
 import civgame.model.tribe.TribeRelationState;
 import civgame.util.Constants;
 import civgame.util.TribeRewardDescriptionProvider;
@@ -23,11 +27,13 @@ public class TribeMenuFactory {
     private final TribeGiftService tribeGiftService;
     private final TribeTradeService tribeTradeService;
     private final TribeDiplomacyService tribeDiplomacyService;
+    private final TribeMissionService tribeMissionService;
 
-    public TribeMenuFactory(TribeGiftService tribeGiftService, TribeTradeService tribeTradeService, TribeDiplomacyService tribeDiplomacyService) {
+    public TribeMenuFactory(TribeGiftService tribeGiftService, TribeTradeService tribeTradeService, TribeDiplomacyService tribeDiplomacyService, TribeMissionService tribeMissionService) {
         this.tribeGiftService = tribeGiftService;
         this.tribeTradeService = tribeTradeService;
         this.tribeDiplomacyService = tribeDiplomacyService;
+        this.tribeMissionService = tribeMissionService;
     }
 
     public JPopupMenu buildMenu(GameSession gameSession, Tribe tribe, Runnable onActionSuccess) {
@@ -42,12 +48,70 @@ public class TribeMenuFactory {
 
         popupMenu.add(createGiftMenu(gameSession, tribe, onActionSuccess));
         popupMenu.add(createTradeMenu(gameSession, tribe, onActionSuccess));
+        popupMenu.add(new JSeparator());
+        tribeMissionService.refreshMissionCondition(gameSession, tribe);
+        popupMenu.add(createMissionItem(gameSession, tribe, onActionSuccess));
+        popupMenu.add(createCancelMissionItem(gameSession, tribe, onActionSuccess));
+        popupMenu.add(new JSeparator());
         popupMenu.add(createDeclareWarItem(gameSession, tribe, onActionSuccess));
         popupMenu.add(createRequestPeaceItem(gameSession, tribe, onActionSuccess));
         popupMenu.add(createRequestAllianceItem(gameSession, tribe, onActionSuccess));
         popupMenu.add(createViewRewardsItem(tribe));
 
         return popupMenu;
+    }
+
+    private JMenuItem createMissionItem(GameSession gameSession, Tribe tribe, Runnable onActionSuccess) {
+        TribeMission mission = tribe.getActiveMission();
+
+        if (mission == null) {
+            boolean canAccept = tribeMissionService.canAcceptMission(gameSession, tribe);
+            String reason = canAccept ? "" : "Relationship too low, at war, or on cooldown";
+
+            ActionListener actionListener = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    boolean success = tribeMissionService.acceptMission(gameSession, tribe);
+                    if (success && onActionSuccess != null) {
+                        onActionSuccess.run();
+                    }
+                }
+            };
+
+            return StyledMenuItemFactory.createItem(null, "Accept Mission", TribeMissionDefinitionProvider.getDescription(tribe.getTribeType()), reason, canAccept, actionListener);
+        }
+
+        if (mission.getStatus() == MissionStatus.ACTIVE && tribeMissionService.isResourcePaymentMission(tribe.getTribeType())) {
+            boolean canPay = tribeMissionService.canPayResourceMissionCost(gameSession, tribe);
+            String reason = canPay ? "" : "Not enough resources";
+
+            ActionListener actionListener = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    boolean success = tribeMissionService.payResourceMissionCost(gameSession, tribe);
+                    if (success && onActionSuccess != null) {
+                        onActionSuccess.run();
+                    }
+                }
+            };
+
+            return StyledMenuItemFactory.createItem(null, "Pay Mission Cost", mission.getTitle() + " (deadline: turn " + mission.getDeadlineTurn() + ")", reason, canPay, actionListener);
+        }
+
+        boolean canDeliver = tribeMissionService.canDeliverMission(tribe);
+        String reason = canDeliver ? "" : "Condition not met yet (deadline: turn " + mission.getDeadlineTurn() + ")";
+
+        ActionListener actionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                boolean success = tribeMissionService.deliverMission(gameSession, tribe);
+                if (success && onActionSuccess != null) {
+                    onActionSuccess.run();
+                }
+            }
+        };
+
+        return StyledMenuItemFactory.createItem(null, "Deliver Mission", mission.getTitle(), reason, canDeliver, actionListener);
     }
 
     private JMenu createGiftMenu(GameSession gameSession, Tribe tribe, Runnable onActionSuccess) {
@@ -229,5 +293,21 @@ public class TribeMenuFactory {
     private JMenuItem createViewRewardsItem(Tribe tribe) {
         String rewardsText = TribeRewardDescriptionProvider.describe(tribe.getTribeType());
         return StyledMenuItemFactory.createItem(null, "View Tribe Rewards", rewardsText, "", true, null);
+    }
+
+    private JMenuItem createCancelMissionItem(GameSession gameSession, Tribe tribe, Runnable onActionSuccess) {
+        boolean hasMission = tribe.getActiveMission() != null;
+
+        ActionListener actionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                boolean success = tribeMissionService.cancelMission(gameSession, tribe);
+                if (success && onActionSuccess != null) {
+                    onActionSuccess.run();
+                }
+            }
+        };
+
+        return StyledMenuItemFactory.createItem(null, "Cancel Mission", "Relationship: -" + (-Constants.MISSION_CANCEL_RELATIONSHIP_PENALTY), hasMission ? "" : "No active mission", hasMission, actionListener);
     }
 }
