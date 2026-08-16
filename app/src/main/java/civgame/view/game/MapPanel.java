@@ -11,6 +11,7 @@ import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TileVisibility;
 import civgame.model.map.Wall;
+import civgame.model.tribe.Tribe;
 import civgame.model.map.TradingPost;
 import civgame.model.unit.Unit;
 import civgame.util.BuildingColorProvider;
@@ -21,6 +22,7 @@ import civgame.util.HexTileTooltipTextBuilder;
 import civgame.util.IconProvider;
 import civgame.util.ResourceIconProvider;
 import civgame.util.TerrainColorProvider;
+import civgame.util.TribeColorProvider;
 import civgame.util.UnitColorProvider;
 import civgame.util.UnitIconProvider;
 
@@ -109,6 +111,7 @@ public class MapPanel extends JPanel {
         drawTownHall(graphics2D, hexSize, centerX, centerY);
         drawAllWildAnimals(graphics2D, hexSize, centerX, centerY);
         drawAllTradingPosts(graphics2D, hexSize, centerX, centerY);
+        drawAllTribeCamps(graphics2D, hexSize, centerX, centerY);
         drawAllBuildings(graphics2D, hexSize, centerX, centerY);
         drawAllSettlements(graphics2D, hexSize, centerX, centerY);
         drawAllUnits(graphics2D, hexSize, centerX, centerY);
@@ -232,6 +235,36 @@ public class MapPanel extends JPanel {
             graphics2D.fillPolygon(diamond);
             graphics2D.setColor(Color.BLACK);
             graphics2D.drawPolygon(diamond);
+        }
+    }
+
+    private void drawAllTribeCamps(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        List<Tribe> tribes = gameSession.getTribes();
+
+        for (int i = 0; i < tribes.size(); i++) {
+            Tribe tribe = tribes.get(i);
+            if (!tribe.isDiscovered()) {
+                continue;
+            }
+
+            HexTile tile = gameSession.getHexMap().getTile(tribe.getCampCoordinate());
+            if (tile == null || tile.getVisibility() == TileVisibility.UNSEEN) {
+                continue;
+            }
+
+            Point2D pixelPosition = HexGeometry.axialToPixel(tribe.getCampCoordinate(), hexSize);
+            double drawX = centerX + pixelPosition.getX();
+            double drawY = centerY + pixelPosition.getY();
+            int markerSize = (int) (hexSize * 0.75);
+
+            graphics2D.setColor(TribeColorProvider.getColorForTribeType(tribe.getTribeType()));
+            graphics2D.fillRect((int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize);
+            graphics2D.setColor(Color.BLACK);
+            graphics2D.drawRect((int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize);
+
+            graphics2D.setColor(Color.WHITE);
+            graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (markerSize * 0.5)));
+            graphics2D.drawString(TribeColorProvider.getLetter(tribe.getTribeType()), (int) (drawX - markerSize * 0.18), (int) (drawY + markerSize * 0.18));
         }
     }
 
