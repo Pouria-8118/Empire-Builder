@@ -22,8 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-// Guards are modeled as always sitting on the camp hex itself (simplification);
-// this stays correct until Phase 25+ has tribes actively move guards around.
 public class AttackExecutionService {
 
     private final CombatTargetService combatTargetService;
