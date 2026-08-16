@@ -377,6 +377,29 @@ public class Constants {
     public static final int BEAR_TRIGGER_UNIT_COUNT = 3;
     public static final int BEAR_ATTACK_COOLDOWN_TURNS = 5;
 
+    public static final double VOLCANO_SPAWN_CHANCE = 0.15;
+
+    public static final int TSUNAMI_RADIUS_EXTRA_HEXES = 2;
+    public static final int TSUNAMI_UNIT_DAMAGE = 30;
+
+    public static final int LAVA_PATH_LENGTH = 3;
+    public static final int VOLCANO_UNIT_DAMAGE = 60;
+    public static final int VOLCANO_NEIGHBOR_UNIT_DAMAGE = 30;
+    public static final int LAVA_PATH_BLOCK_TURNS = 3;
+
+    public static final int TORNADO_PATH_LENGTH = 4;
+    public static final int TORNADO_UNIT_DAMAGE = 30;
+    public static final int TORNADO_BUILDING_DAMAGE = 40;
+
+    public static final int AVALANCHE_PATH_LENGTH = 3;
+    public static final int AVALANCHE_UNIT_DAMAGE = 40;
+    public static final int AVALANCHE_STRUCTURE_DAMAGE = 50;
+    public static final int AVALANCHE_BLOCK_TURNS = 1;
+
+    public static final int SEA_STORM_RADIUS = 2;
+    public static final int SEA_STORM_DOCK_DAMAGE = 30;
+    public static final int SEA_STORM_COASTAL_UNIT_DAMAGE = 20;
+
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";

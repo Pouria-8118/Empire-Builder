@@ -17,7 +17,7 @@ public class TerrainMovementCostProvider {
         if (terrainType == TerrainType.FOREST) {
             return FOREST_MOVEMENT_COST;
         }
-        if (terrainType == TerrainType.MOUNTAIN) {
+        if (terrainType == TerrainType.MOUNTAIN || terrainType == TerrainType.VOLCANO) {
             return MOUNTAIN_MOVEMENT_COST;
         }
         if (terrainType == TerrainType.SEA) {

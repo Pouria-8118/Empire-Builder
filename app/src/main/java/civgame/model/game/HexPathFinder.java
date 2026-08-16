@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class HexPathFinder {
 
-    public List<HexCoordinate> findPath(HexMap hexMap, HexCoordinate start, HexCoordinate destination, boolean allowUnseenTiles, boolean navalTechUnlocked, SeasonType season) {
+    public List<HexCoordinate> findPath(HexMap hexMap, HexCoordinate start, HexCoordinate destination, boolean allowUnseenTiles, boolean navalTechUnlocked, SeasonType season, GameSession gameSession) {
         Map<HexCoordinate, Integer> costSoFar = new HashMap<HexCoordinate, Integer>();
         Map<HexCoordinate, HexCoordinate> cameFrom = new HashMap<HexCoordinate, HexCoordinate>();
 
@@ -33,7 +33,7 @@ public class HexPathFinder {
                 break;
             }
 
-            expandNeighborsForPath(hexMap, current, costSoFar, cameFrom, frontier, allowUnseenTiles, navalTechUnlocked, season);
+            expandNeighborsForPath(hexMap, current, costSoFar, cameFrom, frontier, allowUnseenTiles, navalTechUnlocked, season, gameSession);
         }
 
         if (!cameFrom.containsKey(destination) && !start.equals(destination)) {
@@ -60,7 +60,7 @@ public class HexPathFinder {
 
     private void expandNeighborsForPath(HexMap hexMap, HexCoordinate current, Map<HexCoordinate, Integer> costSoFar,
                                          Map<HexCoordinate, HexCoordinate> cameFrom, PriorityQueue<HexCoordinate> frontier,
-                                         boolean allowUnseenTiles, boolean navalTechUnlocked, SeasonType season) {
+                                         boolean allowUnseenTiles, boolean navalTechUnlocked, SeasonType season, GameSession gameSession) {
         List<HexCoordinate> neighbors = current.getNeighbors();
 
         for (int i = 0; i < neighbors.size(); i++) {
@@ -78,6 +78,9 @@ public class HexPathFinder {
             if (!TerrainMovementCostProvider.isPassable(neighborTile.getTerrainType(), navalTechUnlocked)) {
                 continue;
             }
+            if (gameSession != null && gameSession.isTemporarilyBlocked(neighbor)) {
+                continue;
+            }
 
             int baseCost = TerrainMovementCostProvider.getMovementCost(neighborTile.getTerrainType(), season);
             int stepCost = EdgeMovementCostProvider.getStepCost(hexMap, current, neighbor, baseCost);
@@ -91,7 +94,7 @@ public class HexPathFinder {
         }
     }
 
-    public Set<HexCoordinate> findReachableTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget, boolean allowUnseenTiles, boolean navalTechUnlocked, SeasonType season) {
+    public Set<HexCoordinate> findReachableTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget, boolean allowUnseenTiles, boolean navalTechUnlocked, SeasonType season, GameSession gameSession) {
         Set<HexCoordinate> reachableTiles = new HashSet<HexCoordinate>();
         Map<HexCoordinate, Integer> costSoFar = new HashMap<HexCoordinate, Integer>();
 
@@ -115,6 +118,9 @@ public class HexPathFinder {
                     continue;
                 }
                 if (!TerrainMovementCostProvider.isPassable(neighborTile.getTerrainType(), navalTechUnlocked)) {
+                    continue;
+                }
+                if (gameSession != null && gameSession.isTemporarilyBlocked(neighbor)) {
                     continue;
                 }
 

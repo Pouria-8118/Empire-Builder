@@ -11,6 +11,7 @@ import java.util.Set;
 
 import civgame.model.tribe.Tribe;
 import civgame.model.tribe.TribeType;
+import civgame.util.Constants;
 import civgame.util.UnitIdGenerator;
 
 public class HexMapGenerator {
@@ -72,6 +73,7 @@ public class HexMapGenerator {
 
         applyForestTerrain(hexMap, forestTiles);
         applyMountainTerrain(hexMap, mountainTiles);
+        applyVolcanoConversion(hexMap, mountainTiles);
         applyImpassableRangeTerrain(hexMap, impassableRangeTiles);
         applySeaTerrain(hexMap, seaTiles);
         applyRemainingTerrain(hexMap, forestTiles, mountainTiles, impassableRangeTiles, seaTiles);
@@ -371,6 +373,15 @@ public class HexMapGenerator {
                 mountainTile.setIronDepositPresent(true);
             }
             hexMap.setTile(coordinate, mountainTile);
+        }
+    }
+
+    private void applyVolcanoConversion(HexMap hexMap, Set<HexCoordinate> mountainTiles) {
+        for (HexCoordinate coordinate : mountainTiles) {
+            if (random.nextDouble() < Constants.VOLCANO_SPAWN_CHANCE) {
+                HexTile volcanoTile = new HexTile(coordinate, TerrainType.VOLCANO, TileResourceType.NONE);
+                hexMap.setTile(coordinate, volcanoTile);
+            }
         }
     }
 

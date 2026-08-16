@@ -6,5 +6,6 @@ public enum TerrainType {
     MOUNTAIN,
     MOUNTAIN_RANGE,
     GRASSLAND,
-    SEA
+    SEA,
+    VOLCANO
 }

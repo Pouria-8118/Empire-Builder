@@ -258,7 +258,8 @@ public class GameController {
                 selectedUnit.getCurrentActionPoints(),
                 allowUnseenTiles,
                 navalTechUnlocked,
-                gameSession.getCurrentSeason()
+                gameSession.getCurrentSeason(),
+                gameSession
         );
         selectionState.setReachableTiles(reachableTiles);
     }
@@ -423,7 +424,7 @@ public class GameController {
         boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
         boolean navalTechUnlocked = gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.NAVAL_TECHNIQUES);
 
-        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination, allowUnseenTiles, navalTechUnlocked, gameSession.getCurrentSeason());
+        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination, allowUnseenTiles, navalTechUnlocked, gameSession.getCurrentSeason(), gameSession);
 
         if (fullPath == null || fullPath.isEmpty()) {
             return;

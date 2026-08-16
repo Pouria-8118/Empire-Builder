@@ -17,10 +17,12 @@ public class NaturalDisasterService {
 
     private final Random random;
     private final BearBehaviorService bearBehaviorService;
+    private final DisasterPathGenerator pathGenerator;
 
     public NaturalDisasterService(BearBehaviorService bearBehaviorService) {
         this.random = new Random();
         this.bearBehaviorService = bearBehaviorService;
+        this.pathGenerator = new DisasterPathGenerator(random);
     }
 
     public void rollForDisaster(GameSession gameSession) {
@@ -36,15 +38,319 @@ public class NaturalDisasterService {
         if (bearBehaviorService.isEligible(gameSession)) {
             availableTypes.add(NaturalDisasterType.BEAR_ATTACK);
         }
+        if (pickCoastalCoordinate(gameSession) != null) {
+            availableTypes.add(NaturalDisasterType.TSUNAMI);
+            availableTypes.add(NaturalDisasterType.SEA_STORM);
+        }
+        if (pickVolcanoCoordinate(gameSession) != null) {
+            availableTypes.add(NaturalDisasterType.VOLCANIC_ERUPTION);
+        }
+        if (pickPlainOrGrasslandCoordinate(gameSession) != null) {
+            availableTypes.add(NaturalDisasterType.TORNADO);
+        }
+        if (pickMountainStartCoordinate(gameSession) != null) {
+            availableTypes.add(NaturalDisasterType.AVALANCHE);
+        }
 
         NaturalDisasterType chosenType = availableTypes.get(random.nextInt(availableTypes.size()));
         if (chosenType == NaturalDisasterType.EARTHQUAKE) {
             triggerEarthquake(gameSession);
         } else if (chosenType == NaturalDisasterType.FLOOD) {
             triggerFlood(gameSession);
-        } else {
+        } else if (chosenType == NaturalDisasterType.BEAR_ATTACK) {
             bearBehaviorService.triggerBearAttack(gameSession);
+        } else if (chosenType == NaturalDisasterType.TSUNAMI) {
+            triggerTsunami(gameSession);
+        } else if (chosenType == NaturalDisasterType.SEA_STORM) {
+            triggerSeaStorm(gameSession);
+        } else if (chosenType == NaturalDisasterType.VOLCANIC_ERUPTION) {
+            triggerVolcanicEruption(gameSession);
+        } else if (chosenType == NaturalDisasterType.TORNADO) {
+            triggerTornado(gameSession);
+        } else {
+            triggerAvalanche(gameSession);
         }
+    }
+
+    private void triggerTsunami(GameSession gameSession) {
+        HexCoordinate center = pickCoastalCoordinate(gameSession);
+        if (center == null) {
+            return;
+        }
+
+        List<HexCoordinate> affected = new ArrayList<HexCoordinate>();
+        affected.add(center);
+
+        List<HexCoordinate> neighbors = center.getNeighbors();
+        for (int i = 0; i < neighbors.size() && affected.size() < 1 + Constants.TSUNAMI_RADIUS_EXTRA_HEXES; i++) {
+            HexCoordinate neighbor = neighbors.get(i);
+            if (gameSession.getHexMap().containsCoordinate(neighbor) && isCoastal(gameSession, neighbor)) {
+                affected.add(neighbor);
+            }
+        }
+
+        for (int i = 0; i < affected.size(); i++) {
+            HexCoordinate coordinate = affected.get(i);
+            damageUnitsAt(gameSession, coordinate, Constants.TSUNAMI_UNIT_DAMAGE, false);
+
+            Building building = gameSession.getBuildingAt(coordinate);
+            if (building != null) {
+                building.destroy();
+                gameSession.removeBuildingAt(coordinate);
+            }
+        }
+
+        announceDisaster(gameSession, NaturalDisasterType.TSUNAMI, center);
+    }
+
+    private void triggerSeaStorm(GameSession gameSession) {
+        HexCoordinate center = pickCoastalCoordinate(gameSession);
+        if (center == null) {
+            return;
+        }
+        HexCoordinate seaCenter = findAdjacentSea(gameSession, center);
+        if (seaCenter == null) {
+            return;
+        }
+
+        List<HexCoordinate> affected = collectHexesInRadius(gameSession, seaCenter, Constants.SEA_STORM_RADIUS);
+        for (int i = 0; i < affected.size(); i++) {
+            HexCoordinate coordinate = affected.get(i);
+            TerrainType terrain = gameSession.getHexMap().getTile(coordinate).getTerrainType();
+
+            if (terrain == TerrainType.SEA) {
+                continue;
+            }
+
+            Building building = gameSession.getBuildingAt(coordinate);
+            if (building != null && building.getBuildingType() == BuildingType.DOCK) {
+                building.applyCombatDamage(Constants.SEA_STORM_DOCK_DAMAGE);
+                if (building.isDestroyedByCombat()) {
+                    gameSession.removeBuildingAt(coordinate);
+                }
+            }
+
+            if (isCoastal(gameSession, coordinate)) {
+                damageUnitsAt(gameSession, coordinate, Constants.SEA_STORM_COASTAL_UNIT_DAMAGE, false);
+            }
+        }
+
+        announceDisaster(gameSession, NaturalDisasterType.SEA_STORM, seaCenter);
+    }
+
+    private void triggerVolcanicEruption(GameSession gameSession) {
+        HexCoordinate volcanoCoordinate = pickVolcanoCoordinate(gameSession);
+        if (volcanoCoordinate == null) {
+            return;
+        }
+
+        damageUnitsAt(gameSession, volcanoCoordinate, Integer.MAX_VALUE, false);
+
+        List<HexCoordinate> neighbors = collectHexesInRadius(gameSession, volcanoCoordinate, 1);
+        for (int i = 0; i < neighbors.size(); i++) {
+            HexCoordinate coordinate = neighbors.get(i);
+            if (!coordinate.equals(volcanoCoordinate)) {
+                damageUnitsAt(gameSession, coordinate, Constants.VOLCANO_NEIGHBOR_UNIT_DAMAGE, false);
+            }
+        }
+
+        List<HexCoordinate> lavaPath = pathGenerator.growPath(gameSession, volcanoCoordinate, Constants.LAVA_PATH_LENGTH, true, true);
+        int blockUntilTurn = gameSession.getCurrentTurnNumber() + Constants.LAVA_PATH_BLOCK_TURNS;
+
+        for (int i = 1; i < lavaPath.size(); i++) {
+            HexCoordinate coordinate = lavaPath.get(i);
+            damageUnitsAt(gameSession, coordinate, Constants.VOLCANO_UNIT_DAMAGE, false);
+            destroyStructuresAt(gameSession, coordinate);
+            gameSession.blockHexTemporarily(coordinate, blockUntilTurn);
+        }
+
+        announceDisaster(gameSession, NaturalDisasterType.VOLCANIC_ERUPTION, volcanoCoordinate);
+    }
+
+    private void triggerTornado(GameSession gameSession) {
+        HexCoordinate start = pickPlainOrGrasslandCoordinate(gameSession);
+        if (start == null) {
+            return;
+        }
+
+        List<HexCoordinate> path = pathGenerator.growPath(gameSession, start, Constants.TORNADO_PATH_LENGTH, true, true);
+
+        for (int i = 0; i < path.size(); i++) {
+            HexCoordinate coordinate = path.get(i);
+            throwUnitsAt(gameSession, coordinate);
+            damageBuildingAndRoadAt(gameSession, coordinate, Constants.TORNADO_BUILDING_DAMAGE, true);
+        }
+
+        announceDisaster(gameSession, NaturalDisasterType.TORNADO, start);
+    }
+
+    private void triggerAvalanche(GameSession gameSession) {
+        HexCoordinate start = pickMountainStartCoordinate(gameSession);
+        if (start == null) {
+            return;
+        }
+
+        List<HexCoordinate> path = pathGenerator.growPath(gameSession, start, Constants.AVALANCHE_PATH_LENGTH, true, false);
+        int blockUntilTurn = gameSession.getCurrentTurnNumber() + Constants.AVALANCHE_BLOCK_TURNS + 1;
+
+        for (int i = 0; i < path.size(); i++) {
+            HexCoordinate coordinate = path.get(i);
+            damageUnitsAt(gameSession, coordinate, Constants.AVALANCHE_UNIT_DAMAGE, false);
+            damageBuildingAndRoadAt(gameSession, coordinate, Constants.AVALANCHE_STRUCTURE_DAMAGE, false);
+            gameSession.blockHexTemporarily(coordinate, blockUntilTurn);
+        }
+
+        announceDisaster(gameSession, NaturalDisasterType.AVALANCHE, start);
+    }
+
+    private void throwUnitsAt(GameSession gameSession, HexCoordinate coordinate) {
+        List<Unit> units = new ArrayList<Unit>(gameSession.getUnits());
+        List<Unit> killed = new ArrayList<Unit>();
+
+        for (int i = 0; i < units.size(); i++) {
+            Unit unit = units.get(i);
+            if (!unit.getCoordinate().equals(coordinate)) {
+                continue;
+            }
+
+            unit.applyCombatDamage(Constants.TORNADO_UNIT_DAMAGE);
+            if (unit.isDestroyedByCombat()) {
+                killed.add(unit);
+                continue;
+            }
+
+            HexCoordinate throwTarget = findPassableNeighbor(gameSession, coordinate);
+            if (throwTarget != null) {
+                unit.setCoordinate(throwTarget);
+            }
+        }
+
+        for (int i = 0; i < killed.size(); i++) {
+            gameSession.removeUnit(killed.get(i));
+        }
+    }
+
+    private HexCoordinate findPassableNeighbor(GameSession gameSession, HexCoordinate coordinate) {
+        List<HexCoordinate> neighbors = coordinate.getNeighbors();
+        for (int i = 0; i < neighbors.size(); i++) {
+            HexCoordinate neighbor = neighbors.get(i);
+            if (!gameSession.getHexMap().containsCoordinate(neighbor)) {
+                continue;
+            }
+            TerrainType terrain = gameSession.getHexMap().getTile(neighbor).getTerrainType();
+            if (terrain != TerrainType.SEA && terrain != TerrainType.MOUNTAIN_RANGE) {
+                return neighbor;
+            }
+        }
+        return null;
+    }
+
+    private void damageBuildingAndRoadAt(GameSession gameSession, HexCoordinate coordinate, int damage, boolean destroyRoadOnly) {
+        HexTile tile = gameSession.getHexMap().getTile(coordinate);
+        if (tile != null && tile.isRoadPresent()) {
+            tile.setRoadPresent(false);
+        }
+
+        Building building = gameSession.getBuildingAt(coordinate);
+        if (building == null) {
+            return;
+        }
+
+        building.applyCombatDamage(damage);
+        building.clearAllStationedWorkers();
+        if (building.isDestroyedByCombat()) {
+            gameSession.removeBuildingAt(coordinate);
+        }
+    }
+
+    private void destroyStructuresAt(GameSession gameSession, HexCoordinate coordinate) {
+        HexTile tile = gameSession.getHexMap().getTile(coordinate);
+        if (tile != null && tile.isRoadPresent()) {
+            tile.setRoadPresent(false);
+        }
+
+        Building building = gameSession.getBuildingAt(coordinate);
+        if (building != null) {
+            building.destroy();
+            gameSession.removeBuildingAt(coordinate);
+        }
+    }
+
+    private HexCoordinate pickCoastalCoordinate(GameSession gameSession) {
+        List<HexCoordinate> candidates = new ArrayList<HexCoordinate>();
+        for (HexCoordinate coordinate : gameSession.getHexMap().getAllTiles().keySet()) {
+            TerrainType terrain = gameSession.getHexMap().getTile(coordinate).getTerrainType();
+            if (terrain != TerrainType.SEA && isCoastal(gameSession, coordinate)) {
+                candidates.add(coordinate);
+            }
+        }
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        return candidates.get(random.nextInt(candidates.size()));
+    }
+
+    private HexCoordinate findAdjacentSea(GameSession gameSession, HexCoordinate coastalCoordinate) {
+        List<HexCoordinate> neighbors = coastalCoordinate.getNeighbors();
+        for (int i = 0; i < neighbors.size(); i++) {
+            HexCoordinate neighbor = neighbors.get(i);
+            if (gameSession.getHexMap().containsCoordinate(neighbor) && gameSession.getHexMap().getTile(neighbor).getTerrainType() == TerrainType.SEA) {
+                return neighbor;
+            }
+        }
+        return null;
+    }
+
+    private boolean isCoastal(GameSession gameSession, HexCoordinate coordinate) {
+        List<HexCoordinate> neighbors = coordinate.getNeighbors();
+        for (int i = 0; i < neighbors.size(); i++) {
+            HexCoordinate neighbor = neighbors.get(i);
+            if (gameSession.getHexMap().containsCoordinate(neighbor) && gameSession.getHexMap().getTile(neighbor).getTerrainType() == TerrainType.SEA) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private HexCoordinate pickVolcanoCoordinate(GameSession gameSession) {
+        List<HexCoordinate> candidates = new ArrayList<HexCoordinate>();
+        for (HexCoordinate coordinate : gameSession.getHexMap().getAllTiles().keySet()) {
+            if (gameSession.getHexMap().getTile(coordinate).getTerrainType() == TerrainType.VOLCANO) {
+                candidates.add(coordinate);
+            }
+        }
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        return candidates.get(random.nextInt(candidates.size()));
+    }
+
+    private HexCoordinate pickPlainOrGrasslandCoordinate(GameSession gameSession) {
+        List<HexCoordinate> candidates = new ArrayList<HexCoordinate>();
+        for (HexCoordinate coordinate : gameSession.getHexMap().getAllTiles().keySet()) {
+            TerrainType terrain = gameSession.getHexMap().getTile(coordinate).getTerrainType();
+            if (terrain == TerrainType.PLAIN || terrain == TerrainType.GRASSLAND) {
+                candidates.add(coordinate);
+            }
+        }
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        return candidates.get(random.nextInt(candidates.size()));
+    }
+
+    private HexCoordinate pickMountainStartCoordinate(GameSession gameSession) {
+        List<HexCoordinate> candidates = new ArrayList<HexCoordinate>();
+        for (HexCoordinate coordinate : gameSession.getHexMap().getAllTiles().keySet()) {
+            TerrainType terrain = gameSession.getHexMap().getTile(coordinate).getTerrainType();
+            if (terrain == TerrainType.MOUNTAIN || terrain == TerrainType.MOUNTAIN_RANGE) {
+                candidates.add(coordinate);
+            }
+        }
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        return candidates.get(random.nextInt(candidates.size()));
     }
 
     private void triggerEarthquake(GameSession gameSession) {

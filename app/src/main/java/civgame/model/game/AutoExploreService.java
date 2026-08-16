@@ -53,7 +53,7 @@ public class AutoExploreService {
 
         boolean navalTechUnlocked = gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.NAVAL_TECHNIQUES);
         SeasonType currentSeason = gameSession.getCurrentSeason();
-        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), explorer.getCoordinate(), targetCoordinate, true, navalTechUnlocked, currentSeason);
+        List<HexCoordinate> fullPath = pathFinder.findPath(gameSession.getHexMap(), explorer.getCoordinate(), targetCoordinate, true, navalTechUnlocked, currentSeason, gameSession);
         if (fullPath == null || fullPath.isEmpty()) {
             return;
         }

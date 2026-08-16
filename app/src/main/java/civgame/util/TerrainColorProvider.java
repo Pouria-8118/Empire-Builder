@@ -22,6 +22,9 @@ public class TerrainColorProvider {
         if (terrainType == TerrainType.MOUNTAIN_RANGE) {
             return new Color(70, 65, 65);
         }
+        if (terrainType == TerrainType.VOLCANO) {
+            return new Color(140, 60, 40);
+        }
         if (terrainType == TerrainType.GRASSLAND) {
             return new Color(210, 180, 80);
         }

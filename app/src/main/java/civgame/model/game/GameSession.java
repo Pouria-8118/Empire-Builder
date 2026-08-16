@@ -41,6 +41,7 @@ public class GameSession {
     private final List<String> tribeNotifications;
     private final SeasonService seasonService;
     private final List<ActiveDisasterEffect> activeDisasterEffects;
+    private final Map<HexCoordinate, Integer> temporarilyBlockedHexes;
     private boolean bazaarTradedThisTurn;
     private boolean tradingPostTradedThisTurn;
     private boolean pendingDockDiscount;
@@ -68,6 +69,7 @@ public class GameSession {
         this.tribeNotifications = new ArrayList<String>();
         this.seasonService = new SeasonService();
         this.activeDisasterEffects = new ArrayList<ActiveDisasterEffect>();
+        this.temporarilyBlockedHexes = new HashMap<HexCoordinate, Integer>();
         this.bazaarTradedThisTurn = false;
         this.pendingDockDiscount = false;
         this.tradingPostTradedThisTurn = false;
@@ -301,6 +303,15 @@ public class GameSession {
 
     public List<ActiveDisasterEffect> getActiveDisasterEffects() {
         return activeDisasterEffects;
+    }
+
+    public void blockHexTemporarily(HexCoordinate coordinate, int untilTurn) {
+        temporarilyBlockedHexes.put(coordinate, untilTurn);
+    }
+
+    public boolean isTemporarilyBlocked(HexCoordinate coordinate) {
+        Integer untilTurn = temporarilyBlockedHexes.get(coordinate);
+        return untilTurn != null && getCurrentTurnNumber() < untilTurn;
     }
 
     public void tickActiveDisasterEffects() {
