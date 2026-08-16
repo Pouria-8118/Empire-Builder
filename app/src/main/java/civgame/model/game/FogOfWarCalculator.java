@@ -4,6 +4,7 @@ import civgame.model.building.TownHall;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
 import civgame.model.map.TileVisibility;
+import civgame.model.tribe.Tribe;
 import civgame.model.unit.Unit;
 import civgame.util.Constants;
 
@@ -16,6 +17,21 @@ public class FogOfWarCalculator {
         downgradeVisibleTilesToExplored(hexMap);
         revealAroundTownHall(hexMap, gameSession.getTownHall());
         revealAroundUnits(hexMap, gameSession.getUnits());
+        updateTribeDiscovery(hexMap, gameSession.getTribes());
+    }
+
+    private void updateTribeDiscovery(HexMap hexMap, List<Tribe> tribes) {
+        for (int i = 0; i < tribes.size(); i++) {
+            Tribe tribe = tribes.get(i);
+            if (tribe.isDiscovered()) {
+                continue;
+            }
+
+            HexTile campTile = hexMap.getTile(tribe.getCampCoordinate());
+            if (campTile != null && campTile.getVisibility() == TileVisibility.VISIBLE) {
+                tribe.setDiscovered(true);
+            }
+        }
     }
 
     private void downgradeVisibleTilesToExplored(HexMap hexMap) {
