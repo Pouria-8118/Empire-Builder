@@ -18,6 +18,7 @@ public class TurnEngine {
     private final WildAnimalCombatService wildAnimalCombatService;
     private final TribeMissionService tribeMissionService;
     private final TribeBehaviorService tribeBehaviorService;
+    private final NaturalDisasterService naturalDisasterService;
 
     public TurnEngine() {
         this.resourceProductionService = new ResourceProductionService();
@@ -26,9 +27,11 @@ public class TurnEngine {
         this.wildAnimalCombatService = new WildAnimalCombatService();
         this.tribeMissionService = new TribeMissionService();
         this.tribeBehaviorService = new TribeBehaviorService();
+        this.naturalDisasterService = new NaturalDisasterService();
     }
 
     public TurnSummary executeTurn(GameSession gameSession) {
+        naturalDisasterService.rollForDisaster(gameSession);
         refreshAllUnitActionPoints(gameSession);
         applyRebellionMovementPenalty(gameSession);
         autoExploreService.runAutoExploreForAllUnits(gameSession);
