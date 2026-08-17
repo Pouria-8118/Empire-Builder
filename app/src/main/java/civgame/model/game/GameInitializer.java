@@ -46,6 +46,26 @@ public class GameInitializer {
         }
     }
 
+    public GameSession createNewGameFromBlueprint(civgame.model.map.MapBlueprint blueprint) {
+        HexCoordinate townHallCoordinate = blueprint.getTownHallCoordinate();
+        if (townHallCoordinate == null) {
+            throw new IllegalStateException("This map has no Town Hall placed.");
+        }
+
+        HexMap hexMap = blueprint.toHexMap();
+        TownHall townHall = new TownHall(townHallCoordinate);
+        GameSession gameSession = new GameSession(hexMap, townHall, Constants.INITIAL_UNIT_CAP);
+
+        setupInitialResources(gameSession);
+        setupInitialUnits(gameSession, townHallCoordinate);
+
+        HexMapGenerator mapGenerator = new HexMapGenerator();
+        setupTradingPost(gameSession, mapGenerator, hexMap, townHallCoordinate);
+        setupTribes(gameSession, mapGenerator, hexMap, townHallCoordinate);
+
+        return gameSession;
+    }
+
     private void setupTradingPost(GameSession gameSession, HexMapGenerator mapGenerator, HexMap hexMap, HexCoordinate townHallCoordinate) {
         HexCoordinate tradingPostCoordinate = mapGenerator.pickTradingPostCoordinate(hexMap, townHallCoordinate);
         if (tradingPostCoordinate != null) {
