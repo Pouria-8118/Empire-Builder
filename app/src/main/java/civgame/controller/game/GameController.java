@@ -9,6 +9,7 @@ import civgame.model.game.RoadConstructionService;
 import civgame.model.game.SeasonType;
 import civgame.model.game.WallConstructionService;
 import civgame.model.game.FogOfWarCalculator;
+import civgame.model.game.GameSaveManager;
 import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
 import civgame.model.game.StationingService;
@@ -49,6 +50,7 @@ import civgame.view.game.ExplorerMenuFactory;
 import civgame.view.game.FishingBoatMenuFactory;
 import civgame.view.game.GameFrame;
 import civgame.view.game.MapPanel;
+import civgame.view.game.SaveLoadDialog;
 import civgame.view.game.SelectionState;
 import civgame.view.game.StationingMenuFactory;
 import civgame.view.game.TownHallMenuFactory;
@@ -98,6 +100,7 @@ public class GameController {
     private final DockMenuFactory dockMenuFactory;
     private final FishingBoatMenuFactory fishingBoatMenuFactory;
     private final NavalMovementService navalMovementService;
+    private final GameSaveManager saveManager;
     private final SelectedUnitPanel selectedUnitPanel;
     private final FogOfWarCalculator fogOfWarCalculator;
     private final StationingService stationingService;
@@ -127,7 +130,9 @@ public class GameController {
         this.dockMenuFactory = new DockMenuFactory();
         this.fishingBoatMenuFactory = new FishingBoatMenuFactory(new FishingService());
         this.navalMovementService = new NavalMovementService();
+        this.saveManager = new GameSaveManager();
         this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
+        registerSaveLoadKeyBinding();
         this.fogOfWarCalculator = fogOfWarCalculator;
         this.gameFrame = gameFrame;
         registerListeners();
@@ -663,6 +668,28 @@ public class GameController {
                 selectionState.clearSelection();
                 refreshSelectedUnitDisplay();
                 mapPanel.repaint();
+            }
+        });
+    }
+
+    private void registerSaveLoadKeyBinding() {
+        InputMap inputMap = mapPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = mapPanel.getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "openSaveLoad");
+        actionMap.put("openSaveLoad", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                SaveLoadDialog dialog = new SaveLoadDialog(saveManager, gameSession, new SaveLoadDialog.LoadCallback() {
+                    @Override
+                    public void onGameLoaded(civgame.model.game.GameSession loadedGameSession) {
+                        // TODO: hook this into whatever code creates the GameController /
+                        // swaps the visible panel when starting a new game — I don't have
+                        // visibility into that top-level wiring in this codebase.
+                        javax.swing.JOptionPane.showMessageDialog(mapPanel, "Loaded turn " + loadedGameSession.getCurrentTurnNumber() + ". Ask the assistant to wire this into your game-start flow.");
+                    }
+                });
+                dialog.setVisible(true);
             }
         });
     }

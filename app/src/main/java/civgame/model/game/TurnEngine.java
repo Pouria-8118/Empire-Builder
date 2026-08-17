@@ -23,6 +23,7 @@ public class TurnEngine {
     private final BearBehaviorService bearBehaviorService;
     private final NaturalDisasterService naturalDisasterService;
     private final PirateBehaviorService pirateBehaviorService;
+    private final GameSaveManager saveManager;
 
     public TurnEngine() {
         this.resourceProductionService = new ResourceProductionService();
@@ -34,6 +35,7 @@ public class TurnEngine {
         this.bearBehaviorService = new BearBehaviorService();
         this.naturalDisasterService = new NaturalDisasterService(bearBehaviorService);
         this.pirateBehaviorService = new PirateBehaviorService();
+        this.saveManager = new GameSaveManager();
     }
 
     public TurnSummary executeTurn(GameSession gameSession) {
@@ -69,6 +71,11 @@ public class TurnEngine {
 
         gameSession.incrementTurnNumber();
         gameSession.getEventBus().publish(new TurnEndedEvent(gameSession.getCurrentTurnNumber()));
+
+        SaveLoadResult autosaveResult = saveManager.save(SaveSlot.AUTOSAVE, "Autosave", gameSession);
+        if (!autosaveResult.isSuccess()) {
+            System.err.println("Autosave failed: " + autosaveResult.getMessage());
+        }
 
         return new TurnSummary(destroyedBuildingIds, starvationTriggered, gameSession.getCurrentTurnNumber(), completedProductionDescription, depletedResourceDescriptions);
     }
