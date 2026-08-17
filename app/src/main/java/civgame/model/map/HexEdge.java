@@ -1,6 +1,8 @@
 package civgame.model.map;
 
-public class HexEdge {
+public class HexEdge implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final HexCoordinate first;
     private final HexCoordinate second;

@@ -1,6 +1,6 @@
 package civgame.model.game;
 
-public interface ProductionCommand {
+public interface ProductionCommand extends java.io.Serializable {
 
     void execute(GameSession gameSession);
 

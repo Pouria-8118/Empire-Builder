@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class HexMap {
+public class HexMap implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final int mapRadius;
     private final Map<HexCoordinate, HexTile> tiles;

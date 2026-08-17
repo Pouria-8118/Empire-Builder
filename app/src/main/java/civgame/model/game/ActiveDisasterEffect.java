@@ -2,7 +2,9 @@ package civgame.model.game;
 
 import civgame.model.map.HexCoordinate;
 
-public class ActiveDisasterEffect {
+public class ActiveDisasterEffect implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final NaturalDisasterType type;
     private final HexCoordinate centerCoordinate;

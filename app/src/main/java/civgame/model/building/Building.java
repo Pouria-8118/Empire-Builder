@@ -8,7 +8,9 @@ import civgame.model.unit.Worker;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Building implements Attackable {
+public abstract class Building implements Attackable, java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final String id;
     private final HexCoordinate coordinate;

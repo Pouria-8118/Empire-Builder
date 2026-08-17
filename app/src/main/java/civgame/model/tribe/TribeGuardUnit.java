@@ -3,7 +3,9 @@ package civgame.model.tribe;
 import civgame.model.combat.Attackable;
 import civgame.model.unit.UnitType;
 
-public class TribeGuardUnit implements Attackable {
+public class TribeGuardUnit implements Attackable, java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final UnitType combatCategory;
     private int currentHitPoints;

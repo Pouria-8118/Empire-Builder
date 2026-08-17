@@ -5,7 +5,9 @@ import civgame.util.Constants;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ResourceStorage {
+public class ResourceStorage implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final Map<ResourceType, Integer> currentAmounts;
     private final Map<ResourceType, Integer> capacities;

@@ -1,6 +1,8 @@
 package civgame.model.map;
 
-public class TradingPost {
+public class TradingPost implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final HexCoordinate coordinate;
 

@@ -1,6 +1,8 @@
 package civgame.model.game;
 
-public class TownHallProductionQueue {
+public class TownHallProductionQueue implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private ProductionCommand currentCommand;
 

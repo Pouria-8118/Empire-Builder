@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class GameSession {
+public class GameSession implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final HexMap hexMap;
     private final TownHall townHall;
@@ -33,7 +35,7 @@ public class GameSession {
     private final TownHallUpgradeService townHallUpgradeService;
     private final TownHallLevelService townHallLevelService;
     private final TownHallProductionQueue townHallProductionQueue;
-    private final GameEventBus eventBus;
+    private transient GameEventBus eventBus;
     private final AdjacencyBonusService adjacencyBonusService;
     private final HappinessService happinessService;
     private final List<WildAnimal> wildAnimals;
@@ -188,6 +190,13 @@ public class GameSession {
 
     public GameEventBus getEventBus() {
         return eventBus;
+    }
+
+    public void reconnectAfterLoad() {
+        this.eventBus = new GameEventBus();
+        this.adjacencyBonusService.subscribeTo(this);
+        this.adjacencyBonusService.recalculateAll();
+        this.tribeNotifications.clear();
     }
 
     public AdjacencyBonusService getAdjacencyBonusService() {

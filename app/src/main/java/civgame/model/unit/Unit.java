@@ -4,7 +4,9 @@ import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 import civgame.util.Constants;
 
-public abstract class Unit implements Attackable {
+public abstract class Unit implements Attackable, java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final String id;
     private HexCoordinate coordinate;

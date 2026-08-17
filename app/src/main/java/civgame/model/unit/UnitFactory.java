@@ -4,7 +4,9 @@ import civgame.model.map.HexCoordinate;
 import civgame.util.Constants;
 import civgame.util.UnitIdGenerator;
 
-public class UnitFactory {
+public class UnitFactory implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public Unit createUnit(UnitType unitType, HexCoordinate coordinate) {
         if (unitType == UnitType.EXPLORER) {

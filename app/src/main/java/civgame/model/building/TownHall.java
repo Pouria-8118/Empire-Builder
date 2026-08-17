@@ -4,7 +4,9 @@ import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 import civgame.util.Constants;
 
-public class TownHall implements Attackable {
+public class TownHall implements Attackable, java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final HexCoordinate coordinate;
     private TownHallLevel level;

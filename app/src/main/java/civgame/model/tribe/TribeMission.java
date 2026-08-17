@@ -1,6 +1,8 @@
 package civgame.model.tribe;
 
-public class TribeMission {
+public class TribeMission implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final TribeType tribeType;
     private final String title;

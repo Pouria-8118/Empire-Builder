@@ -3,7 +3,9 @@ package civgame.model.pirate;
 import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 
-public class Pirate implements Attackable {
+public class Pirate implements Attackable, java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final String id;
     private HexCoordinate coordinate;

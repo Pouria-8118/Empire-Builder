@@ -1,6 +1,8 @@
 package civgame.model.map;
 
-public class HexEdgeFeatures {
+public class HexEdgeFeatures implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private boolean riverPresent;
     private Wall wall;

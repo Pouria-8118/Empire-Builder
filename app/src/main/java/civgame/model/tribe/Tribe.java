@@ -6,7 +6,9 @@ import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 import civgame.util.Constants;
 
-public class Tribe implements Attackable {
+public class Tribe implements Attackable, java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final String id;
     private final String name;

@@ -3,7 +3,9 @@ package civgame.model.map;
 import civgame.model.combat.Attackable;
 import civgame.util.Constants;
 
-public class Wall implements Attackable {
+public class Wall implements Attackable, java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int currentHitPoints;
     private int maxHitPoints;

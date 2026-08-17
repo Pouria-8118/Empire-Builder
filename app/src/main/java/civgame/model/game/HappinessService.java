@@ -6,7 +6,9 @@ import civgame.util.Constants;
 
 import java.util.List;
 
-public class HappinessService {
+public class HappinessService implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int happinessValue;
 

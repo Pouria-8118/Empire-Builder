@@ -5,7 +5,9 @@ import civgame.model.building.TownHallLevelCostProvider;
 import civgame.model.resource.ResourceType;
 import civgame.util.Constants;
 
-public class TownHallLevelService {
+public class TownHallLevelService implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public boolean canLevelUp(GameSession gameSession) {
         return getNextLevel(gameSession) != null;

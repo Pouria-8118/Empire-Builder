@@ -15,11 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AdjacencyBonusService implements GameEventListener {
+public class AdjacencyBonusService implements GameEventListener, java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final Map<Building, Integer> buildingBonusCache;
     private int farmSynergyBonus;
-    private GameSession gameSession;
+    private transient GameSession gameSession;
 
     public AdjacencyBonusService() {
         this.buildingBonusCache = new HashMap<Building, Integer>();

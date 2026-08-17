@@ -10,7 +10,9 @@ import civgame.util.Constants;
 import java.util.HashSet;
 import java.util.Set;
 
-public class TownHallUpgradeService {
+public class TownHallUpgradeService implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final Set<TownHallUpgradeType> unlockedUpgrades;
     private int storageUpgradeCount;

@@ -3,7 +3,9 @@ package civgame.model.map;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HexCoordinate {
+public class HexCoordinate implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final int[][] NEIGHBOR_DIRECTIONS = {
             {1, 0},

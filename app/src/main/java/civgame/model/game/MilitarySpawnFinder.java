@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
-public class MilitarySpawnFinder {
+public class MilitarySpawnFinder implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final int MAX_TILES_TO_CHECK = 40;
 

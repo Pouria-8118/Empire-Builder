@@ -3,7 +3,9 @@ package civgame.model.animal;
 import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 
-public class WildAnimal implements Attackable {
+public class WildAnimal implements Attackable, java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final String id;
     private HexCoordinate coordinate;

@@ -2,7 +2,9 @@ package civgame.model.map;
 
 import civgame.util.Constants;
 
-public class HexTile {
+public class HexTile implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final HexCoordinate coordinate;
     private final TerrainType terrainType;

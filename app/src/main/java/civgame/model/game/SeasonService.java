@@ -1,6 +1,8 @@
 package civgame.model.game;
 
-public class SeasonService {
+public class SeasonService implements java.io.Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final int SEASON_LENGTH_TURNS = 10;
     private static final int SEASONS_PER_YEAR = 4;
