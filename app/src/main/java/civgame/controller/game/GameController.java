@@ -1,6 +1,7 @@
 package civgame.controller.game;
 
 import civgame.model.building.Building;
+import civgame.model.building.Dock;
 import civgame.model.building.TownHallUpgradeType;
 import civgame.model.game.BorderExpansionService;
 import civgame.model.game.ConstructionService;
@@ -12,8 +13,10 @@ import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
 import civgame.model.game.StationingService;
 import civgame.model.game.DemolitionService;
+import civgame.model.game.FishingService;
 import civgame.model.game.CombatTargetService;
 import civgame.model.game.MilitaryStackingRules;
+import civgame.model.game.NavalMovementService;
 import civgame.model.game.AttackExecutionService;
 import civgame.model.game.AttackOutcome;
 import civgame.model.game.TradingPostTradeService;
@@ -29,6 +32,7 @@ import civgame.model.tribe.Tribe;
 import civgame.model.unit.BorderExpander;
 import civgame.model.unit.Builder;
 import civgame.model.unit.Explorer;
+import civgame.model.unit.FishingBoat;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitType;
 import civgame.model.unit.Worker;
@@ -40,7 +44,9 @@ import java.util.HashSet;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
 import civgame.view.game.ConstructionMenuFactory;
+import civgame.view.game.DockMenuFactory;
 import civgame.view.game.ExplorerMenuFactory;
+import civgame.view.game.FishingBoatMenuFactory;
 import civgame.view.game.GameFrame;
 import civgame.view.game.MapPanel;
 import civgame.view.game.SelectionState;
@@ -89,6 +95,9 @@ public class GameController {
     private final AttackExecutionService attackExecutionService;
     private final TradingPostMenuFactory tradingPostMenuFactory;
     private final TribeMenuFactory tribeMenuFactory;
+    private final DockMenuFactory dockMenuFactory;
+    private final FishingBoatMenuFactory fishingBoatMenuFactory;
+    private final NavalMovementService navalMovementService;
     private final SelectedUnitPanel selectedUnitPanel;
     private final FogOfWarCalculator fogOfWarCalculator;
     private final StationingService stationingService;
@@ -115,6 +124,9 @@ public class GameController {
         this.attackExecutionService = new AttackExecutionService();
         this.tradingPostMenuFactory = new TradingPostMenuFactory(new TradingPostTradeService());
         this.tribeMenuFactory = new TribeMenuFactory(new TribeGiftService(), new TribeTradeService(), new TribeDiplomacyService(), new TribeMissionService());
+        this.dockMenuFactory = new DockMenuFactory();
+        this.fishingBoatMenuFactory = new FishingBoatMenuFactory(new FishingService());
+        this.navalMovementService = new NavalMovementService();
         this.selectedUnitPanel = gameFrame.getSelectedUnitPanel();
         this.fogOfWarCalculator = fogOfWarCalculator;
         this.gameFrame = gameFrame;
@@ -249,6 +261,13 @@ public class GameController {
 
     private void updateReachableTilesForSelection() {
         Unit selectedUnit = selectionState.getSelectedUnit();
+
+        if (isNavalUnit(selectedUnit)) {
+            Set<HexCoordinate> seaTiles = navalMovementService.findReachableSeaTiles(gameSession.getHexMap(), selectedUnit.getCoordinate(), selectedUnit.getCurrentActionPoints());
+            selectionState.setReachableTiles(seaTiles);
+            return;
+        }
+
         boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
         boolean navalTechUnlocked = gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.NAVAL_TECHNIQUES);
 
@@ -288,6 +307,11 @@ public class GameController {
             return;
         }
 
+        if (gameSession.getBuildingAt(clickedCoordinate) instanceof Dock) {
+            showDockMenu((Dock) gameSession.getBuildingAt(clickedCoordinate), mouseEvent);
+            return;
+        }
+
         List<Unit> unitsHere = findUnitsAtCoordinate(clickedCoordinate);
         if (unitsHere.isEmpty()) {
             return;
@@ -309,6 +333,8 @@ public class GameController {
             showExplorerMenu((Explorer) targetUnit, mouseEvent);
         } else if (MilitaryUnitCapProvider.isMilitaryUnitType(targetUnit.getUnitType())) {
             showCombatMenu(targetUnit, mouseEvent);
+        } else if (targetUnit.getUnitType() == UnitType.FISHING_BOAT) {
+            showFishingBoatMenu((FishingBoat) targetUnit, mouseEvent);
         }
     }
 
@@ -369,6 +395,18 @@ public class GameController {
         popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
     }
 
+    private void showDockMenu(Dock dock, MouseEvent mouseEvent) {
+        Runnable onSuccess = createRepaintRunnable();
+        JPopupMenu popupMenu = dockMenuFactory.buildMenu(gameSession, dock, onSuccess);
+        popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
+    }
+
+    private void showFishingBoatMenu(FishingBoat boat, MouseEvent mouseEvent) {
+        Runnable onSuccess = createRepaintRunnable();
+        JPopupMenu popupMenu = fishingBoatMenuFactory.buildMenu(gameSession, boat, onSuccess);
+        popupMenu.show(mapPanel, mouseEvent.getX(), mouseEvent.getY());
+    }
+
     private void showConstructionMenu(Builder builder, MouseEvent mouseEvent) {
         Runnable onSuccess = createRepaintRunnable();
         JPopupMenu popupMenu = constructionMenuFactory.buildMenu(gameSession, builder, onSuccess);
@@ -421,6 +459,12 @@ public class GameController {
         }
 
         Unit selectedUnit = selectionState.getSelectedUnit();
+
+        if (isNavalUnit(selectedUnit)) {
+            attemptMoveNavalUnit(selectedUnit, destination);
+            return;
+        }
+
         boolean allowUnseenTiles = selectedUnit.getUnitType() == UnitType.EXPLORER;
         boolean navalTechUnlocked = gameSession.getTownHallUpgradeService().isUnlocked(TownHallUpgradeType.NAVAL_TECHNIQUES);
 
@@ -443,6 +487,30 @@ public class GameController {
         }
 
         unstationIfWorkerIsLeavingItsBuilding(selectedUnit);
+
+        selectedUnit.consumeActionPoints(movementCost);
+        refreshSelectedUnitDisplay();
+        movementAnimator.startMovement(selectedUnit, fullPath, createMovementFinishedCallback(selectedUnit));
+    }
+
+    private boolean isNavalUnit(Unit unit) {
+        return unit.getUnitType() == UnitType.FISHING_BOAT || unit.getUnitType() == UnitType.GALLEY;
+    }
+
+    private void attemptMoveNavalUnit(Unit selectedUnit, HexCoordinate destination) {
+        if (!navalMovementService.isValidNavalDestination(gameSession.getHexMap(), destination)) {
+            return;
+        }
+
+        List<HexCoordinate> fullPath = navalMovementService.findSeaPath(gameSession.getHexMap(), selectedUnit.getCoordinate(), destination);
+        if (fullPath == null || fullPath.isEmpty()) {
+            return;
+        }
+
+        int movementCost = fullPath.size();
+        if (!selectedUnit.hasEnoughActionPoints(movementCost)) {
+            return;
+        }
 
         selectedUnit.consumeActionPoints(movementCost);
         refreshSelectedUnitDisplay();

@@ -28,6 +28,12 @@ public class UnitFactory {
         if (unitType == UnitType.CATAPULT) {
             return createCatapult(coordinate);
         }
+        if (unitType == UnitType.FISHING_BOAT) {
+            return createFishingBoat(coordinate);
+        }
+        if (unitType == UnitType.GALLEY) {
+            return createGalley(coordinate);
+        }
         return createBorderExpander(coordinate);
     }
 
@@ -69,5 +75,15 @@ public class UnitFactory {
     private Catapult createCatapult(HexCoordinate coordinate) {
         String id = UnitIdGenerator.generateNextId("CATAPULT");
         return new Catapult(id, coordinate);
+    }
+
+    private FishingBoat createFishingBoat(HexCoordinate coordinate) {
+        String id = UnitIdGenerator.generateNextId("FISHING_BOAT");
+        return new FishingBoat(id, coordinate);
+    }
+
+    private Galley createGalley(HexCoordinate coordinate) {
+        String id = UnitIdGenerator.generateNextId("GALLEY");
+        return new Galley(id, coordinate);
     }
 }

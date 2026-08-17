@@ -14,8 +14,13 @@ public class CombatResolutionService {
     }
 
     public CombatResult resolveCombat(int attackerDiceCount, int defenderDiceCount, int defenderDieBonus) {
+        return resolveCombat(attackerDiceCount, defenderDiceCount, 0, defenderDieBonus);
+    }
+
+    public CombatResult resolveCombat(int attackerDiceCount, int defenderDiceCount, int attackerDieBonus, int defenderDieBonus) {
         List<Integer> attackerDice = rollDice(attackerDiceCount);
         List<Integer> defenderDice = rollDice(defenderDiceCount);
+        applyDieBonus(attackerDice, attackerDieBonus);
         applyDieBonus(defenderDice, defenderDieBonus);
 
         Collections.sort(attackerDice, Collections.reverseOrder());

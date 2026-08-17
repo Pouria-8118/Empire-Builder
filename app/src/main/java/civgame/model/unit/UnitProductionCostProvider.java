@@ -29,6 +29,12 @@ public class UnitProductionCostProvider {
         if (unitType == UnitType.CATAPULT) {
             return Constants.CATAPULT_PRODUCTION_WOOD_COST;
         }
+        if (unitType == UnitType.FISHING_BOAT) {
+            return Constants.FISHING_BOAT_PRODUCTION_WOOD_COST;
+        }
+        if (unitType == UnitType.GALLEY) {
+            return Constants.GALLEY_PRODUCTION_WOOD_COST;
+        }
         return Constants.BORDER_EXPANDER_PRODUCTION_WOOD_COST;
     }
 
@@ -54,6 +60,12 @@ public class UnitProductionCostProvider {
         if (unitType == UnitType.CATAPULT) {
             return Constants.CATAPULT_PRODUCTION_FOOD_COST;
         }
+        if (unitType == UnitType.FISHING_BOAT) {
+            return Constants.FISHING_BOAT_PRODUCTION_FOOD_COST;
+        }
+        if (unitType == UnitType.GALLEY) {
+            return Constants.GALLEY_PRODUCTION_FOOD_COST;
+        }
         return Constants.BORDER_EXPANDER_PRODUCTION_FOOD_COST;
     }
 
@@ -78,6 +90,12 @@ public class UnitProductionCostProvider {
         }
         if (unitType == UnitType.CATAPULT) {
             return Constants.CATAPULT_PRODUCTION_TURNS;
+        }
+        if (unitType == UnitType.FISHING_BOAT) {
+            return Constants.FISHING_BOAT_PRODUCTION_TURNS;
+        }
+        if (unitType == UnitType.GALLEY) {
+            return Constants.GALLEY_PRODUCTION_TURNS;
         }
         return Constants.BORDER_EXPANDER_PRODUCTION_TURNS;
     }

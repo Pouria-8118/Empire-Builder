@@ -8,6 +8,7 @@ import civgame.model.event.GameEventBus;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.TradingPost;
+import civgame.model.pirate.Pirate;
 import civgame.model.resource.ResourceStorage;
 import civgame.model.tribe.Tribe;
 import civgame.model.unit.Unit;
@@ -42,6 +43,7 @@ public class GameSession {
     private final SeasonService seasonService;
     private final List<ActiveDisasterEffect> activeDisasterEffects;
     private final Map<HexCoordinate, Integer> temporarilyBlockedHexes;
+    private final List<Pirate> pirates;
     private boolean bazaarTradedThisTurn;
     private boolean tradingPostTradedThisTurn;
     private boolean pendingDockDiscount;
@@ -70,6 +72,7 @@ public class GameSession {
         this.seasonService = new SeasonService();
         this.activeDisasterEffects = new ArrayList<ActiveDisasterEffect>();
         this.temporarilyBlockedHexes = new HashMap<HexCoordinate, Integer>();
+        this.pirates = new ArrayList<Pirate>();
         this.bazaarTradedThisTurn = false;
         this.pendingDockDiscount = false;
         this.tradingPostTradedThisTurn = false;
@@ -303,6 +306,18 @@ public class GameSession {
 
     public List<ActiveDisasterEffect> getActiveDisasterEffects() {
         return activeDisasterEffects;
+    }
+
+    public void addPirate(Pirate pirate) {
+        pirates.add(pirate);
+    }
+
+    public void removePirate(Pirate pirate) {
+        pirates.remove(pirate);
+    }
+
+    public List<Pirate> getPirates() {
+        return pirates;
     }
 
     public void blockHexTemporarily(HexCoordinate coordinate, int untilTurn) {

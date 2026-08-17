@@ -5,6 +5,8 @@ import civgame.model.tribe.Tribe;
 import civgame.model.unit.Unit;
 import civgame.model.unit.Worker;
 import civgame.model.animal.WildAnimal;
+import civgame.model.building.Building;
+import civgame.model.building.Dock;
 import civgame.util.Constants;
 
 import java.util.List;
@@ -20,6 +22,7 @@ public class TurnEngine {
     private final TribeBehaviorService tribeBehaviorService;
     private final BearBehaviorService bearBehaviorService;
     private final NaturalDisasterService naturalDisasterService;
+    private final PirateBehaviorService pirateBehaviorService;
 
     public TurnEngine() {
         this.resourceProductionService = new ResourceProductionService();
@@ -30,11 +33,15 @@ public class TurnEngine {
         this.tribeBehaviorService = new TribeBehaviorService();
         this.bearBehaviorService = new BearBehaviorService();
         this.naturalDisasterService = new NaturalDisasterService(bearBehaviorService);
+        this.pirateBehaviorService = new PirateBehaviorService();
     }
 
     public TurnSummary executeTurn(GameSession gameSession) {
         naturalDisasterService.rollForDisaster(gameSession);
         bearBehaviorService.processAllBearTurns(gameSession);
+        pirateBehaviorService.maybeSpawnPirate(gameSession);
+        pirateBehaviorService.processAllPirateTurns(gameSession);
+        processDockProductionQueues(gameSession);
         refreshAllUnitActionPoints(gameSession);
         applyRebellionMovementPenalty(gameSession);
         autoExploreService.runAutoExploreForAllUnits(gameSession);
@@ -92,6 +99,17 @@ public class TurnEngine {
         List<WildAnimal> wildAnimalsSnapshot = new ArrayList<WildAnimal>(gameSession.getWildAnimals());
         for (int i = 0; i < wildAnimalsSnapshot.size(); i++) {
             wildAnimalCombatService.processWildAnimalTurn(gameSession, wildAnimalsSnapshot.get(i));
+        }
+    }
+
+    private void processDockProductionQueues(GameSession gameSession) {
+        List<Building> allBuildings = gameSession.getAllBuildings();
+        for (int i = 0; i < allBuildings.size(); i++) {
+            Building building = allBuildings.get(i);
+            if (building.isDestroyed() || !(building instanceof Dock)) {
+                continue;
+            }
+            ((Dock) building).getNavalProductionQueue().advanceOneTurn(gameSession);
         }
     }
     

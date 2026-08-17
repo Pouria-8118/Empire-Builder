@@ -65,8 +65,9 @@ public class AttackExecutionService {
         int attackerDiceCount = countDiceParticipantTypes(attackerParticipants);
         int defenderDiceCount = countDiceParticipantTypes(defenderUnits);
         int wallBonus = gameSession.getHexMap().hasActiveWall(attackerCoordinate, defenderCoordinate) ? Constants.WALL_DEFENSE_DICE_BONUS : 0;
+        int galleyBonus = (hasUnitType(attackerParticipants, UnitType.GALLEY) && hasFloatingUnit(defenderUnits)) ? Constants.GALLEY_VS_FLOATING_DIE_BONUS : 0;
 
-        CombatResult combatResult = combatResolutionService.resolveCombat(attackerDiceCount, defenderDiceCount, wallBonus);
+        CombatResult combatResult = combatResolutionService.resolveCombat(attackerDiceCount, defenderDiceCount, galleyBonus, wallBonus);
 
         List<Unit> attackerLosses = combatDamageApplier.applyHitsToUnits(gameSession, attackerParticipants, combatResult.getAttackerHits());
         List<Unit> defenderLosses = combatDamageApplier.applyHitsToUnits(gameSession, defenderUnits, combatResult.getDefenderHits());
@@ -261,5 +262,23 @@ public class AttackExecutionService {
             }
         }
         return types.size();
+    }
+
+    private boolean hasUnitType(List<Unit> units, UnitType unitType) {
+        for (int i = 0; i < units.size(); i++) {
+            if (units.get(i).getUnitType() == unitType) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasFloatingUnit(List<Unit> units) {
+        for (int i = 0; i < units.size(); i++) {
+            if (units.get(i).isFloating()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

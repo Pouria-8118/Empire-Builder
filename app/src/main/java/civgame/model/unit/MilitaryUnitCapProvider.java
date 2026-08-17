@@ -19,11 +19,11 @@ public class MilitaryUnitCapProvider {
     }
 
     public static boolean isMilitaryUnitType(UnitType unitType) {
-        return unitType == UnitType.SWORDSMAN || unitType == UnitType.ARCHER
-                || unitType == UnitType.CAVALRY || unitType == UnitType.CATAPULT;
+        return unitType == UnitType.SWORDSMAN || unitType == UnitType.ARCHER || unitType == UnitType.CAVALRY
+                || unitType == UnitType.CATAPULT || unitType == UnitType.GALLEY;
     }
 
     public static boolean isDiceParticipant(UnitType unitType) {
-        return unitType == UnitType.SWORDSMAN || unitType == UnitType.ARCHER || unitType == UnitType.CAVALRY;
+        return unitType == UnitType.SWORDSMAN || unitType == UnitType.ARCHER || unitType == UnitType.CAVALRY || unitType == UnitType.GALLEY;
     }
 }

@@ -29,6 +29,12 @@ public class UnitIconProvider {
         if (unitType == UnitType.CATAPULT) {
             return Constants.CATAPULT_ICON_PATH;
         }
+        if (unitType == UnitType.FISHING_BOAT) {
+            return Constants.FISHING_BOAT_ICON_PATH;
+        }
+        if (unitType == UnitType.GALLEY) {
+            return Constants.GALLEY_ICON_PATH;
+        }
         return Constants.BORDER_EXPANDER_ICON_PATH;
     }
 
@@ -53,6 +59,12 @@ public class UnitIconProvider {
         }
         if (unitType == UnitType.CATAPULT) {
             return "P";
+        }
+        if (unitType == UnitType.FISHING_BOAT) {
+            return "F";
+        }
+        if (unitType == UnitType.GALLEY) {
+            return "G";
         }
         return "X";
     }

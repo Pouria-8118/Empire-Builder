@@ -31,6 +31,12 @@ public class UnitColorProvider {
         if (unitType == UnitType.CATAPULT) {
             return new Color(90, 90, 90);
         }
+        if (unitType == UnitType.FISHING_BOAT) {
+            return new Color(200, 170, 90);
+        }
+        if (unitType == UnitType.GALLEY) {
+            return new Color(80, 60, 40);
+        }
         return new Color(180, 60, 200);
     }
 

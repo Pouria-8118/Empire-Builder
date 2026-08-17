@@ -15,6 +15,7 @@ import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TileVisibility;
 import civgame.model.map.Wall;
+import civgame.model.pirate.Pirate;
 import civgame.model.tribe.Tribe;
 import civgame.model.map.TradingPost;
 import civgame.model.unit.Unit;
@@ -130,6 +131,7 @@ public class MapPanel extends JPanel {
         drawAllWalls(graphics2D, hexSize, centerX, centerY);
         drawTownHall(graphics2D, hexSize, centerX, centerY);
         drawAllWildAnimals(graphics2D, hexSize, centerX, centerY);
+        drawAllPirates(graphics2D, hexSize, centerX, centerY);
         drawAllTradingPosts(graphics2D, hexSize, centerX, centerY);
         drawAllTribeCamps(graphics2D, hexSize, centerX, centerY);
         weatherEffectRenderer.draw(graphics2D, gameSession.getCurrentSeason(), getWidth(), getHeight());
@@ -235,6 +237,28 @@ public class MapPanel extends JPanel {
             graphics2D.drawString(label, (int) (drawX - iconSize * 0.4), (int) (drawY + iconSize * 0.15));
         }
     }
+
+    private void drawAllPirates(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        List<Pirate> pirates = gameSession.getPirates();
+
+        for (int i = 0; i < pirates.size(); i++) {
+            Pirate pirate = pirates.get(i);
+            Point2D pixelPosition = HexGeometry.axialToPixel(pirate.getCoordinate(), hexSize);
+            double drawX = centerX + pixelPosition.getX();
+            double drawY = centerY + pixelPosition.getY();
+            int iconSize = (int) (hexSize * UNIT_SIZE_FACTOR);
+
+            graphics2D.setColor(new Color(30, 30, 30));
+            graphics2D.fillOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+            graphics2D.setColor(Color.RED);
+            graphics2D.drawOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+
+            graphics2D.setColor(Color.WHITE);
+            graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (iconSize * 0.35)));
+            graphics2D.drawString("P" + pirate.getCurrentHitPoints(), (int) (drawX - iconSize * 0.3), (int) (drawY + iconSize * 0.15));
+        }
+    }
+    
     private void drawAllTradingPosts(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
         List<TradingPost> tradingPosts = gameSession.getTradingPosts();
 
