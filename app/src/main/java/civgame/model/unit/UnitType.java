@@ -8,5 +8,7 @@ public enum UnitType {
     SWORDSMAN,
     ARCHER,
     CAVALRY,
-    CATAPULT
+    CATAPULT,
+    FISHING_BOAT,
+    GALLEY
 }

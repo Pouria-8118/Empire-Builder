@@ -400,6 +400,34 @@ public class Constants {
     public static final int SEA_STORM_DOCK_DAMAGE = 30;
     public static final int SEA_STORM_COASTAL_UNIT_DAMAGE = 20;
 
+    public static final int FISHING_BOAT_MAX_ACTION_POINTS = 2;
+    public static final int FISHING_BOAT_VISION_RADIUS = 1;
+    public static final int FISHING_BOAT_PRODUCTION_WOOD_COST = 15;
+    public static final int FISHING_BOAT_PRODUCTION_FOOD_COST = 5;
+    public static final int FISHING_BOAT_PRODUCTION_TURNS = 2;
+    public static final int FISHING_BOAT_HARVEST_AMOUNT = 4;
+    public static final int FISHING_BOAT_HARVEST_AP_COST = 1;
+    public static final String FISHING_BOAT_ICON_PATH = "/images/units/fishing_boat.png";
+
+    public static final int GALLEY_MAX_ACTION_POINTS = 3;
+    public static final int GALLEY_VISION_RADIUS = 2;
+    public static final int GALLEY_MAX_HIT_POINTS = 3;
+    public static final int GALLEY_ATTACK_RANGE = 1;
+    public static final int GALLEY_STRUCTURE_ATTACK_POWER = 8;
+    public static final int GALLEY_PRODUCTION_WOOD_COST = 35;
+    public static final int GALLEY_PRODUCTION_FOOD_COST = 15;
+    public static final int GALLEY_PRODUCTION_TURNS = 4;
+    public static final int GALLEY_VS_FLOATING_DIE_BONUS = 2;
+    public static final String GALLEY_ICON_PATH = "/images/units/galley.png";
+
+    public static final int MAX_ACTIVE_PIRATES = 2;
+    public static final double PIRATE_SPAWN_CHANCE_PER_TURN = 0.08;
+    public static final int PIRATE_MAX_HIT_POINTS = 2;
+    public static final int PIRATE_MAX_ACTION_POINTS = 3;
+    public static final int PIRATE_DICE_COUNT = 1;
+    public static final int PIRATE_DOCK_ATTACK_RANGE = 2;
+    public static final int PIRATE_DOCK_DAMAGE = 15;
+
     public static final String FLOATING_UNIT_ICON_PATH = "/images/units/floating_unit.png";
     public static final String TOWN_HALL_GAME_ICON_PATH = "/images/buildings/town_hall.png";
     public static final String LUMBER_MILL_ICON_PATH = "/images/buildings/lumber_mill.png";
