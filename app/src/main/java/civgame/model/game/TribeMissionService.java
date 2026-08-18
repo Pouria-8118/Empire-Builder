@@ -105,13 +105,34 @@ public class TribeMissionService {
         }
     }
 
-    public boolean canDeliverMission(Tribe tribe) {
+    public boolean canDeliverMission(GameSession gameSession, Tribe tribe) {
         TribeMission mission = tribe.getActiveMission();
-        return mission != null && mission.getStatus() == MissionStatus.READY_TO_DELIVER;
+        if (mission == null || mission.getStatus() != MissionStatus.READY_TO_DELIVER) {
+            return false;
+        }
+        return hasRoomForReward(gameSession, tribe.getTribeType());
+    }
+
+    private boolean hasRoomForReward(GameSession gameSession, TribeType tribeType) {
+        if (tribeType == TribeType.FARMER) {
+            return hasRoomFor(gameSession, ResourceType.FOOD, Constants.FARMER_MISSION_REWARD_FOOD);
+        }
+        if (tribeType == TribeType.MOUNTAIN) {
+            return hasRoomFor(gameSession, ResourceType.STONE, Constants.MOUNTAIN_MISSION_REWARD_STONE);
+        }
+        if (tribeType == TribeType.COASTAL) {
+            return hasRoomFor(gameSession, ResourceType.FOOD, Constants.COASTAL_MISSION_REWARD_FOOD);
+        }
+        return true;
+    }
+
+    private boolean hasRoomFor(GameSession gameSession, ResourceType resourceType, int amount) {
+        int remaining = gameSession.getResourceStorage().getCapacity(resourceType) - gameSession.getResourceStorage().getAmount(resourceType);
+        return remaining >= amount;
     }
 
     public boolean deliverMission(GameSession gameSession, Tribe tribe) {
-        if (!canDeliverMission(tribe)) {
+        if (!canDeliverMission(gameSession, tribe)) {
             return false;
         }
 

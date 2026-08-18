@@ -98,8 +98,8 @@ public class TribeMenuFactory {
             return StyledMenuItemFactory.createItem(null, "Pay Mission Cost", mission.getTitle() + " (deadline: turn " + mission.getDeadlineTurn() + ")", reason, canPay, actionListener);
         }
 
-        boolean canDeliver = tribeMissionService.canDeliverMission(tribe);
-        String reason = canDeliver ? "" : "Condition not met yet (deadline: turn " + mission.getDeadlineTurn() + ")";
+        boolean canDeliver = tribeMissionService.canDeliverMission(gameSession, tribe);
+        String reason = canDeliver ? "" : buildDeliverBlockedReason(mission);
 
         ActionListener actionListener = new ActionListener() {
             @Override
@@ -222,6 +222,13 @@ public class TribeMenuFactory {
         } else if (!success) {
             JOptionPane.showMessageDialog(null, "Trade failed. Check the amount and your resources.");
         }
+    }
+
+    private String buildDeliverBlockedReason(civgame.model.tribe.TribeMission mission) {
+        if (mission.getStatus() != civgame.model.tribe.MissionStatus.READY_TO_DELIVER) {
+            return "Condition not met yet (deadline: turn " + mission.getDeadlineTurn() + ")";
+        }
+        return "Not enough storage space for the reward";
     }
 
     private JMenuItem createDeclareWarItem(GameSession gameSession, Tribe tribe, Runnable onActionSuccess) {
