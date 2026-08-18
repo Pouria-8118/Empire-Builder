@@ -22,7 +22,7 @@ public class Constants {
     public static final double[] ZOOM_LEVELS = {0.5, 0.75, 1.0, 1.25, 1.5, 2.0};
     public static final int DEFAULT_ZOOM_INDEX = 2;
     public static final int DEFAULT_MAP_RADIUS = 14;
-
+    public static final int INITIAL_BORDER_RADIUS = 2;
     public static final int STARTING_FOOD = 70;
     public static final int STARTING_WOOD = 60;
     public static final int STARTING_STONE = 20;

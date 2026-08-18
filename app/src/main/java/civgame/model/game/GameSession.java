@@ -7,11 +7,13 @@ import civgame.model.building.TownHall;
 import civgame.model.event.GameEventBus;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
+import civgame.model.map.HexTile;
 import civgame.model.map.TradingPost;
 import civgame.model.pirate.Pirate;
 import civgame.model.resource.ResourceStorage;
 import civgame.model.tribe.Tribe;
 import civgame.model.unit.Unit;
+import civgame.util.Constants;
 import civgame.model.animal.WildAnimal;
 
 import java.util.ArrayList;
@@ -83,6 +85,7 @@ public class GameSession implements java.io.Serializable {
         this.currentTurnNumber = 1;
         this.inStarvation = false;
         claimInitialBorderAroundTownHall();
+        claimSecondRingAroundTownHall();
     }
 
     private void claimInitialBorderAroundTownHall() {
@@ -150,6 +153,13 @@ public class GameSession implements java.io.Serializable {
 
     public List<Building> getAllBuildings() {
         return new ArrayList<Building>(buildings.values());
+    }
+
+    private void claimSecondRingAroundTownHall() {
+        List<HexTile> tilesInRange = hexMap.getTilesInRange(townHall.getCoordinate(), Constants.INITIAL_BORDER_RADIUS);
+        for (int i = 0; i < tilesInRange.size(); i++) {
+            claimedBorderTiles.add(tilesInRange.get(i).getCoordinate());
+        }
     }
 
     public boolean isWithinBorder(HexCoordinate coordinate) {
