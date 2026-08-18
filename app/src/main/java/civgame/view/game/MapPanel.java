@@ -33,7 +33,6 @@ import civgame.util.UnitIconProvider;
 
 import javax.swing.Timer;
 import javax.swing.JPanel;
-import javax.swing.ToolTipManager;
 import java.awt.BasicStroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
