@@ -235,10 +235,16 @@ public class MapPanel extends JPanel {
             int iconSize = (int) (hexSize * UNIT_SIZE_FACTOR);
 
             boolean isBear = wildAnimal instanceof Bear;
-            graphics2D.setColor(isBear ? new Color(60, 40, 20) : new Color(101, 67, 33));
-            graphics2D.fillOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
-            graphics2D.setColor(Color.BLACK);
-            graphics2D.drawOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+            Image animalIcon = IconProvider.loadImage(isBear ? Constants.BEAR_ICON_PATH : Constants.WILD_ANIMAL_ICON_PATH);
+
+            if (animalIcon != null) {
+                graphics2D.drawImage(animalIcon, (int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize, this);
+            } else {
+                graphics2D.setColor(isBear ? new Color(60, 40, 20) : new Color(101, 67, 33));
+                graphics2D.fillOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+                graphics2D.setColor(Color.BLACK);
+                graphics2D.drawOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+            }
 
             graphics2D.setColor(Color.WHITE);
             graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (iconSize * 0.35)));
@@ -257,10 +263,15 @@ public class MapPanel extends JPanel {
             double drawY = centerY + pixelPosition.getY();
             int iconSize = (int) (hexSize * UNIT_SIZE_FACTOR);
 
-            graphics2D.setColor(new Color(30, 30, 30));
-            graphics2D.fillOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
-            graphics2D.setColor(Color.RED);
-            graphics2D.drawOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+            Image pirateIcon = IconProvider.loadImage(Constants.PIRATE_ICON_PATH);
+            if (pirateIcon != null) {
+                graphics2D.drawImage(pirateIcon, (int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize, this);
+            } else {
+                graphics2D.setColor(new Color(30, 30, 30));
+                graphics2D.fillOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+                graphics2D.setColor(Color.RED);
+                graphics2D.drawOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+            }
 
             graphics2D.setColor(Color.WHITE);
             graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (iconSize * 0.35)));
@@ -289,10 +300,15 @@ public class MapPanel extends JPanel {
             diamond.addPoint((int) drawX, (int) (drawY + markerSize / 2.0));
             diamond.addPoint((int) (drawX - markerSize / 2.0), (int) drawY);
 
-            graphics2D.setColor(new Color(180, 140, 40));
-            graphics2D.fillPolygon(diamond);
-            graphics2D.setColor(Color.BLACK);
-            graphics2D.drawPolygon(diamond);
+            Image tradingPostIcon = IconProvider.loadImage(Constants.TRADING_POST_ICON_PATH);
+            if (tradingPostIcon != null) {
+                graphics2D.drawImage(tradingPostIcon, (int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize, this);
+            } else {
+                graphics2D.setColor(new Color(180, 140, 40));
+                graphics2D.fillPolygon(diamond);
+                graphics2D.setColor(Color.BLACK);
+                graphics2D.drawPolygon(diamond);
+            }
         }
     }
 
@@ -315,10 +331,15 @@ public class MapPanel extends JPanel {
             double drawY = centerY + pixelPosition.getY();
             int markerSize = (int) (hexSize * 0.75);
 
-            graphics2D.setColor(TribeColorProvider.getColorForTribeType(tribe.getTribeType()));
-            graphics2D.fillRect((int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize);
-            graphics2D.setColor(Color.BLACK);
-            graphics2D.drawRect((int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize);
+            Image tribeCampIcon = IconProvider.loadImage(Constants.TRIBE_CAMP_ICON_PATH);
+            if (tribeCampIcon != null) {
+                graphics2D.drawImage(tribeCampIcon, (int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize, this);
+            } else {
+                graphics2D.setColor(TribeColorProvider.getColorForTribeType(tribe.getTribeType()));
+                graphics2D.fillRect((int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize);
+                graphics2D.setColor(Color.BLACK);
+                graphics2D.drawRect((int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize);
+            }
 
             graphics2D.setColor(Color.WHITE);
             graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (markerSize * 0.5)));
