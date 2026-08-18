@@ -23,7 +23,7 @@ import civgame.util.BuildingColorProvider;
 import civgame.util.BuildingIconProvider;
 import civgame.util.Constants;
 import civgame.util.HexGeometry;
-import civgame.util.HexTileTooltipTextBuilder;
+import civgame.util.HexTileInfoTextBuilder;
 import civgame.util.IconProvider;
 import civgame.util.ResourceIconProvider;
 import civgame.util.TerrainColorProvider;
@@ -44,6 +44,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Polygon;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.util.Set;
 import java.util.ArrayList;
@@ -72,6 +73,7 @@ public class MapPanel extends JPanel {
     private final CameraState cameraState;
     private final SelectionState selectionState;
     private final UnitMovementAnimator movementAnimator;
+    private List<String> hoveredTileInfoLines;
 
     public MapPanel(GameSession gameSession, CameraState cameraState, SelectionState selectionState, UnitMovementAnimator movementAnimator) {
         this.gameSession = gameSession;
@@ -79,24 +81,27 @@ public class MapPanel extends JPanel {
         this.selectionState = selectionState;
         this.movementAnimator = movementAnimator;
         setBackground(Color.BLACK);
-        setToolTipText("");
-        ToolTipManager.sharedInstance().registerComponent(this);
 
         Timer weatherTimer = new Timer(50, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                weatherEffectRenderer.advance(gameSession.getCurrentSeason());
-                gameSession.tickActiveDisasterEffects();
-                repaint();
-            }
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            weatherEffectRenderer.advance(gameSession.getCurrentSeason());
+            gameSession.tickActiveDisasterEffects();
+            repaint();
+        }
         });
         weatherTimer.start();
 
+
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent mouseEvent) {
+                updateHoveredTileInfo(mouseEvent);
+            }
+        });
     }
 
-
-    @Override
-    public String getToolTipText(MouseEvent mouseEvent) {
+    private void updateHoveredTileInfo(MouseEvent mouseEvent) {
         double hexSize = getCurrentHexSize();
         double centerX = getPanelCenterX();
         double centerY = getPanelCenterY();
@@ -106,15 +111,19 @@ public class MapPanel extends JPanel {
         HexCoordinate coordinate = HexGeometry.pixelToAxial(relativeX, relativeY, hexSize);
 
         if (!gameSession.getHexMap().containsCoordinate(coordinate)) {
-            return null;
+            hoveredTileInfoLines = null;
+            repaint();
+            return;
         }
 
         HexTile tile = gameSession.getHexMap().getTile(coordinate);
         if (tile.getVisibility() == TileVisibility.UNSEEN) {
-            return null;
+            hoveredTileInfoLines = null;
+        } else {
+            hoveredTileInfoLines = HexTileInfoTextBuilder.build(tile, gameSession.getHexMap());
         }
 
-        return HexTileTooltipTextBuilder.build(tile, gameSession.getHexMap());
+        repaint();
     }
 
     @Override
@@ -132,6 +141,7 @@ public class MapPanel extends JPanel {
         drawTownHall(graphics2D, hexSize, centerX, centerY);
         drawAllWildAnimals(graphics2D, hexSize, centerX, centerY);
         drawAllPirates(graphics2D, hexSize, centerX, centerY);
+        drawHoveredTileInfoBox(graphics2D);
         drawAllTradingPosts(graphics2D, hexSize, centerX, centerY);
         drawAllTribeCamps(graphics2D, hexSize, centerX, centerY);
         weatherEffectRenderer.draw(graphics2D, gameSession.getCurrentSeason(), getWidth(), getHeight());
@@ -326,6 +336,28 @@ public class MapPanel extends JPanel {
         graphics2D.drawRoundRect(10, 10, 130, 30, 10, 10);
         graphics2D.setFont(new Font("SansSerif", Font.BOLD, 14));
         graphics2D.drawString(season.name(), 22, 30);
+    }
+
+    private void drawHoveredTileInfoBox(Graphics2D graphics2D) {
+        if (hoveredTileInfoLines == null || hoveredTileInfoLines.isEmpty()) {
+            return;
+        }
+
+        int lineHeight = 16;
+        int boxWidth = 230;
+        int boxHeight = hoveredTileInfoLines.size() * lineHeight + 12;
+        int boxX = 10;
+        int boxY = getHeight() - boxHeight - 10;
+
+        graphics2D.setColor(new Color(0, 0, 0, 170));
+        graphics2D.fillRoundRect(boxX, boxY, boxWidth, boxHeight, 10, 10);
+        graphics2D.setColor(Color.WHITE);
+        graphics2D.drawRoundRect(boxX, boxY, boxWidth, boxHeight, 10, 10);
+
+        graphics2D.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        for (int i = 0; i < hoveredTileInfoLines.size(); i++) {
+            graphics2D.drawString(hoveredTileInfoLines.get(i), boxX + 8, boxY + 16 + i * lineHeight);
+        }
     }
 
     private void drawActiveDisasterEffects(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {

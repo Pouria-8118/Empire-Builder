@@ -2,47 +2,51 @@ package civgame.util;
 
 import civgame.model.building.BuildingPlacementValidator;
 import civgame.model.building.BuildingType;
+import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
-import civgame.model.map.HexMap;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class HexTileTooltipTextBuilder {
+public class HexTileInfoTextBuilder {
 
-    private HexTileTooltipTextBuilder() {
+    private HexTileInfoTextBuilder() {
     }
 
-    public static String build(HexTile tile, HexMap hexMap) {
-        StringBuilder textBuilder = new StringBuilder();
-        textBuilder.append("<html>");
-        textBuilder.append("Terrain: ").append(tile.getTerrainType().name()).append("<br>");
-        textBuilder.append(buildMovementLine(tile.getTerrainType()));
-        textBuilder.append(buildResourceLine(tile));
-        if (tile.isRoadPresent()) {
-            textBuilder.append("Road: Yes<br>");
+    public static List<String> build(HexTile tile, HexMap hexMap) {
+        List<String> lines = new ArrayList<String>();
+        lines.add("Terrain: " + tile.getTerrainType().name());
+        lines.add(buildMovementLine(tile.getTerrainType()));
+
+        String resourceLine = buildResourceLine(tile);
+        if (!resourceLine.isEmpty()) {
+            lines.add(resourceLine);
         }
-        textBuilder.append(buildBuildableLine(tile, hexMap));
-        textBuilder.append("</html>");
-        return textBuilder.toString();
+        if (tile.isRoadPresent()) {
+            lines.add("Road: Yes");
+        }
+
+        lines.add(buildBuildableLine(tile, hexMap));
+        return lines;
     }
 
     private static String buildMovementLine(TerrainType terrainType) {
         if (terrainType == TerrainType.MOUNTAIN_RANGE) {
-            return "Movement: Impassable<br>";
+            return "Movement: Impassable";
         }
         if (terrainType == TerrainType.SEA) {
-            return "Movement: Sea (requires Naval Techniques)<br>";
+            return "Movement: Sea (requires Naval Techniques)";
         }
         int cost = TerrainMovementCostProvider.getMovementCost(terrainType);
-        return "Movement cost: " + cost + " AP<br>";
+        return "Movement cost: " + cost + " AP";
     }
 
     private static String buildResourceLine(HexTile tile) {
         if (!tile.hasResource()) {
             return "";
         }
-        return "Resource: " + tile.getResourceType().name() + "<br>";
+        return "Resource: " + tile.getResourceType().name();
     }
 
     private static String buildBuildableLine(HexTile tile, HexMap hexMap) {
