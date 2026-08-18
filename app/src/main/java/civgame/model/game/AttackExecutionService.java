@@ -1,5 +1,6 @@
 package civgame.model.game;
 
+import civgame.model.animal.WildAnimal;
 import civgame.model.building.Building;
 import civgame.model.combat.Combatant;
 import civgame.model.event.BuildingDestroyedEvent;
@@ -49,6 +50,11 @@ public class AttackExecutionService {
         Tribe targetTribe = gameSession.getTribeAt(defenderCoordinate);
         if (targetTribe != null && !targetTribe.isDefeated()) {
             return executeAttackOnTribe(gameSession, attackerParticipants, targetTribe);
+        }
+
+        WildAnimal targetAnimal = getWildAnimalAt(gameSession, defenderCoordinate);
+        if (targetAnimal != null) {
+            return executeAttackOnWildAnimal(gameSession, attackerParticipants, targetAnimal);
         }
 
         List<Unit> defenderUnits = findMilitaryUnitsAt(gameSession, defenderCoordinate);
@@ -280,5 +286,31 @@ public class AttackExecutionService {
             }
         }
         return false;
+    }
+
+    private AttackOutcome executeAttackOnWildAnimal(GameSession gameSession, List<Unit> attackerParticipants, WildAnimal targetAnimal) {
+        int attackerDiceCount = countDiceParticipantTypes(attackerParticipants);
+        int defenderDiceCount = Constants.WILD_ANIMAL_DEFENSE_DICE_COUNT;
+        
+        CombatResult combatResult = combatResolutionService.resolveCombat(attackerDiceCount, defenderDiceCount, 0);
+        
+        targetAnimal.applyCombatDamage(combatResult.getAttackerHits());
+        List<Unit> attackerLosses = combatDamageApplier.applyHitsToUnits(gameSession, attackerParticipants, combatResult.getDefenderHits());
+        
+        if (targetAnimal.isDestroyedByCombat()) {
+            gameSession.removeWildAnimal(targetAnimal);
+        }
+        
+        return new AttackOutcome(combatResult, false, attackerLosses, new ArrayList<Unit>());
+    }
+
+    private WildAnimal getWildAnimalAt(GameSession gameSession, HexCoordinate coordinate) {
+        List<WildAnimal> animals = gameSession.getWildAnimals();
+        for (int i = 0; i < animals.size(); i++) {
+            if (animals.get(i).getCoordinate().equals(coordinate)) {
+                return animals.get(i);
+            }
+        }
+        return null;
     }
 }
