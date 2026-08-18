@@ -341,8 +341,8 @@ public class MapPanel extends JPanel {
                 graphics2D.drawRect((int) (drawX - markerSize / 2.0), (int) (drawY - markerSize / 2.0), markerSize, markerSize);
             }
 
-            graphics2D.setColor(Color.WHITE);
-            graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (markerSize * 0.5)));
+            graphics2D.setColor(Color.BLACK);
+            graphics2D.setFont(new Font("SansSerif", Font.BOLD, (int) (markerSize * 0.3)));
             graphics2D.drawString(TribeColorProvider.getLetter(tribe.getTribeType()), (int) (drawX - markerSize * 0.18), (int) (drawY + markerSize * 0.18));
         }
     }
