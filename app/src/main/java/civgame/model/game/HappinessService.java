@@ -2,6 +2,9 @@ package civgame.model.game;
 
 import civgame.model.building.Building;
 import civgame.model.building.BuildingType;
+import civgame.model.map.HexCoordinate;
+import civgame.model.unit.MilitaryUnitCapProvider;
+import civgame.model.unit.Unit;
 import civgame.util.Constants;
 
 import java.util.List;
@@ -60,9 +63,17 @@ public class HappinessService implements java.io.Serializable {
         return count;
     }
 
-    // TODO: return true once military units and a Town Hall garrison
-    // mechanic exist, checking whether at least one military unit is stationed there.
     private boolean isMilitaryUnitGarrisonedAtTownHall(GameSession gameSession) {
+        HexCoordinate townHallCoordinate = gameSession.getTownHall().getCoordinate();
+        List<Unit> units = gameSession.getUnits();
+
+        for (int i = 0; i < units.size(); i++) {
+            Unit unit = units.get(i);
+            if (unit.getCoordinate().equals(townHallCoordinate) && MilitaryUnitCapProvider.isMilitaryUnitType(unit.getUnitType())) {
+                return true;
+            }
+        }
+
         return false;
     }
 }
