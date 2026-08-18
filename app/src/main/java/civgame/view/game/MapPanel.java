@@ -53,12 +53,12 @@ import java.util.Map;
 
 public class MapPanel extends JPanel {
 
-    private static final double UNIT_SIZE_FACTOR = 0.75;
-    private static final double BUILDING_SIZE_FACTOR = 1.2;
+    private static final double UNIT_SIZE_FACTOR = 0.5;
+    private static final double BUILDING_SIZE_FACTOR = 1;
     private static final double TOWN_HALL_SIZE_FACTOR = 1.4;
     private static final double REACHABLE_TILE_BRIGHTEN_AMOUNT = 0.16;
-    private static final double STACKED_UNIT_SIZE_SCALE = 0.62;
-    private static final double STACKED_UNIT_CLUSTER_RADIUS_FACTOR = 0.28;
+    private static final double STACKED_UNIT_SIZE_SCALE = 0.41;
+    private static final double STACKED_UNIT_CLUSTER_RADIUS_FACTOR = 0.2;
 
     private static final Color OUTSIDE_BORDER_TINT = new Color(0, 0, 0, 110);
     private static final Color SETTLEMENT_COLOR = new Color(150, 90, 200);
