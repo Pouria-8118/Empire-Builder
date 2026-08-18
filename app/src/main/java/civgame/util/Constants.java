@@ -11,6 +11,8 @@ public class Constants {
     public static final String START_ICON_PATH = "/images/menu/start_icon.png";
     public static final String SETTINGS_ICON_PATH = "/images/menu/settings_icon.png";
     public static final String EXIT_ICON_PATH = "/images/menu/exit_icon.png";
+    public static final String MAP_EDITOR_ICON_PATH = "/images/icons/map_editor.png";
+    public static final String LOAD_GAME_ICON_PATH = "/images/icons/load_game.png";
 
     public static final String BACKGROUND_MUSIC_PATH = "/audio/background_music.wav";
 
@@ -441,6 +443,11 @@ public class Constants {
     public static final String MONUMENT_ICON_PATH = "/images/buildings/monument.png";
     public static final String SETTLEMENT_ICON_PATH = "/images/buildings/settlement.png";
 
+    public static final String TRADING_POST_ICON_PATH = "/images/map/trading_post.png";
+    public static final String TRIBE_CAMP_ICON_PATH = "/images/map/tribe_camp.png";
+    public static final String WILD_ANIMAL_ICON_PATH = "/images/units/wild_animal.png";
+    public static final String BEAR_ICON_PATH = "/images/units/bear.png";
+    public static final String PIRATE_ICON_PATH = "/images/units/pirate.png";
     public static final String FOOD_ICON_PATH = "/images/resources/food.png";
     public static final String WOOD_ICON_PATH = "/images/resources/wood.png";
     public static final String STONE_ICON_PATH = "/images/resources/stone.png";

@@ -20,12 +20,18 @@ import java.awt.event.ActionListener;
 
 public class MapEditorFrame extends JFrame {
 
+    public interface PlayCallback {
+        void onPlayRequested(MapBlueprint blueprint);
+    }
+
     private final MapBlueprintFileManager mapFileManager;
+    private final PlayCallback playCallback;
     private MapEditorPanel editorPanel;
     private MapBlueprint blueprint;
 
-    public MapEditorFrame() {
+    public MapEditorFrame(PlayCallback playCallback) {
         super("Map Editor");
+        this.playCallback = playCallback;
         this.mapFileManager = new MapBlueprintFileManager();
         this.blueprint = new MapBlueprint(Constants.MAP_EDITOR_DEFAULT_RADIUS);
 
@@ -101,6 +107,14 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
+        JButton playButton = new JButton("Play This Map");
+        playButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                handlePlay();
+            }
+        });
+
         toolbar.add(new JLabel("Terrain:"));
         toolbar.add(terrainCombo);
         toolbar.add(new JLabel("Resource:"));
@@ -110,6 +124,7 @@ public class MapEditorFrame extends JFrame {
         toolbar.add(newButton);
         toolbar.add(saveButton);
         toolbar.add(loadButton);
+        toolbar.add(playButton);
 
         return toolbar;
     }
@@ -160,8 +175,17 @@ public class MapEditorFrame extends JFrame {
         rebuildEditorPanel();
     }
 
-    public static void main(String[] args) {
-        MapEditorFrame frame = new MapEditorFrame();
-        frame.setVisible(true);
+    private void handlePlay() {
+        if (blueprint.getTownHallCoordinate() == null) {
+            JOptionPane.showMessageDialog(this, "Place a Town Hall before playing this map.");
+            return;
+        }
+        if (playCallback == null) {
+            JOptionPane.showMessageDialog(this, "Playing is not available from this window.");
+            return;
+        }
+
+        playCallback.onPlayRequested(blueprint);
+        dispose();
     }
 }

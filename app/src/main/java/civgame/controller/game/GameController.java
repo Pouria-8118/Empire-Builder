@@ -101,6 +101,7 @@ public class GameController {
     private final FishingBoatMenuFactory fishingBoatMenuFactory;
     private final NavalMovementService navalMovementService;
     private final GameSaveManager saveManager;
+    private final GameLoadListener gameLoadListener;
     private final SelectedUnitPanel selectedUnitPanel;
     private final FogOfWarCalculator fogOfWarCalculator;
     private final StationingService stationingService;
@@ -109,7 +110,8 @@ public class GameController {
     private int lastDragY;
     private boolean wasDragged;
 
-    public GameController(GameFrame gameFrame, GameSession gameSession, FogOfWarCalculator fogOfWarCalculator) {
+    public GameController(GameFrame gameFrame, GameSession gameSession, FogOfWarCalculator fogOfWarCalculator, GameLoadListener gameLoadListener) {
+        this.gameLoadListener = gameLoadListener;
         this.mapPanel = gameFrame.getMapPanel();
         this.cameraState = gameFrame.getCameraState();
         this.selectionState = gameFrame.getSelectionState();
@@ -683,10 +685,7 @@ public class GameController {
                 SaveLoadDialog dialog = new SaveLoadDialog(saveManager, gameSession, new SaveLoadDialog.LoadCallback() {
                     @Override
                     public void onGameLoaded(civgame.model.game.GameSession loadedGameSession) {
-                        // TODO: hook this into whatever code creates the GameController /
-                        // swaps the visible panel when starting a new game — I don't have
-                        // visibility into that top-level wiring in this codebase.
-                        javax.swing.JOptionPane.showMessageDialog(mapPanel, "Loaded turn " + loadedGameSession.getCurrentTurnNumber() + ". Ask the assistant to wire this into your game-start flow.");
+                        gameLoadListener.onGameLoaded(loadedGameSession);
                     }
                 });
                 dialog.setVisible(true);
