@@ -82,6 +82,14 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
+        JButton wallButton = new JButton("Toggle Wall (click 2 adjacent hexes)");
+        wallButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                editorPanel.setToolMode(MapEditorToolMode.TOGGLE_WALL);
+            }
+        });
+
         JButton newButton = new JButton("New Blank Map");
         newButton.addActionListener(new ActionListener() {
             @Override
@@ -121,6 +129,7 @@ public class MapEditorFrame extends JFrame {
         toolbar.add(resourceCombo);
         toolbar.add(townHallButton);
         toolbar.add(riverButton);
+        toolbar.add(wallButton);
         toolbar.add(newButton);
         toolbar.add(saveButton);
         toolbar.add(loadButton);

@@ -7,6 +7,7 @@ import civgame.model.map.HexTile;
 import civgame.model.map.MapBlueprint;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TileResourceType;
+import civgame.model.map.Wall;
 import civgame.util.HexGeometry;
 import civgame.util.TerrainColorProvider;
 
@@ -77,13 +78,15 @@ public class MapEditorPanel extends JPanel {
         } else if (toolMode == MapEditorToolMode.PLACE_TOWN_HALL) {
             blueprint.setTownHallCoordinate(clickedCoordinate);
         } else if (toolMode == MapEditorToolMode.TOGGLE_RIVER) {
-            handleEdgeClick(clickedCoordinate);
+            handleRiverEdgeClick(clickedCoordinate);
+        } else if (toolMode == MapEditorToolMode.TOGGLE_WALL) {
+            handleWallEdgeClick(clickedCoordinate);
         }
 
         repaint();
     }
 
-    private void handleEdgeClick(HexCoordinate clickedCoordinate) {
+    private void handleRiverEdgeClick(HexCoordinate clickedCoordinate) {
         if (pendingEdgeSource == null) {
             pendingEdgeSource = clickedCoordinate;
             return;
@@ -92,6 +95,24 @@ public class MapEditorPanel extends JPanel {
         if (pendingEdgeSource.distanceTo(clickedCoordinate) == 1) {
             HexEdgeFeatures features = blueprint.getOrCreateEdgeFeatures(pendingEdgeSource, clickedCoordinate);
             features.setRiverPresent(!features.isRiverPresent());
+        }
+
+        pendingEdgeSource = null;
+    }
+
+    private void handleWallEdgeClick(HexCoordinate clickedCoordinate) {
+        if (pendingEdgeSource == null) {
+            pendingEdgeSource = clickedCoordinate;
+            return;
+        }
+
+        if (pendingEdgeSource.distanceTo(clickedCoordinate) == 1) {
+            HexEdgeFeatures features = blueprint.getOrCreateEdgeFeatures(pendingEdgeSource, clickedCoordinate);
+            if (features.hasActiveWall()) {
+                features.setWall(null);
+            } else {
+                features.setWall(new Wall());
+            }
         }
 
         pendingEdgeSource = null;
@@ -110,6 +131,7 @@ public class MapEditorPanel extends JPanel {
         }
 
         drawRivers(graphics2D, centerX, centerY);
+        drawWalls(graphics2D, centerX, centerY);
 
         if (blueprint.getTownHallCoordinate() != null) {
             drawTownHallMarker(graphics2D, blueprint.getTownHallCoordinate(), centerX, centerY);
@@ -144,6 +166,29 @@ public class MapEditorPanel extends JPanel {
         graphics2D.fillRect((int) (x - 8), (int) (y - 8), 16, 16);
         graphics2D.setColor(Color.BLACK);
         graphics2D.drawRect((int) (x - 8), (int) (y - 8), 16, 16);
+    }
+
+    private void drawWalls(Graphics2D graphics2D, double centerX, double centerY) {
+        graphics2D.setColor(new Color(90, 80, 70));
+        graphics2D.setStroke(new BasicStroke(6f));
+
+        for (Map.Entry<HexEdge, HexEdgeFeatures> entry : blueprint.getEdgeFeatures().entrySet()) {
+            if (!entry.getValue().hasActiveWall()) {
+                continue;
+            }
+
+            Point2D firstPixel = HexGeometry.axialToPixel(entry.getKey().getFirst(), HEX_SIZE);
+            Point2D secondPixel = HexGeometry.axialToPixel(entry.getKey().getSecond(), HEX_SIZE);
+
+            int x1 = (int) (centerX + firstPixel.getX());
+            int y1 = (int) (centerY + firstPixel.getY());
+            int x2 = (int) (centerX + secondPixel.getX());
+            int y2 = (int) (centerY + secondPixel.getY());
+
+            graphics2D.drawLine(x1, y1, x2, y2);
+        }
+
+        graphics2D.setStroke(new BasicStroke(1f));
     }
 
     private void drawRivers(Graphics2D graphics2D, double centerX, double centerY) {
