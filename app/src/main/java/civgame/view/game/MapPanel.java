@@ -73,7 +73,10 @@ public class MapPanel extends JPanel {
     private final SelectionState selectionState;
     private final UnitMovementAnimator movementAnimator;
     private List<String> hoveredTileInfoLines;
+    private int hudTopInset = 60;
+    private int hudBottomInset = 150;
 
+    
     public MapPanel(GameSession gameSession, CameraState cameraState, SelectionState selectionState, UnitMovementAnimator movementAnimator) {
         this.gameSession = gameSession;
         this.cameraState = cameraState;
@@ -349,13 +352,15 @@ public class MapPanel extends JPanel {
 
     private void drawSeasonBanner(Graphics2D graphics2D) {
         SeasonType season = gameSession.getCurrentSeason();
+        int bannerWidth = Math.max(130, (int) (getWidth() * 0.09));
+        int bannerY = hudTopInset;
 
         graphics2D.setColor(getSeasonBannerColor(season));
-        graphics2D.fillRoundRect(10, 10, 130, 30, 10, 10);
+        graphics2D.fillRoundRect(10, bannerY +20, bannerWidth, 30, 10, 10);
         graphics2D.setColor(Color.BLACK);
-        graphics2D.drawRoundRect(10, 10, 130, 30, 10, 10);
+        graphics2D.drawRoundRect(10, bannerY + 20, bannerWidth, 30, 10, 10);
         graphics2D.setFont(new Font("SansSerif", Font.BOLD, 14));
-        graphics2D.drawString(season.name(), 22, 30);
+        graphics2D.drawString(season.name(), 22, bannerY + 40);
     }
 
     private void drawHoveredTileInfoBox(Graphics2D graphics2D) {
@@ -364,10 +369,10 @@ public class MapPanel extends JPanel {
         }
 
         int lineHeight = 16;
-        int boxWidth = 230;
+        int boxWidth = Math.max(220, (int) (getWidth() * 0.16));
         int boxHeight = hoveredTileInfoLines.size() * lineHeight + 12;
         int boxX = 10;
-        int boxY = getHeight() - boxHeight - 10;
+        int boxY = getHeight() - hudBottomInset - boxHeight;
 
         graphics2D.setColor(new Color(0, 0, 0, 170));
         graphics2D.fillRoundRect(boxX, boxY, boxWidth, boxHeight, 10, 10);
@@ -899,5 +904,10 @@ public class MapPanel extends JPanel {
     private String buildBuildingTooltip(Building building) {
         String workerText = building.getStationedWorkers().size() + "/" + building.getWorkerCapacity();
         return building.getBuildingType().name() + " | Workers: " + workerText;
+    }
+
+    public void setHudInsets(int topInset, int bottomInset) {
+        this.hudTopInset = topInset;
+        this.hudBottomInset = bottomInset;
     }
 }
