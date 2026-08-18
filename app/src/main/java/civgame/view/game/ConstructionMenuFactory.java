@@ -71,6 +71,7 @@ public class ConstructionMenuFactory {
 
     private JMenu createDemolishMenu(GameSession gameSession, Builder builder, Runnable onActionSuccess) {
         JMenu demolishMenu = new JMenu("Demolish");
+        MenuComponentStyler.style(demolishMenu);
         boolean anyItemAdded = false;
 
         List<HexCoordinate> selfAndNeighbors = new ArrayList<HexCoordinate>();
@@ -182,35 +183,42 @@ public class ConstructionMenuFactory {
         return StyledMenuItemFactory.createItem(null, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
     }
 
-    private JMenu createWallMenu(GameSession gameSession, Builder builder, Runnable onBuildSuccess) {
+    private JMenu createWallMenu(GameSession gameSession, Builder builder, Runnable onActionSuccess) {
         JMenu wallMenu = new JMenu("Build Wall");
-        List<HexCoordinate> neighbors = builder.getCoordinate().getNeighbors();
+        MenuComponentStyler.style(wallMenu);
 
+        List<HexCoordinate> neighbors = builder.getCoordinate().getNeighbors();
         for (int i = 0; i < neighbors.size(); i++) {
-            HexCoordinate neighborCoordinate = neighbors.get(i);
-            wallMenu.add(createWallDirectionItem(gameSession, builder, neighborCoordinate, onBuildSuccess));
+            wallMenu.add(createWallDirectionItem(gameSession, builder, neighbors.get(i), i, onActionSuccess));
         }
 
         return wallMenu;
     }
 
-    private JMenuItem createWallDirectionItem(GameSession gameSession, Builder builder, HexCoordinate neighborCoordinate, Runnable onBuildSuccess) {
+    private JMenuItem createWallDirectionItem(GameSession gameSession, Builder builder, HexCoordinate neighborCoordinate, int directionIndex, Runnable onActionSuccess) {
         HexCoordinate fromCoordinate = builder.getCoordinate();
-        String title = "Toward (" + neighborCoordinate.getQ() + ", " + neighborCoordinate.getR() + ")";
-        String detailText = "Stone: " + Constants.WALL_STONE_COST + "  Wood: " + Constants.WALL_WOOD_COST + "  AP: " + Constants.WALL_CONSTRUCTION_AP_COST;
-        String reason = buildWallUnavailabilityReason(gameSession, fromCoordinate, neighborCoordinate, builder);
+        boolean canBuild = wallConstructionService.canBuildWall(gameSession, builder, fromCoordinate, neighborCoordinate);
+        String reason = canBuild ? "" : buildWallUnavailabilityReason(gameSession, fromCoordinate, neighborCoordinate, builder);
 
-        ActionListener actionListener = new ActionListener() {
+        JMenuItem item = new JMenuItem("Stone: " + Constants.WALL_STONE_COST + "  Wood: " + Constants.WALL_WOOD_COST);
+        item.setIcon(new HexEdgeDirectionIcon(directionIndex));
+        item.setEnabled(canBuild);
+        if (!canBuild) {
+            item.setToolTipText(reason);
+        }
+        MenuComponentStyler.style(item);
+
+        item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 boolean success = wallConstructionService.buildWall(gameSession, builder, fromCoordinate, neighborCoordinate);
-                if (success && onBuildSuccess != null) {
-                    onBuildSuccess.run();
+                if (success && onActionSuccess != null) {
+                    onActionSuccess.run();
                 }
             }
-        };
+        });
 
-        return StyledMenuItemFactory.createItem(null, title, detailText, reason, reason.isEmpty(), actionListener);
+        return item;
     }
 
     private String buildWallUnavailabilityReason(GameSession gameSession, HexCoordinate fromCoordinate, HexCoordinate neighborCoordinate, Builder builder) {

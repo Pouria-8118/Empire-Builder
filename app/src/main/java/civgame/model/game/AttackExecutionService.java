@@ -129,7 +129,14 @@ public class AttackExecutionService {
         CombatResult combatResult = combatResolutionService.resolveCombat(attackerDiceCount, defenderDiceCount, 0);
 
         List<Unit> attackerLosses = combatDamageApplier.applyHitsToUnits(gameSession, attackerParticipants, combatResult.getAttackerHits());
+
+        int guardsBefore = guards.size();
         applyHitsToGuards(tribe, combatResult.getDefenderHits());
+        int guardsKilled = guardsBefore - guards.size();
+
+        for (int i = 0; i < guardsKilled; i++) {
+            tribeMissionService.registerWarriorMissionKill(gameSession, tribe.getCampCoordinate());
+        }
 
         return new AttackOutcome(combatResult, false, attackerLosses, new ArrayList<Unit>());
     }
