@@ -4,10 +4,13 @@ import civgame.model.building.BuildingType;
 import civgame.model.building.TownHallLevel;
 import civgame.model.building.TownHallUpgradeType;
 import civgame.model.map.HexCoordinate;
+import civgame.model.map.TerrainType;
+import civgame.model.map.Wall;
 import civgame.model.resource.ResourceType;
 import civgame.util.Constants;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class TownHallUpgradeService implements java.io.Serializable {
@@ -97,9 +100,29 @@ public class TownHallUpgradeService implements java.io.Serializable {
     private void applyDefensiveArchitectureUpgrade(GameSession gameSession) {
         gameSession.getTownHall().setDefense(Constants.DEFENSIVE_ARCHITECTURE_DEFENSE_VALUE);
         gameSession.getTownHall().setMaxHitPoints(Constants.DEFENSIVE_ARCHITECTURE_MAX_HIT_POINTS);
+        buildWallsAroundTownHall(gameSession);
+    }
 
-        // TODO: once the Wall model exists, automatically build a stone Wall
-        // on every edge hex around the Town Hall's coordinate here.
+    private void buildWallsAroundTownHall(GameSession gameSession) {
+        HexCoordinate townHallCoordinate = gameSession.getTownHall().getCoordinate();
+        List<HexCoordinate> neighbors = townHallCoordinate.getNeighbors();
+
+        for (int i = 0; i < neighbors.size(); i++) {
+            HexCoordinate neighbor = neighbors.get(i);
+            if (!gameSession.getHexMap().containsCoordinate(neighbor)) {
+                continue;
+            }
+
+            TerrainType terrainType = gameSession.getHexMap().getTile(neighbor).getTerrainType();
+            if (terrainType == TerrainType.SEA || terrainType == TerrainType.MOUNTAIN_RANGE) {
+                continue;
+            }
+            if (gameSession.getHexMap().hasActiveWall(townHallCoordinate, neighbor)) {
+                continue;
+            }
+
+            gameSession.getHexMap().getOrCreateEdgeFeatures(townHallCoordinate, neighbor).setWall(new Wall());
+        }
     }
 
     public double getProductionMultiplier(BuildingType buildingType) {
