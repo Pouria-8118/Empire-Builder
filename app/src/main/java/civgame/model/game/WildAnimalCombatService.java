@@ -37,7 +37,7 @@ public class WildAnimalCombatService {
     }
 
     private void resolveMilitaryDefense(GameSession gameSession, WildAnimal wildAnimal, List<Unit> militaryUnits) {
-        CombatResult combatResult = combatResolutionService.resolveCombat(1, Constants.WILD_ANIMAL_DEFENSE_DICE_COUNT, 0);
+        CombatResult combatResult = combatResolutionService.resolveCombat(Constants.WILD_ANIMAL_DICE_COUNT, Constants.WILD_ANIMAL_DEFENSE_DICE_COUNT, 0);
 
         wildAnimal.applyCombatDamage(combatResult.getAttackerHits());
         combatDamageApplier.applyHitsToUnits(gameSession, militaryUnits, combatResult.getDefenderHits());

@@ -35,7 +35,8 @@ public class CombatTargetService {
         if (attackerCoordinate.equals(defenderCoordinate)) {
             return false;
         }
-        if (gameSession.isWithinBorder(defenderCoordinate)) {
+        boolean hasWildAnimal = gameSession.getWildAnimalAt(defenderCoordinate) != null;
+        if (gameSession.isWithinBorder(defenderCoordinate) && !hasWildAnimal) {
             return false;
         }
         if (!hasAnyMilitaryUnit(gameSession, attackerCoordinate)) {

@@ -255,6 +255,15 @@ public class GameSession implements java.io.Serializable {
         return wildAnimals;
     }
 
+    public WildAnimal getWildAnimalAt(HexCoordinate coordinate) {
+        for (int i = 0; i < wildAnimals.size(); i++) {
+            if (wildAnimals.get(i).getCoordinate().equals(coordinate)) {
+                return wildAnimals.get(i);
+            }
+        }
+        return null;
+    }
+
     public boolean hasActiveBazaar() {
         List<Building> allBuildings = getAllBuildings();
         for (int i = 0; i < allBuildings.size(); i++) {

@@ -52,7 +52,7 @@ public class AttackExecutionService {
             return executeAttackOnTribe(gameSession, attackerParticipants, targetTribe);
         }
 
-        WildAnimal targetAnimal = getWildAnimalAt(gameSession, defenderCoordinate);
+        WildAnimal targetAnimal = gameSession.getWildAnimalAt(defenderCoordinate);
         if (targetAnimal != null) {
             return executeAttackOnWildAnimal(gameSession, attackerParticipants, targetAnimal);
         }
@@ -230,6 +230,20 @@ public class AttackExecutionService {
         return new AttackOutcome(null, false, new ArrayList<Unit>(), new ArrayList<Unit>());
     }
 
+        private AttackOutcome executeAttackOnWildAnimal(GameSession gameSession, List<Unit> attackerParticipants, WildAnimal animal) {
+        int attackerDiceCount = countDiceParticipantTypes(attackerParticipants);
+        CombatResult combatResult = combatResolutionService.resolveCombat(attackerDiceCount, Constants.WILD_ANIMAL_DICE_COUNT, 0);
+
+        List<Unit> attackerLosses = combatDamageApplier.applyHitsToUnits(gameSession, attackerParticipants, combatResult.getAttackerHits());
+        animal.applyCombatDamage(combatResult.getDefenderHits());
+
+        if (animal.isDestroyedByCombat()) {
+            gameSession.removeWildAnimal(animal);
+        }
+
+        return new AttackOutcome(combatResult, false, attackerLosses, new ArrayList<Unit>());
+    }
+
     private void consumeAttackActionPoints(List<Unit> participants) {
         for (int i = 0; i < participants.size(); i++) {
             participants.get(i).consumeActionPoints(Constants.ATTACK_ACTION_POINT_COST);
@@ -286,31 +300,5 @@ public class AttackExecutionService {
             }
         }
         return false;
-    }
-
-    private AttackOutcome executeAttackOnWildAnimal(GameSession gameSession, List<Unit> attackerParticipants, WildAnimal targetAnimal) {
-        int attackerDiceCount = countDiceParticipantTypes(attackerParticipants);
-        int defenderDiceCount = Constants.WILD_ANIMAL_DEFENSE_DICE_COUNT;
-        
-        CombatResult combatResult = combatResolutionService.resolveCombat(attackerDiceCount, defenderDiceCount, 0);
-        
-        targetAnimal.applyCombatDamage(combatResult.getAttackerHits());
-        List<Unit> attackerLosses = combatDamageApplier.applyHitsToUnits(gameSession, attackerParticipants, combatResult.getDefenderHits());
-        
-        if (targetAnimal.isDestroyedByCombat()) {
-            gameSession.removeWildAnimal(targetAnimal);
-        }
-        
-        return new AttackOutcome(combatResult, false, attackerLosses, new ArrayList<Unit>());
-    }
-
-    private WildAnimal getWildAnimalAt(GameSession gameSession, HexCoordinate coordinate) {
-        List<WildAnimal> animals = gameSession.getWildAnimals();
-        for (int i = 0; i < animals.size(); i++) {
-            if (animals.get(i).getCoordinate().equals(coordinate)) {
-                return animals.get(i);
-            }
-        }
-        return null;
     }
 }

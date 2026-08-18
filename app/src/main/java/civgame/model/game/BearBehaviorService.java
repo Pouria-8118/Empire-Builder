@@ -4,7 +4,6 @@ import civgame.model.animal.Bear;
 import civgame.model.animal.WildAnimal;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
-import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
 import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.model.unit.Unit;
@@ -182,20 +181,40 @@ public class BearBehaviorService {
     }
 
     private HexCoordinate findFreeForestSpot(GameSession gameSession, HexCoordinate denCoordinate) {
-        HexTile denTile = gameSession.getHexMap().getTile(denCoordinate);
-        if (denTile.getTerrainType() == TerrainType.FOREST) {
+        if (isHexFreeOfLife(gameSession, denCoordinate)) {
             return denCoordinate;
         }
 
         List<HexCoordinate> neighbors = denCoordinate.getNeighbors();
         for (int i = 0; i < neighbors.size(); i++) {
             HexCoordinate neighbor = neighbors.get(i);
-            if (gameSession.getHexMap().containsCoordinate(neighbor) && gameSession.getHexMap().getTile(neighbor).getTerrainType() == TerrainType.FOREST) {
+            if (!gameSession.getHexMap().containsCoordinate(neighbor)) {
+                continue;
+            }
+            if (gameSession.getHexMap().getTile(neighbor).getTerrainType() == TerrainType.FOREST && isHexFreeOfLife(gameSession, neighbor)) {
                 return neighbor;
             }
         }
 
         return denCoordinate;
+    }
+
+    private boolean isHexFreeOfLife(GameSession gameSession, HexCoordinate coordinate) {
+        List<Unit> units = gameSession.getUnits();
+        for (int i = 0; i < units.size(); i++) {
+            if (units.get(i).getCoordinate().equals(coordinate)) {
+                return false;
+            }
+        }
+
+        List<WildAnimal> animals = gameSession.getWildAnimals();
+        for (int i = 0; i < animals.size(); i++) {
+            if (animals.get(i).getCoordinate().equals(coordinate)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private int countPlayerUnitsNear(GameSession gameSession, HexCoordinate denCoordinate) {

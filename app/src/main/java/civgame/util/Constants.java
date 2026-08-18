@@ -243,6 +243,7 @@ public class Constants {
     public static final int HEX_MAX_CAVALRY = 1;
     public static final int ATTACK_ACTION_POINT_COST = 1;
     public static final int WILD_ANIMAL_DEFENSE_DICE_COUNT = 2;
+        public static final int WILD_ANIMAL_DICE_COUNT = 1;
 
     public static final int CATAPULT_MAX_ACTION_POINTS = 2;
     public static final int CATAPULT_VISION_RADIUS = 2;
