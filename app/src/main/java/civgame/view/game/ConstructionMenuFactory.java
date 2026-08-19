@@ -135,7 +135,7 @@ public class ConstructionMenuFactory {
             }
         };
 
-        return StyledMenuItemFactory.createItem(null, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
+        return StyledMenuItemFactory.createItem(new DemolishIcon(), title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
     }
 
     private JMenuItem createDemolishRoadItem(GameSession gameSession, Builder builder, HexCoordinate targetCoordinate, Runnable onActionSuccess) {
@@ -158,7 +158,7 @@ public class ConstructionMenuFactory {
             }
         };
 
-        return StyledMenuItemFactory.createItem(null, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
+        return StyledMenuItemFactory.createItem(new DemolishIcon(), title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
     }
 
     private JMenuItem createDemolishWallItem(GameSession gameSession, Builder builder, HexCoordinate neighborCoordinate, Runnable onActionSuccess) {
@@ -186,7 +186,7 @@ public class ConstructionMenuFactory {
             }
         };
 
-        return StyledMenuItemFactory.createItem(directionIcon, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
+                return StyledMenuItemFactory.createItem(directionIcon, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
     }
 
     private JMenu createWallMenu(GameSession gameSession, Builder builder, Runnable onActionSuccess) {

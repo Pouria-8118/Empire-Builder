@@ -168,31 +168,54 @@ public class MapPanel extends JPanel {
         Set<HexEdge> riverEdges = hexMap.getRiverEdges();
 
         graphics2D.setColor(new Color(50, 110, 200));
-        graphics2D.setStroke(new BasicStroke((float) (hexSize * 0.12)));
+        graphics2D.setStroke(new BasicStroke((float) (hexSize * 0.14)));
 
         for (HexEdge edge : riverEdges) {
-            HexTile firstTile = hexMap.getTile(edge.getFirst());
-            HexTile secondTile = hexMap.getTile(edge.getSecond());
-
-            if (firstTile == null || secondTile == null) {
-                continue;
-            }
-            if (firstTile.getVisibility() == TileVisibility.UNSEEN && secondTile.getVisibility() == TileVisibility.UNSEEN) {
-                continue;
-            }
-
-            Point2D firstPixel = HexGeometry.axialToPixel(edge.getFirst(), hexSize);
-            Point2D secondPixel = HexGeometry.axialToPixel(edge.getSecond(), hexSize);
-
-            int x1 = (int) (centerX + firstPixel.getX());
-            int y1 = (int) (centerY + firstPixel.getY());
-            int x2 = (int) (centerX + secondPixel.getX());
-            int y2 = (int) (centerY + secondPixel.getY());
-
-            graphics2D.drawLine(x1, y1, x2, y2);
+            drawEdgeFeatureLine(graphics2D, hexMap, edge, hexSize, centerX, centerY);
         }
 
         graphics2D.setStroke(new BasicStroke(1f));
+    }
+
+    private void drawEdgeFeatureLine(Graphics2D graphics2D, HexMap hexMap, HexEdge edge, double hexSize, double centerX, double centerY) {
+        HexTile firstTile = hexMap.getTile(edge.getFirst());
+        HexTile secondTile = hexMap.getTile(edge.getSecond());
+
+        if (firstTile == null || secondTile == null) {
+            return;
+        }
+        if (firstTile.getVisibility() == TileVisibility.UNSEEN && secondTile.getVisibility() == TileVisibility.UNSEEN) {
+            return;
+        }
+
+        Point2D firstPixel = HexGeometry.axialToPixel(edge.getFirst(), hexSize);
+        Point2D secondPixel = HexGeometry.axialToPixel(edge.getSecond(), hexSize);
+
+        double firstCenterX = centerX + firstPixel.getX();
+        double firstCenterY = centerY + firstPixel.getY();
+        double secondCenterX = centerX + secondPixel.getX();
+        double secondCenterY = centerY + secondPixel.getY();
+
+        Point2D[] edgeVertices = computeSharedEdgeVertices(firstCenterX, firstCenterY, secondCenterX, secondCenterY, hexSize);
+
+        graphics2D.drawLine((int) edgeVertices[0].getX(), (int) edgeVertices[0].getY(), (int) edgeVertices[1].getX(), (int) edgeVertices[1].getY());
+    }
+
+    private Point2D[] computeSharedEdgeVertices(double centerAX, double centerAY, double centerBX, double centerBY, double hexSize) {
+        double midX = (centerAX + centerBX) / 2.0;
+        double midY = (centerAY + centerBY) / 2.0;
+
+        double angle = Math.atan2(centerBY - centerAY, centerBX - centerAX);
+        double perpendicular = angle + Math.PI / 2.0;
+
+        double halfEdgeLength = hexSize / 2.0;
+        double offsetX = halfEdgeLength * Math.cos(perpendicular);
+        double offsetY = halfEdgeLength * Math.sin(perpendicular);
+
+        Point2D vertexA = new Point2D.Double(midX + offsetX, midY + offsetY);
+        Point2D vertexB = new Point2D.Double(midX - offsetX, midY - offsetY);
+
+        return new Point2D[]{vertexA, vertexB};
     }
 
     private void drawAllWalls(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
@@ -200,28 +223,10 @@ public class MapPanel extends JPanel {
         Map<HexEdge, Wall> walls = hexMap.getAllActiveWalls();
 
         graphics2D.setColor(new Color(90, 80, 70));
-        graphics2D.setStroke(new BasicStroke((float) (hexSize * 0.18)));
+        graphics2D.setStroke(new BasicStroke((float) (hexSize * 0.22)));
 
         for (HexEdge edge : walls.keySet()) {
-            HexTile firstTile = hexMap.getTile(edge.getFirst());
-            HexTile secondTile = hexMap.getTile(edge.getSecond());
-
-            if (firstTile == null || secondTile == null) {
-                continue;
-            }
-            if (firstTile.getVisibility() == TileVisibility.UNSEEN && secondTile.getVisibility() == TileVisibility.UNSEEN) {
-                continue;
-            }
-
-            Point2D firstPixel = HexGeometry.axialToPixel(edge.getFirst(), hexSize);
-            Point2D secondPixel = HexGeometry.axialToPixel(edge.getSecond(), hexSize);
-
-            int x1 = (int) (centerX + firstPixel.getX());
-            int y1 = (int) (centerY + firstPixel.getY());
-            int x2 = (int) (centerX + secondPixel.getX());
-            int y2 = (int) (centerY + secondPixel.getY());
-
-            graphics2D.drawLine(x1, y1, x2, y2);
+            drawEdgeFeatureLine(graphics2D, hexMap, edge, hexSize, centerX, centerY);
         }
 
         graphics2D.setStroke(new BasicStroke(1f));
