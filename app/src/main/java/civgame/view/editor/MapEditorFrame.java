@@ -6,19 +6,23 @@ import civgame.model.map.MapBlueprint;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TileResourceType;
 import civgame.util.Constants;
+import civgame.view.game.StyledButton;
 
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class MapEditorFrame extends JFrame {
+
+    private static final Color TOOLBAR_BACKGROUND = new Color(24, 24, 30);
+    private static final Color LABEL_COLOR = new Color(220, 220, 220);
 
     public interface PlayCallback {
         void onPlayRequested(MapBlueprint blueprint);
@@ -42,14 +46,16 @@ public class MapEditorFrame extends JFrame {
         add(editorPanel, BorderLayout.CENTER);
         add(buildToolbar(), BorderLayout.NORTH);
 
-        setSize(900, 700);
+        setSize(1000, 750);
         setLocationRelativeTo(null);
     }
 
     private JPanel buildToolbar() {
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
+        toolbar.setBackground(TOOLBAR_BACKGROUND);
 
         JComboBox<TerrainType> terrainCombo = new JComboBox<TerrainType>(TerrainType.values());
+        styleCombo(terrainCombo);
         terrainCombo.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -59,6 +65,7 @@ public class MapEditorFrame extends JFrame {
         });
 
         JComboBox<TileResourceType> resourceCombo = new JComboBox<TileResourceType>(TileResourceType.values());
+        styleCombo(resourceCombo);
         resourceCombo.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -66,7 +73,7 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
-        JButton townHallButton = new JButton("Place Town Hall");
+        StyledButton townHallButton = createToolbarButton("Place Town Hall");
         townHallButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -74,7 +81,7 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
-        JButton riverButton = new JButton("Toggle River (click 2 adjacent hexes)");
+        StyledButton riverButton = createToolbarButton("Toggle River");
         riverButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -82,7 +89,7 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
-        JButton wallButton = new JButton("Toggle Wall (click 2 adjacent hexes)");
+        StyledButton wallButton = createToolbarButton("Toggle Wall");
         wallButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -90,7 +97,7 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
-        JButton newButton = new JButton("New Blank Map");
+        StyledButton newButton = createToolbarButton("New Blank Map");
         newButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -99,7 +106,7 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
-        JButton saveButton = new JButton("Save Map");
+        StyledButton saveButton = createToolbarButton("Save Map");
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -107,7 +114,7 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
-        JButton loadButton = new JButton("Load Map");
+        StyledButton loadButton = createToolbarButton("Load Map");
         loadButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -115,7 +122,7 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
-        JButton playButton = new JButton("Play This Map");
+        StyledButton playButton = createToolbarButton("Play This Map");
         playButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -123,9 +130,9 @@ public class MapEditorFrame extends JFrame {
             }
         });
 
-        toolbar.add(new JLabel("Terrain:"));
+        toolbar.add(createToolbarLabel("Terrain:"));
         toolbar.add(terrainCombo);
-        toolbar.add(new JLabel("Resource:"));
+        toolbar.add(createToolbarLabel("Resource:"));
         toolbar.add(resourceCombo);
         toolbar.add(townHallButton);
         toolbar.add(riverButton);
@@ -136,6 +143,23 @@ public class MapEditorFrame extends JFrame {
         toolbar.add(playButton);
 
         return toolbar;
+    }
+
+    private StyledButton createToolbarButton(String text) {
+        StyledButton button = new StyledButton(text);
+        button.setPreferredSize(new java.awt.Dimension(140, 34));
+        return button;
+    }
+
+    private JLabel createToolbarLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setForeground(LABEL_COLOR);
+        return label;
+    }
+
+    private void styleCombo(JComboBox<?> comboBox) {
+        comboBox.setBackground(new Color(45, 45, 55));
+        comboBox.setForeground(Color.WHITE);
     }
 
     private void rebuildEditorPanel() {

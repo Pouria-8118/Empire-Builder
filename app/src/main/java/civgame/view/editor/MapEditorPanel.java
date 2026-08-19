@@ -7,8 +7,10 @@ import civgame.model.map.HexTile;
 import civgame.model.map.MapBlueprint;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TileResourceType;
-import civgame.model.map.Wall;
+import civgame.util.Constants;
 import civgame.util.HexGeometry;
+import civgame.util.IconProvider;
+import civgame.util.ResourceIconProvider;
 import civgame.util.TerrainColorProvider;
 
 import javax.swing.JPanel;
@@ -17,6 +19,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Polygon;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -111,7 +114,7 @@ public class MapEditorPanel extends JPanel {
             if (features.hasActiveWall()) {
                 features.setWall(null);
             } else {
-                features.setWall(new Wall());
+                features.setWall(new civgame.model.map.Wall());
             }
         }
 
@@ -130,8 +133,7 @@ public class MapEditorPanel extends JPanel {
             drawTile(graphics2D, entry.getValue(), centerX, centerY);
         }
 
-        drawRivers(graphics2D, centerX, centerY);
-        drawWalls(graphics2D, centerX, centerY);
+        drawEdgeFeatures(graphics2D, centerX, centerY);
 
         if (blueprint.getTownHallCoordinate() != null) {
             drawTownHallMarker(graphics2D, blueprint.getTownHallCoordinate(), centerX, centerY);
@@ -146,72 +148,111 @@ public class MapEditorPanel extends JPanel {
         Polygon hexagon = buildHexagonPolygon(tileCenterX, tileCenterY);
         graphics2D.setColor(TerrainColorProvider.getColorForTerrain(tile.getTerrainType()));
         graphics2D.fillPolygon(hexagon);
-        graphics2D.setColor(Color.DARK_GRAY);
+        graphics2D.setColor(new Color(20, 20, 20));
         graphics2D.drawPolygon(hexagon);
 
-        if (tile.getResourceType() != TileResourceType.NONE) {
-            graphics2D.setColor(Color.WHITE);
-            graphics2D.setFont(new Font("SansSerif", Font.PLAIN, 9));
-            String label = tile.getResourceType().name().substring(0, Math.min(3, tile.getResourceType().name().length()));
-            graphics2D.drawString(label, (int) (tileCenterX - 10), (int) (tileCenterY + 4));
+        if (tile.getTerrainType() == TerrainType.MOUNTAIN_RANGE) {
+            drawMountainRangePeaks(graphics2D, tileCenterX, tileCenterY);
         }
+
+        if (tile.getResourceType() != TileResourceType.NONE) {
+            drawResourceIcon(graphics2D, tile, tileCenterX, tileCenterY);
+        }
+    }
+
+    private void drawResourceIcon(Graphics2D graphics2D, HexTile tile, double tileCenterX, double tileCenterY) {
+        int iconSize = (int) (HEX_SIZE * 0.7);
+        Image resourceIcon = IconProvider.loadImage(ResourceIconProvider.getIconPath(tile.getResourceType()));
+
+        if (resourceIcon != null) {
+            graphics2D.drawImage(resourceIcon, (int) (tileCenterX - iconSize / 2.0), (int) (tileCenterY - iconSize / 2.0), iconSize, iconSize, this);
+            return;
+        }
+
+        graphics2D.setColor(Color.WHITE);
+        graphics2D.fillOval((int) (tileCenterX - iconSize / 4.0), (int) (tileCenterY - iconSize / 4.0), iconSize / 2, iconSize / 2);
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.setFont(new Font("SansSerif", Font.PLAIN, 8));
+        String label = tile.getResourceType().name().substring(0, Math.min(2, tile.getResourceType().name().length()));
+        graphics2D.drawString(label, (int) (tileCenterX - 6), (int) (tileCenterY + 3));
+    }
+
+    private void drawMountainRangePeaks(Graphics2D graphics2D, double centerX, double centerY) {
+        graphics2D.setColor(new Color(30, 25, 25));
+
+        int peakWidth = (int) (HEX_SIZE * 0.35);
+        int peakHeight = (int) (HEX_SIZE * 0.5);
+        int baseY = (int) (centerY + HEX_SIZE * 0.35);
+
+        drawPeak(graphics2D, (int) (centerX - HEX_SIZE * 0.35), baseY, peakWidth, peakHeight);
+        drawPeak(graphics2D, (int) centerX, baseY, peakWidth, peakHeight);
+        drawPeak(graphics2D, (int) (centerX + HEX_SIZE * 0.35), baseY, peakWidth, peakHeight);
+    }
+
+    private void drawPeak(Graphics2D graphics2D, int baseCenterX, int baseY, int width, int height) {
+        Polygon peakPolygon = new Polygon();
+        peakPolygon.addPoint(baseCenterX - width / 2, baseY);
+        peakPolygon.addPoint(baseCenterX, baseY - height);
+        peakPolygon.addPoint(baseCenterX + width / 2, baseY);
+        graphics2D.fillPolygon(peakPolygon);
     }
 
     private void drawTownHallMarker(Graphics2D graphics2D, HexCoordinate coordinate, double centerX, double centerY) {
         Point2D pixelPosition = HexGeometry.axialToPixel(coordinate, HEX_SIZE);
         double x = centerX + pixelPosition.getX();
         double y = centerY + pixelPosition.getY();
+        int iconSize = (int) (HEX_SIZE * 1.1);
 
-        graphics2D.setColor(Color.YELLOW);
-        graphics2D.fillRect((int) (x - 8), (int) (y - 8), 16, 16);
+        Image townHallIcon = IconProvider.loadImage(Constants.TOWN_HALL_GAME_ICON_PATH);
+        if (townHallIcon != null) {
+            graphics2D.drawImage(townHallIcon, (int) (x - iconSize / 2.0), (int) (y - iconSize / 2.0), iconSize, iconSize, this);
+            return;
+        }
+
+        graphics2D.setColor(new Color(230, 200, 60));
+        graphics2D.fillOval((int) (x - iconSize / 2.0), (int) (y - iconSize / 2.0), iconSize, iconSize);
         graphics2D.setColor(Color.BLACK);
-        graphics2D.drawRect((int) (x - 8), (int) (y - 8), 16, 16);
+        graphics2D.drawOval((int) (x - iconSize / 2.0), (int) (y - iconSize / 2.0), iconSize, iconSize);
     }
 
-    private void drawWalls(Graphics2D graphics2D, double centerX, double centerY) {
-        graphics2D.setColor(new Color(90, 80, 70));
-        graphics2D.setStroke(new BasicStroke(6f));
-
-        for (Map.Entry<HexEdge, HexEdgeFeatures> entry : blueprint.getEdgeFeatures().entrySet()) {
-            if (!entry.getValue().hasActiveWall()) {
-                continue;
-            }
-
-            Point2D firstPixel = HexGeometry.axialToPixel(entry.getKey().getFirst(), HEX_SIZE);
-            Point2D secondPixel = HexGeometry.axialToPixel(entry.getKey().getSecond(), HEX_SIZE);
-
-            int x1 = (int) (centerX + firstPixel.getX());
-            int y1 = (int) (centerY + firstPixel.getY());
-            int x2 = (int) (centerX + secondPixel.getX());
-            int y2 = (int) (centerY + secondPixel.getY());
-
-            graphics2D.drawLine(x1, y1, x2, y2);
-        }
-
-        graphics2D.setStroke(new BasicStroke(1f));
-    }
-
-    private void drawRivers(Graphics2D graphics2D, double centerX, double centerY) {
+    private void drawEdgeFeatures(Graphics2D graphics2D, double centerX, double centerY) {
         graphics2D.setColor(new Color(50, 110, 200));
-        graphics2D.setStroke(new BasicStroke(4f));
-
+        graphics2D.setStroke(new BasicStroke((float) (HEX_SIZE * 0.14)));
         for (Map.Entry<HexEdge, HexEdgeFeatures> entry : blueprint.getEdgeFeatures().entrySet()) {
-            if (!entry.getValue().isRiverPresent()) {
-                continue;
+            if (entry.getValue().isRiverPresent()) {
+                drawEdgeLine(graphics2D, entry.getKey(), centerX, centerY);
             }
+        }
 
-            Point2D firstPixel = HexGeometry.axialToPixel(entry.getKey().getFirst(), HEX_SIZE);
-            Point2D secondPixel = HexGeometry.axialToPixel(entry.getKey().getSecond(), HEX_SIZE);
-
-            int x1 = (int) (centerX + firstPixel.getX());
-            int y1 = (int) (centerY + firstPixel.getY());
-            int x2 = (int) (centerX + secondPixel.getX());
-            int y2 = (int) (centerY + secondPixel.getY());
-
-            graphics2D.drawLine(x1, y1, x2, y2);
+        graphics2D.setColor(new Color(90, 80, 70));
+        graphics2D.setStroke(new BasicStroke((float) (HEX_SIZE * 0.22)));
+        for (Map.Entry<HexEdge, HexEdgeFeatures> entry : blueprint.getEdgeFeatures().entrySet()) {
+            if (entry.getValue().hasActiveWall()) {
+                drawEdgeLine(graphics2D, entry.getKey(), centerX, centerY);
+            }
         }
 
         graphics2D.setStroke(new BasicStroke(1f));
+    }
+
+    private void drawEdgeLine(Graphics2D graphics2D, HexEdge edge, double centerX, double centerY) {
+        Point2D firstPixel = HexGeometry.axialToPixel(edge.getFirst(), HEX_SIZE);
+        Point2D secondPixel = HexGeometry.axialToPixel(edge.getSecond(), HEX_SIZE);
+
+        double firstCenterX = centerX + firstPixel.getX();
+        double firstCenterY = centerY + firstPixel.getY();
+        double secondCenterX = centerX + secondPixel.getX();
+        double secondCenterY = centerY + secondPixel.getY();
+
+        double midX = (firstCenterX + secondCenterX) / 2.0;
+        double midY = (firstCenterY + secondCenterY) / 2.0;
+        double angle = Math.atan2(secondCenterY - firstCenterY, secondCenterX - firstCenterX);
+        double perpendicular = angle + Math.PI / 2.0;
+        double halfEdgeLength = HEX_SIZE / 2.0;
+        double offsetX = halfEdgeLength * Math.cos(perpendicular);
+        double offsetY = halfEdgeLength * Math.sin(perpendicular);
+
+        graphics2D.drawLine((int) (midX + offsetX), (int) (midY + offsetY), (int) (midX - offsetX), (int) (midY - offsetY));
     }
 
     private Polygon buildHexagonPolygon(double centerX, double centerY) {
