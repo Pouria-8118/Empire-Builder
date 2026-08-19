@@ -6,7 +6,7 @@ import civgame.model.map.TerrainType;
 public class TerrainMovementCostProvider {
 
     private static final int FOREST_MOVEMENT_COST = 2;
-    private static final int MOUNTAIN_MOVEMENT_COST = 4;
+    private static final int MOUNTAIN_MOVEMENT_COST = 2;
     private static final int SEA_MOVEMENT_COST = 1;
     private static final int DEFAULT_MOVEMENT_COST = 1;
 

@@ -15,13 +15,18 @@ import java.util.Set;
 
 public class NavalMovementService {
 
-    public Set<HexCoordinate> findReachableSeaTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget) {
+    public int getStepCost(SeasonType season) {
+        return season == SeasonType.AUTUMN ? 2 : 1;
+    }
+
+    public Set<HexCoordinate> findReachableSeaTiles(HexMap hexMap, HexCoordinate start, int actionPointBudget, SeasonType season) {
         Set<HexCoordinate> reachable = new HashSet<HexCoordinate>();
         Map<HexCoordinate, Integer> costSoFar = new HashMap<HexCoordinate, Integer>();
         costSoFar.put(start, 0);
 
         Queue<HexCoordinate> frontier = new LinkedList<HexCoordinate>();
         frontier.add(start);
+        int stepCost = getStepCost(season);
 
         while (!frontier.isEmpty()) {
             HexCoordinate current = frontier.poll();
@@ -33,7 +38,7 @@ public class NavalMovementService {
                     continue;
                 }
 
-                int newCost = costSoFar.get(current) + 1;
+                int newCost = costSoFar.get(current) + stepCost;
                 if (newCost > actionPointBudget) {
                     continue;
                 }

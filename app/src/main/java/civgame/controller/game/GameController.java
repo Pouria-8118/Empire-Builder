@@ -270,7 +270,7 @@ public class GameController {
         Unit selectedUnit = selectionState.getSelectedUnit();
 
         if (isNavalUnit(selectedUnit)) {
-            Set<HexCoordinate> seaTiles = navalMovementService.findReachableSeaTiles(gameSession.getHexMap(), selectedUnit.getCoordinate(), selectedUnit.getCurrentActionPoints());
+            Set<HexCoordinate> seaTiles = navalMovementService.findReachableSeaTiles(gameSession.getHexMap(), selectedUnit.getCoordinate(), selectedUnit.getCurrentActionPoints(), gameSession.getCurrentSeason());
             selectionState.setReachableTiles(seaTiles);
             return;
         }
@@ -514,7 +514,7 @@ public class GameController {
             return;
         }
 
-        int movementCost = fullPath.size();
+        int movementCost = fullPath.size() * navalMovementService.getStepCost(gameSession.getCurrentSeason());
         if (!selectedUnit.hasEnoughActionPoints(movementCost)) {
             return;
         }
