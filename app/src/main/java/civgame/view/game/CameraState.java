@@ -10,12 +10,12 @@ public class CameraState {
 
     private double offsetX;
     private double offsetY;
-    private int zoomIndex;
+    private double currentZoom;
 
     public CameraState() {
         this.offsetX = 0;
         this.offsetY = 0;
-        this.zoomIndex = Constants.DEFAULT_ZOOM_INDEX;
+        this.currentZoom = Constants.ZOOM_LEVELS[Constants.DEFAULT_ZOOM_INDEX];
     }
 
     public void pan(double deltaX, double deltaY) {
@@ -23,20 +23,41 @@ public class CameraState {
         this.offsetY = this.offsetY + deltaY;
     }
 
+    public void zoom(double factor, double mouseX, double mouseY, double panelWidth, double panelHeight) {
+        double oldZoom = currentZoom;
+        double newZoom = currentZoom * factor;
+        newZoom = Math.max(Constants.MIN_ZOOM, Math.min(Constants.MAX_ZOOM, newZoom));
+
+        double halfW = panelWidth / 2.0;
+        double halfH = panelHeight / 2.0;
+
+        double baseWorldX = (mouseX - halfW - offsetX) / oldZoom;
+        double baseWorldY = (mouseY - halfH - offsetY) / oldZoom;
+
+        currentZoom = newZoom;
+
+        offsetX = mouseX - halfW - baseWorldX * newZoom;
+        offsetY = mouseY - halfH - baseWorldY * newZoom;
+    }
+
     public void zoomIn() {
-        if (zoomIndex < Constants.ZOOM_LEVELS.length - 1) {
-            zoomIndex = zoomIndex + 1;
-        }
+        double oldZoom = currentZoom;
+        currentZoom = Math.min(Constants.MAX_ZOOM, currentZoom * 1.2);
+        double ratio = currentZoom / oldZoom;
+        offsetX = offsetX * ratio;
+        offsetY = offsetY * ratio;
     }
 
     public void zoomOut() {
-        if (zoomIndex > 0) {
-            zoomIndex = zoomIndex - 1;
-        }
+        double oldZoom = currentZoom;
+        currentZoom = Math.max(Constants.MIN_ZOOM, currentZoom / 1.2);
+        double ratio = currentZoom / oldZoom;
+        offsetX = offsetX * ratio;
+        offsetY = offsetY * ratio;
     }
 
     public double getCurrentZoom() {
-        return Constants.ZOOM_LEVELS[zoomIndex];
+        return currentZoom;
     }
 
     public double getOffsetX() {

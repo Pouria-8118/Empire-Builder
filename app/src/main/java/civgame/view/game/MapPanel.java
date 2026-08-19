@@ -44,6 +44,8 @@ import java.awt.Image;
 import java.awt.Polygon;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.geom.Point2D;
 import java.util.Set;
 import java.util.ArrayList;
@@ -99,6 +101,17 @@ public class MapPanel extends JPanel {
             @Override
             public void mouseMoved(MouseEvent mouseEvent) {
                 updateHoveredTileInfo(mouseEvent);
+            }
+        });
+
+        addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent mouseWheelEvent) {
+                double factor = mouseWheelEvent.getWheelRotation() < 0
+                        ? Constants.ZOOM_WHEEL_FACTOR
+                        : 1.0 / Constants.ZOOM_WHEEL_FACTOR;
+                cameraState.zoom(factor, mouseWheelEvent.getX(), mouseWheelEvent.getY(), getWidth(), getHeight());
+                repaint();
             }
         });
     }

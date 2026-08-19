@@ -21,6 +21,9 @@ public class Constants {
     public static final int HEX_SIZE = 80;
     public static final double[] ZOOM_LEVELS = {0.5, 0.75, 1.0, 1.25, 1.5, 2.0};
     public static final int DEFAULT_ZOOM_INDEX = 2;
+    public static final double MIN_ZOOM = 0.3;
+    public static final double MAX_ZOOM = 3.0;
+    public static final double ZOOM_WHEEL_FACTOR = 1.1;
     public static final int DEFAULT_MAP_RADIUS = 14;
     public static final int INITIAL_BORDER_RADIUS = 2;
     public static final int STARTING_FOOD = 70;
