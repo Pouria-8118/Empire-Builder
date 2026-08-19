@@ -25,7 +25,7 @@ public class Constants {
     public static final int INITIAL_BORDER_RADIUS = 2;
     public static final int STARTING_FOOD = 70;
     public static final int STARTING_WOOD = 60;
-    public static final int STARTING_STONE = 20;
+    public static final int STARTING_STONE = 50;
     public static final int STARTING_IRON = 0;
 
     public static final int INITIAL_FOOD_CAPACITY = 200;

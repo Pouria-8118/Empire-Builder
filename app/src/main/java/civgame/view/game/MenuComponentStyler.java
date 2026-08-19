@@ -7,8 +7,8 @@ import java.awt.Font;
 
 public class MenuComponentStyler {
 
-    private static final Color BACKGROUND_COLOR = new Color(45, 45, 50);
-    private static final Color FOREGROUND_COLOR = new Color(230, 230, 230);
+    private static final Color BACKGROUND_COLOR = new Color(32, 32, 42);
+    private static final Color FOREGROUND_COLOR = new Color(235, 235, 235);
     private static final Font ITEM_FONT = new Font("SansSerif", Font.PLAIN, 13);
 
     private MenuComponentStyler() {

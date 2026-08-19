@@ -4,6 +4,7 @@ import civgame.model.building.Building;
 import civgame.model.building.BuildingCostProvider;
 import civgame.model.building.BuildingPlacementValidator;
 import civgame.model.building.BuildingType;
+import civgame.model.building.TownHallLevel;
 import civgame.model.building.TownHallUpgradeType;
 import civgame.model.game.ConstructionService;
 import civgame.model.game.DemolitionService;
@@ -20,6 +21,7 @@ import civgame.model.unit.Builder;
 import civgame.util.Constants;
 import civgame.util.MenuIconResolver;
 
+import javax.swing.Icon;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -165,6 +167,10 @@ public class ConstructionMenuFactory {
         boolean canDemolish = demolitionService.canDemolishWall(gameSession, builder, fromCoordinate, neighborCoordinate);
         String reason = canDemolish ? "" : "Not enough Action Points";
 
+        int deltaQ = neighborCoordinate.getQ() - fromCoordinate.getQ();
+        int deltaR = neighborCoordinate.getR() - fromCoordinate.getR();
+        Icon directionIcon = new HexEdgeDirectionIcon(deltaQ, deltaR);
+
         ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -180,7 +186,7 @@ public class ConstructionMenuFactory {
             }
         };
 
-        return StyledMenuItemFactory.createItem(null, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
+        return StyledMenuItemFactory.createItem(directionIcon, title, "AP: " + Constants.DEMOLITION_AP_COST, reason, canDemolish, actionListener);
     }
 
     private JMenu createWallMenu(GameSession gameSession, Builder builder, Runnable onActionSuccess) {
@@ -189,26 +195,25 @@ public class ConstructionMenuFactory {
 
         List<HexCoordinate> neighbors = builder.getCoordinate().getNeighbors();
         for (int i = 0; i < neighbors.size(); i++) {
-            wallMenu.add(createWallDirectionItem(gameSession, builder, neighbors.get(i), i, onActionSuccess));
+            wallMenu.add(createWallDirectionItem(gameSession, builder, neighbors.get(i), onActionSuccess));
         }
 
         return wallMenu;
     }
 
-    private JMenuItem createWallDirectionItem(GameSession gameSession, Builder builder, HexCoordinate neighborCoordinate, int directionIndex, Runnable onActionSuccess) {
+    private JMenuItem createWallDirectionItem(GameSession gameSession, Builder builder, HexCoordinate neighborCoordinate, Runnable onActionSuccess) {
         HexCoordinate fromCoordinate = builder.getCoordinate();
         boolean canBuild = wallConstructionService.canBuildWall(gameSession, builder, fromCoordinate, neighborCoordinate);
         String reason = canBuild ? "" : buildWallUnavailabilityReason(gameSession, fromCoordinate, neighborCoordinate, builder);
 
-        JMenuItem item = new JMenuItem("Stone: " + Constants.WALL_STONE_COST + "  Wood: " + Constants.WALL_WOOD_COST);
-        item.setIcon(new HexEdgeDirectionIcon(directionIndex));
-        item.setEnabled(canBuild);
-        if (!canBuild) {
-            item.setToolTipText(reason);
-        }
-        MenuComponentStyler.style(item);
+        String title = "Wall toward (" + neighborCoordinate.getQ() + ", " + neighborCoordinate.getR() + ")";
+        String detailText = "Stone: " + Constants.WALL_STONE_COST + "   Wood: " + Constants.WALL_WOOD_COST;
 
-        item.addActionListener(new ActionListener() {
+        int deltaQ = neighborCoordinate.getQ() - fromCoordinate.getQ();
+        int deltaR = neighborCoordinate.getR() - fromCoordinate.getR();
+        Icon directionIcon = new HexEdgeDirectionIcon(deltaQ, deltaR);
+
+        ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 boolean success = wallConstructionService.buildWall(gameSession, builder, fromCoordinate, neighborCoordinate);
@@ -216,9 +221,9 @@ public class ConstructionMenuFactory {
                     onActionSuccess.run();
                 }
             }
-        });
+        };
 
-        return item;
+        return StyledMenuItemFactory.createItem(directionIcon, title, detailText, reason, canBuild, actionListener);
     }
 
     private String buildWallUnavailabilityReason(GameSession gameSession, HexCoordinate fromCoordinate, HexCoordinate neighborCoordinate, Builder builder) {
@@ -301,12 +306,19 @@ public class ConstructionMenuFactory {
     }
 
     private JMenuItem createMenuItem(GameSession gameSession, Builder builder, BuildingType buildingType, Runnable onBuildSuccess) {
-        int woodCost = BuildingCostProvider.getWoodCost(buildingType);
-        int actionPointCost = BuildingCostProvider.getConstructionActionPointCost(buildingType);
         HexCoordinate targetCoordinate = builder.getCoordinate();
+        int woodCost = BuildingCostProvider.getWoodCost(buildingType);
+        int stoneCost = BuildingCostProvider.getStoneCost(buildingType);
+        int actionPointCost = BuildingCostProvider.getConstructionActionPointCost(buildingType);
 
-        String detailText = "Wood: " + woodCost + "   AP: " + actionPointCost;
-        String reason = buildUnavailabilityReason(gameSession, builder, buildingType, targetCoordinate);
+        String detailText = "Wood: " + woodCost;
+        if (stoneCost > 0) {
+            detailText = detailText + "   Stone: " + stoneCost;
+        }
+        detailText = detailText + "   AP: " + actionPointCost;
+
+        boolean canBuild = constructionService.canBuild(gameSession, builder, buildingType, targetCoordinate);
+        String reason = canBuild ? "" : buildUnavailabilityReason(gameSession, builder, buildingType, targetCoordinate, woodCost, stoneCost, actionPointCost);
 
         ActionListener actionListener = new ActionListener() {
             @Override
@@ -323,12 +335,12 @@ public class ConstructionMenuFactory {
                 "Build " + buildingType.name(),
                 detailText,
                 reason,
-                reason.isEmpty(),
+                canBuild,
                 actionListener
         );
     }
 
-    private String buildUnavailabilityReason(GameSession gameSession, Builder builder, BuildingType buildingType, HexCoordinate targetCoordinate) {
+    private String buildUnavailabilityReason(GameSession gameSession, Builder builder, BuildingType buildingType, HexCoordinate targetCoordinate, int woodCost, int stoneCost, int actionPointCost) {
         if (builder.isOutOfCharges()) {
             return "No charges left on this Builder";
         }
@@ -338,21 +350,24 @@ public class ConstructionMenuFactory {
         if (!gameSession.isWithinBorder(targetCoordinate)) {
             return "Outside your claimed border";
         }
+        if ((buildingType == BuildingType.BAZAAR || buildingType == BuildingType.DOCK)
+                && !gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.SETTLEMENT)) {
+            return "Requires Town Hall level 2";
+        }
         if (isTechLocked(gameSession, buildingType)) {
             return "Locked - requires technology";
         }
-
-        int actionPointCost = BuildingCostProvider.getConstructionActionPointCost(buildingType);
         if (!builder.hasEnoughActionPoints(actionPointCost)) {
             return "Not enough Action Points";
         }
-
-        int woodCost = BuildingCostProvider.getWoodCost(buildingType);
         if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, woodCost)) {
             return "Not enough Wood";
         }
+        if (stoneCost > 0 && !gameSession.getResourceStorage().hasEnough(ResourceType.STONE, stoneCost)) {
+            return "Not enough Stone";
+        }
 
-        return "";
+        return "Unavailable here";
     }
 
     private boolean isTechLocked(GameSession gameSession, BuildingType buildingType) {
