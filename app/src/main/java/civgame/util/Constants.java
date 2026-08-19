@@ -402,6 +402,7 @@ public class Constants {
     public static final int SEA_STORM_RADIUS = 2;
     public static final int SEA_STORM_DOCK_DAMAGE = 30;
     public static final int SEA_STORM_COASTAL_UNIT_DAMAGE = 20;
+    public static final int SEA_STORM_SHIP_DAMAGE = 40;
 
     public static final int FISHING_BOAT_MAX_ACTION_POINTS = 2;
     public static final int FISHING_BOAT_VISION_RADIUS = 1;

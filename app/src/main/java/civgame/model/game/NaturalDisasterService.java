@@ -7,6 +7,7 @@ import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TileVisibility;
 import civgame.model.unit.Unit;
+import civgame.model.unit.UnitType;
 import civgame.util.Constants;
 
 import java.util.ArrayList;
@@ -119,6 +120,7 @@ public class NaturalDisasterService {
             TerrainType terrain = gameSession.getHexMap().getTile(coordinate).getTerrainType();
 
             if (terrain == TerrainType.SEA) {
+                damageShipsAt(gameSession, coordinate);
                 continue;
             }
 
@@ -138,6 +140,29 @@ public class NaturalDisasterService {
         announceDisaster(gameSession, NaturalDisasterType.SEA_STORM, seaCenter);
     }
 
+    private void damageShipsAt(GameSession gameSession, HexCoordinate coordinate) {
+        List<Unit> units = new ArrayList<Unit>(gameSession.getUnits());
+        List<Unit> killed = new ArrayList<Unit>();
+
+        for (int i = 0; i < units.size(); i++) {
+            Unit unit = units.get(i);
+            boolean isShipOrFloating = unit.getUnitType() == UnitType.GALLEY || unit.getUnitType() == UnitType.FISHING_BOAT || unit.isFloating();
+            if (!unit.getCoordinate().equals(coordinate) || !isShipOrFloating) {
+                continue;
+            }
+
+            unit.applyCombatDamage(Constants.SEA_STORM_SHIP_DAMAGE);
+            unit.zeroRemainingActionPoints();
+            if (unit.isDestroyedByCombat()) {
+                killed.add(unit);
+            }
+        }
+
+        for (int i = 0; i < killed.size(); i++) {
+            gameSession.removeUnit(killed.get(i));
+        }
+    }
+
     private void triggerVolcanicEruption(GameSession gameSession) {
         HexCoordinate volcanoCoordinate = pickVolcanoCoordinate(gameSession);
         if (volcanoCoordinate == null) {
@@ -145,14 +170,6 @@ public class NaturalDisasterService {
         }
 
         damageUnitsAt(gameSession, volcanoCoordinate, Integer.MAX_VALUE, false);
-
-        List<HexCoordinate> neighbors = collectHexesInRadius(gameSession, volcanoCoordinate, 1);
-        for (int i = 0; i < neighbors.size(); i++) {
-            HexCoordinate coordinate = neighbors.get(i);
-            if (!coordinate.equals(volcanoCoordinate)) {
-                damageUnitsAt(gameSession, coordinate, Constants.VOLCANO_NEIGHBOR_UNIT_DAMAGE, false);
-            }
-        }
 
         List<HexCoordinate> lavaPath = pathGenerator.growPath(gameSession, volcanoCoordinate, Constants.LAVA_PATH_LENGTH, true, true);
         int blockUntilTurn = gameSession.getCurrentTurnNumber() + Constants.LAVA_PATH_BLOCK_TURNS;
@@ -162,6 +179,15 @@ public class NaturalDisasterService {
             damageUnitsAt(gameSession, coordinate, Constants.VOLCANO_UNIT_DAMAGE, false);
             destroyStructuresAt(gameSession, coordinate);
             gameSession.blockHexTemporarily(coordinate, blockUntilTurn);
+        }
+
+        List<HexCoordinate> neighbors = collectHexesInRadius(gameSession, volcanoCoordinate, 1);
+        for (int i = 0; i < neighbors.size(); i++) {
+            HexCoordinate coordinate = neighbors.get(i);
+            if (coordinate.equals(volcanoCoordinate) || lavaPath.contains(coordinate)) {
+                continue;
+            }
+            damageUnitsAt(gameSession, coordinate, Constants.VOLCANO_NEIGHBOR_UNIT_DAMAGE, false);
         }
 
         announceDisaster(gameSession, NaturalDisasterType.VOLCANIC_ERUPTION, volcanoCoordinate);
@@ -401,8 +427,7 @@ public class NaturalDisasterService {
                 continue;
             }
             TerrainType neighborTerrain = gameSession.getHexMap().getTile(neighbor).getTerrainType();
-            if (neighborTerrain != TerrainType.SEA && neighborTerrain != TerrainType.MOUNTAIN && neighborTerrain != TerrainType.MOUNTAIN_RANGE) {
-                affectedArea.add(neighbor);
+                if (neighborTerrain != TerrainType.SEA && neighborTerrain != TerrainType.MOUNTAIN && neighborTerrain != TerrainType.MOUNTAIN_RANGE && neighborTerrain != TerrainType.VOLCANO) {                affectedArea.add(neighbor);
             }
         }
 
