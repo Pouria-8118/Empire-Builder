@@ -20,6 +20,7 @@ public abstract class Building implements Attackable, java.io.Serializable {
     private boolean destroyed;
     private int currentHitPoints;
     private int maxHitPoints;
+    private int productionStoppedUntilTurn;
 
     public Building(String id, HexCoordinate coordinate, int workerCapacity) {
         this.id = id;
@@ -30,6 +31,7 @@ public abstract class Building implements Attackable, java.io.Serializable {
         this.destroyed = false;
         this.maxHitPoints = BuildingHitPointsProvider.getMaxHitPoints(getBuildingType());
         this.currentHitPoints = maxHitPoints;
+        this.productionStoppedUntilTurn = 0;
     }
 
     public abstract BuildingType getBuildingType();
@@ -98,6 +100,18 @@ public abstract class Building implements Attackable, java.io.Serializable {
         stationedWorkers.clear();
     }
 
+    public int getProductionStoppedUntilTurn() {
+        return productionStoppedUntilTurn;
+    }
+
+    public void setProductionStoppedUntilTurn(int productionStoppedUntilTurn) {
+        this.productionStoppedUntilTurn = productionStoppedUntilTurn;
+    }
+
+    public boolean isProductionStopped(int currentTurn) {
+        return productionStoppedUntilTurn >= currentTurn;
+    }
+
     @Override
     public int getCurrentHitPoints() {
         return currentHitPoints;
@@ -125,9 +139,4 @@ public abstract class Building implements Attackable, java.io.Serializable {
             destroy();
         }
     }
-
-    // TODO: the future CombatService must also call
-    // gameSession.removeBuildingAt(building.getCoordinate()) after a building
-    // is destroyed by combat, the same way UpkeepService.collapseBuilding does.
-    
 }

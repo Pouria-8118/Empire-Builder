@@ -24,10 +24,14 @@ public class ResourceProductionService {
         List<Building> allBuildings = gameSession.getAllBuildings();
         HappinessLevel happinessLevel = gameSession.getHappinessService().getCurrentLevel();
         SeasonType currentSeason = gameSession.getCurrentSeason();
+        int currentTurn = gameSession.getCurrentTurnNumber();
 
         for (int i = 0; i < allBuildings.size(); i++) {
             Building building = allBuildings.get(i);
             if (building.isDestroyed()) {
+                continue;
+            }
+            if (building.isProductionStopped(currentTurn)) {
                 continue;
             }
 

@@ -427,7 +427,8 @@ public class NaturalDisasterService {
                 continue;
             }
             TerrainType neighborTerrain = gameSession.getHexMap().getTile(neighbor).getTerrainType();
-                if (neighborTerrain != TerrainType.SEA && neighborTerrain != TerrainType.MOUNTAIN && neighborTerrain != TerrainType.MOUNTAIN_RANGE && neighborTerrain != TerrainType.VOLCANO) {                affectedArea.add(neighbor);
+            if (neighborTerrain != TerrainType.SEA && neighborTerrain != TerrainType.MOUNTAIN && neighborTerrain != TerrainType.MOUNTAIN_RANGE && neighborTerrain != TerrainType.VOLCANO) {
+                affectedArea.add(neighbor);
             }
         }
 
@@ -528,6 +529,7 @@ public class NaturalDisasterService {
 
         building.applyCombatDamage(Constants.FLOOD_BUILDING_DAMAGE);
         building.clearAllStationedWorkers();
+        building.setProductionStoppedUntilTurn(gameSession.getCurrentTurnNumber() + 1);
 
         if (building.isDestroyedByCombat()) {
             gameSession.removeBuildingAt(coordinate);
