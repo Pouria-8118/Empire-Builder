@@ -64,6 +64,9 @@ public class AttackExecutionService {
             if (defenderBuilding != null) {
                 return executeStructureDamage(gameSession, attackerParticipants, defenderBuilding);
             }
+            if (!gameSession.isTribeTerritory(defenderCoordinate)) {
+                return null;
+            }
             gameSession.claimBorderTile(defenderCoordinate);
             return new AttackOutcome(null, true, new ArrayList<Unit>(), new ArrayList<Unit>());
         }
@@ -237,7 +240,7 @@ public class AttackExecutionService {
         return new AttackOutcome(null, false, new ArrayList<Unit>(), new ArrayList<Unit>());
     }
 
-        private AttackOutcome executeAttackOnWildAnimal(GameSession gameSession, List<Unit> attackerParticipants, WildAnimal animal) {
+    private AttackOutcome executeAttackOnWildAnimal(GameSession gameSession, List<Unit> attackerParticipants, WildAnimal animal) {
         int attackerDiceCount = countDiceParticipantTypes(attackerParticipants);
         CombatResult combatResult = combatResolutionService.resolveCombat(attackerDiceCount, Constants.WILD_ANIMAL_DICE_COUNT, 0);
 

@@ -275,6 +275,21 @@ public class GameSession implements java.io.Serializable {
         return false;
     }
 
+    public boolean isTribeTerritory(HexCoordinate coordinate) {
+        List<Tribe> tribes = getTribes();
+        for (int i = 0; i < tribes.size(); i++) {
+            Tribe tribe = tribes.get(i);
+            if (tribe.getCampCoordinate().equals(coordinate)) {
+                return true;
+            }
+            List<HexCoordinate> neighbors = tribe.getCampCoordinate().getNeighbors();
+            if (neighbors.contains(coordinate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean hasBazaarTradedThisTurn() {
         return bazaarTradedThisTurn;
     }
