@@ -62,6 +62,7 @@ public class TurnEngine {
             applyStarvationPenalty(gameSession);
         }
 
+        gameSession.getHappinessService().applyPerTurnContributions(gameSession);
         gameSession.resetBazaarTradeFlag();
         gameSession.resetTradingPostTradeFlag();
         resetTribeTradeFlags(gameSession);

@@ -107,11 +107,6 @@ public class ConstructionService {
         Building newBuilding = buildingFactory.createBuilding(buildingType, targetCoordinate);
         gameSession.addBuilding(newBuilding);
         gameSession.getEventBus().publish(new BuildingPlacedEvent(newBuilding));
-
-        if (buildingType == BuildingType.MONUMENT) {
-            gameSession.getHappinessService().applyOneTimeDelta(Constants.MONUMENT_HAPPINESS_BONUS);
-        }
-
         builder.consumeCharge();
         if (builder.isOutOfCharges()) {
             gameSession.removeUnit(builder);
