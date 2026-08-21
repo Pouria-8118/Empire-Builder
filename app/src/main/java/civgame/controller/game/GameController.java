@@ -25,7 +25,6 @@ import civgame.model.game.TribeDiplomacyService;
 import civgame.model.game.TribeGiftService;
 import civgame.model.game.TribeTradeService;
 import civgame.model.game.TribeMissionService;
-import civgame.model.game.HappinessService;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
