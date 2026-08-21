@@ -16,6 +16,7 @@ import civgame.model.tribe.Tribe;
 import civgame.model.unit.Builder;
 import civgame.util.Constants;
 import civgame.model.event.BuildingPlacedEvent;
+
 public class ConstructionService {
 
     private final BuildingFactory buildingFactory;
@@ -107,6 +108,10 @@ public class ConstructionService {
         gameSession.addBuilding(newBuilding);
         gameSession.getEventBus().publish(new BuildingPlacedEvent(newBuilding));
 
+        if (buildingType == BuildingType.MONUMENT) {
+            gameSession.getHappinessService().applyOneTimeDelta(Constants.MONUMENT_HAPPINESS_BONUS);
+        }
+
         builder.consumeCharge();
         if (builder.isOutOfCharges()) {
             gameSession.removeUnit(builder);
@@ -143,5 +148,4 @@ public class ConstructionService {
 
         return Math.max(0, baseCost);
     }
-    
 }

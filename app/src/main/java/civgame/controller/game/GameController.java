@@ -25,6 +25,7 @@ import civgame.model.game.TribeDiplomacyService;
 import civgame.model.game.TribeGiftService;
 import civgame.model.game.TribeTradeService;
 import civgame.model.game.TribeMissionService;
+import civgame.model.game.HappinessService;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
@@ -41,6 +42,7 @@ import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.util.HexGeometry;
 import civgame.util.TerrainMovementCostProvider;
 import civgame.util.EdgeMovementCostProvider;
+import civgame.util.Constants;
 import java.util.HashSet;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
@@ -561,6 +563,11 @@ public class GameController {
                 movedUnit.setFloating(nowOnSea);
                 if (nowOnSea) {
                     movedUnit.zeroRemainingActionPoints();
+                }
+
+                if (MilitaryUnitCapProvider.isMilitaryUnitType(movedUnit.getUnitType()) 
+                    && movedUnit.getCoordinate().equals(gameSession.getTownHall().getCoordinate())) {
+                    gameSession.getHappinessService().applyOneTimeDelta(Constants.TOWN_HALL_GARRISON_HAPPINESS_BONUS);
                 }
 
                 fogOfWarCalculator.updateVisibility(gameSession);

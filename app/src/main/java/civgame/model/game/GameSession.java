@@ -127,7 +127,14 @@ public class GameSession implements java.io.Serializable {
         if (hasReachedUnitCap()) {
             return false;
         }
+        
+        boolean wasMilitaryCapReached = hasReachedMilitaryUnitCap();
         units.add(unit);
+        
+        if (!wasMilitaryCapReached && hasReachedMilitaryUnitCap()) {
+            happinessService.applyOneTimeDelta(Constants.UNIT_CAP_REACHED_HAPPINESS_PENALTY);
+        }
+        
         return true;
     }
 

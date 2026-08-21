@@ -4,6 +4,7 @@ import civgame.model.event.TurnEndedEvent;
 import civgame.model.tribe.Tribe;
 import civgame.model.unit.Unit;
 import civgame.model.unit.Worker;
+import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.model.animal.WildAnimal;
 import civgame.model.building.Building;
 import civgame.model.building.Dock;
@@ -61,12 +62,10 @@ public class TurnEngine {
             applyStarvationPenalty(gameSession);
         }
 
-        gameSession.getHappinessService().applyPerTurnContributions(gameSession);
         gameSession.resetBazaarTradeFlag();
         gameSession.resetTradingPostTradeFlag();
         resetTribeTradeFlags(gameSession);
         tribeMissionService.checkAllActiveMissionConditions(gameSession);
-        tribeBehaviorService.processTribeTurns(gameSession);
         tribeBehaviorService.processTribeTurns(gameSession);
 
         gameSession.incrementTurnNumber();
@@ -95,11 +94,10 @@ public class TurnEngine {
         List<Unit> units = gameSession.getUnits();
         for (int i = 0; i < units.size(); i++) {
             Unit unit = units.get(i);
-            if (unit instanceof Worker) {
+            if (unit instanceof Worker || MilitaryUnitCapProvider.isMilitaryUnitType(unit.getUnitType())) {
                 unit.applyActionPointPenalty(Constants.REBELLION_ACTION_POINT_PENALTY);
             }
         }
-        // TODO: also apply this penalty to military units once they exist.
     }
 
     private void processWildAnimalTurns(GameSession gameSession) {
@@ -126,7 +124,6 @@ public class TurnEngine {
             tribes.get(i).setTradedThisTurn(false);
         }
     }
-    
 
     private void applyStarvationPenalty(GameSession gameSession) {
         List<Unit> units = gameSession.getUnits();
