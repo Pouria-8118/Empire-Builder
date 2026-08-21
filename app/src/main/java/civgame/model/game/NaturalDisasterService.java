@@ -564,8 +564,36 @@ public class NaturalDisasterService {
             gameSession.addActiveDisasterEffect(new ActiveDisasterEffect(type, center, Constants.DISASTER_EFFECT_DURATION_TICKS));
         }
 
-        String label = type == NaturalDisasterType.EARTHQUAKE ? "Earthquake" : "Flood";
+        String label = getDisasterLabel(type);
         String visibilityNote = visible ? "" : " (out of sight)";
         gameSession.addTribeNotification(label + " struck near (" + center.getQ() + ", " + center.getR() + ")" + visibilityNote);
+    }
+
+    private String getDisasterLabel(NaturalDisasterType type) {
+        if (type == NaturalDisasterType.EARTHQUAKE) {
+            return "Earthquake";
+        }
+        if (type == NaturalDisasterType.FLOOD) {
+            return "Flood";
+        }
+        if (type == NaturalDisasterType.TSUNAMI) {
+            return "Tsunami";
+        }
+        if (type == NaturalDisasterType.VOLCANIC_ERUPTION) {
+            return "Volcanic Eruption";
+        }
+        if (type == NaturalDisasterType.TORNADO) {
+            return "Tornado";
+        }
+        if (type == NaturalDisasterType.AVALANCHE) {
+            return "Avalanche";
+        }
+        if (type == NaturalDisasterType.SEA_STORM) {
+            return "Sea Storm";
+        }
+        if (type == NaturalDisasterType.BEAR_ATTACK) {
+            return "Bear Attack";
+        }
+        return "Disaster";
     }
 }
