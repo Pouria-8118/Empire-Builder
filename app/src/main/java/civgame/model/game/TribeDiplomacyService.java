@@ -57,12 +57,14 @@ public class TribeDiplomacyService {
         return true;
     }
 
-    // TODO: also require no failed mission from this tribe in the last 5 turns.
     public boolean canRequestAlliance(GameSession gameSession, Tribe tribe) {
         if (tribe.getRelationState().isAtWar()) {
             return false;
         }
         if (tribe.getRelationshipValue() < Constants.TRIBE_ALLIANCE_MIN_RELATIONSHIP) {
+            return false;
+        }
+        if (gameSession.getCurrentTurnNumber() - tribe.getLastMissionFailureTurn() < Constants.MISSION_FAILURE_COOLDOWN_TURNS) {
             return false;
         }
         return TribeAllianceRules.canFormAlliance(gameSession.getTribes(), tribe);

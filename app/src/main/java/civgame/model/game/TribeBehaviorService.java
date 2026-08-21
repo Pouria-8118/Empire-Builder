@@ -11,8 +11,6 @@ import civgame.util.Constants;
 
 import java.util.List;
 
-// TODO: active enemy tribe movement/pursuit toward the player
-// is an explicitly optional feature per the document and is not implemented here.
 public class TribeBehaviorService {
 
     public void processTribeTurns(GameSession gameSession) {

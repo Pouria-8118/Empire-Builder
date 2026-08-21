@@ -79,7 +79,4 @@ public class TownHall implements Attackable, java.io.Serializable {
     public void setDefense(int defense) {
         this.defense = defense;
     }
-
-    // TODO: decide and implement what happens at the game level
-    // when the Town Hall itself reaches 0 HP through combat.
 }

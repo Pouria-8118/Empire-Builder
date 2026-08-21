@@ -6,13 +6,12 @@ import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexEdgeFeatures;
 import civgame.model.map.HexTile;
 import civgame.model.unit.Builder;
+import civgame.model.map.TradingPost;
+import civgame.model.tribe.Tribe;
 import civgame.util.Constants;
 
 import java.util.List;
 
-// TODO: once neutral Trading Posts and active tribe camps exist,
-// exclude their coordinates here the same way Town Hall is already excluded
-// (Town Hall is simply never part of gameSession.getAllBuildings()).
 public class DemolitionService {
 
     public boolean canDemolishBuilding(GameSession gameSession, Builder builder, HexCoordinate targetCoordinate) {
@@ -28,7 +27,29 @@ public class DemolitionService {
             return false;
         }
 
+        if (isProtectedStructure(gameSession, targetCoordinate)) {
+            return false;
+        }
+
         return true;
+    }
+
+    private boolean isProtectedStructure(GameSession gameSession, HexCoordinate coordinate) {
+        if (coordinate.equals(gameSession.getTownHall().getCoordinate())) {
+            return true;
+        }
+
+        TradingPost tradingPost = gameSession.getTradingPostAt(coordinate);
+        if (tradingPost != null) {
+            return true;
+        }
+
+        Tribe tribe = gameSession.getTribeAt(coordinate);
+        if (tribe != null && !tribe.isDefeated()) {
+            return true;
+        }
+
+        return false;
     }
 
     public boolean demolishBuilding(GameSession gameSession, Builder builder, HexCoordinate targetCoordinate) {

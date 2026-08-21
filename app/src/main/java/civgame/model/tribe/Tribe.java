@@ -29,6 +29,7 @@ public class Tribe implements Attackable, java.io.Serializable {
     private boolean missionOfferAvailable;
     private int nextMissionCheckTurn;
     private int nextGuardSpawnTurn;
+    private int lastMissionFailureTurn;
 
     public Tribe(String id, String name, TribeType tribeType, HexCoordinate campCoordinate) {
         this.id = id;
@@ -50,6 +51,7 @@ public class Tribe implements Attackable, java.io.Serializable {
         this.missionOfferAvailable = true;
         this.nextMissionCheckTurn = 0;
         this.nextGuardSpawnTurn = 0;
+        this.lastMissionFailureTurn = -999;
     }
 
     public String getId() {
@@ -183,6 +185,14 @@ public class Tribe implements Attackable, java.io.Serializable {
 
     public void setAllied(boolean allied) {
         this.allied = allied;
+    }
+
+    public int getLastMissionFailureTurn() {
+        return lastMissionFailureTurn;
+    }
+
+    public void setLastMissionFailureTurn(int lastMissionFailureTurn) {
+        this.lastMissionFailureTurn = lastMissionFailureTurn;
     }
 
     @Override

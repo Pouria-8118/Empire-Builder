@@ -202,6 +202,7 @@ public class TribeMissionService {
         tribe.setActiveMission(null);
         tribe.changeRelationship(Constants.MISSION_FAILURE_RELATIONSHIP_PENALTY);
         tribe.setMissionCooldownUntilTurn(gameSession.getCurrentTurnNumber() + Constants.MISSION_FAILURE_COOLDOWN_TURNS);
+        tribe.setLastMissionFailureTurn(gameSession.getCurrentTurnNumber());
     }
 
     public void registerWarriorMissionKill(GameSession gameSession, HexCoordinate killCoordinate) {
