@@ -9,7 +9,6 @@ import civgame.util.Constants;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class WildAnimalCombatService {
 
     private final CombatResolutionService combatResolutionService;
@@ -48,8 +47,18 @@ public class WildAnimalCombatService {
     }
 
     private void attackCivilianUnits(GameSession gameSession, List<Unit> civilianUnits) {
+        List<Unit> killed = new ArrayList<Unit>();
+
         for (int i = 0; i < civilianUnits.size(); i++) {
-            gameSession.removeUnit(civilianUnits.get(i));
+            Unit unit = civilianUnits.get(i);
+            unit.applyCombatDamage(Constants.WILD_ANIMAL_CIVILIAN_DAMAGE);
+            if (unit.isDestroyedByCombat()) {
+                killed.add(unit);
+            }
+        }
+
+        for (int i = 0; i < killed.size(); i++) {
+            gameSession.removeUnit(killed.get(i));
         }
     }
 
