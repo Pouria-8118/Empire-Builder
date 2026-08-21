@@ -24,14 +24,17 @@
 
 ## 🎮 About the Game
 
-**Empire Builder** is a single-player, turn-based strategy game where you take control of a fledgling civilization. Your goal is to **explore the unknown**, **gather resources**, **construct buildings**, and **expand your territory** — all while managing your economy and keeping your people fed.
+**Empire Builder** is a single-player, turn-based strategy game where you take control of a fledgling civilization. Your goal is to **explore the unknown**, **gather resources**, **construct buildings**, **expand your territory**, **engage in diplomacy with neutral tribes**, **build a military**, and **manage trade** — all while keeping your economy stable and your people fed.
 
-This project was developed as the first phase of the Advanced Programming course at **Sharif University of Technology**, focusing on:
+This project was developed as the Advanced Programming course project at **Sharif University of Technology**, focusing on:
 - Object-Oriented Programming (OOP)
 - Model-View-Controller (MVC) architecture
 - SOLID principles
 - Advanced Java (Swing, Streams, Generics)
 - Procedural map generation
+- Event-driven architecture
+- Serialization for save/load
+- Strategy Pattern for trade systems
 
 ---
 
@@ -40,19 +43,29 @@ This project was developed as the first phase of the Advanced Programming course
 | Category | Features |
 | :--- | :--- |
 | 🗺️ **Map** | Procedurally generated hexagonal grid with forests, mountains, grasslands, and plains. Each tile has unique resources. |
+| 🎨 **Map Editor** | Customize and edit the map manually — change terrain types and place resources. |
 | ⛏️ **Resources** | Manage **Food**, **Wood**, **Stone**, and **Iron**. Each resource has specific production buildings. |
-| 🏛️ **Buildings** | Construct Lumber Mills, Stone Mines, Iron Mines, Farms, and Stables. Each requires specific terrain. |
-| 👷 **Units** | Command **Explorers** (scout the map), **Builders** (construct buildings with limited charges), **Workers** (gather resources), and **Border Expanders** (claim new territory). |
+| 🏛️ **Buildings** | Construct Lumber Mills, Stone Mines, Iron Mines, Farms, Stables, and **Bazaars** (trade buildings with 3 tiers). |
+| 👷 **Units** | Command **Explorers** (scout), **Builders** (construct with limited charges), **Workers** (gather), **Border Expanders** (claim territory), and **Military Units** (Swordsman, Archer, Cavalry). |
+| ⚔️ **Combat** | Military units can attack enemy units and buildings. Buildings have HP and can be destroyed. |
+| 🏕️ **Tribes** | Interact with neutral tribes. Each tribe has a **relation state**: Allied, Friendly, Neutral, Displeased, or Enemy. |
+| 📜 **Tribe Missions** | Receive and complete missions from tribes to earn rewards and improve relations. |
+| 🏪 **Trade System** | Build Bazaars to establish trade routes. Different trade strategies available based on tribe type (Farmer, Mountain, Coastal). |
+| 🎪 **Event System** | Real-time game events: building destroyed, unit killed, turn ended, relation changed, and more. |
+| 🏴‍☠️ **Pirates** | Encounter pirates that can disrupt your trade routes and attack coastal areas. |
+| 🐑 **Animals** | Wildlife system that can be hunted or interacted with for resources. |
 | 🔄 **Turn System** | Each unit has **Action Points (AP)**. Plan your moves carefully — every action consumes AP. |
 | 🌫️ **Fog of War** | The map starts dark. Only explored tiles become visible. Explorers have the largest vision radius. |
-| 🧭 **Auto-Explore** | Explorers can be set to automatically explore unknown territories (bonus feature). |
+| 🧭 **Auto-Explore** | Explorers can be set to automatically explore unknown territories. |
 | 🗺️ **Minimap** | A small overview map shows explored areas, units, and your town hall. Click to teleport the camera. |
+| 💾 **Save/Load** | Save your game progress in multiple slots and load anytime. Autosave feature included. |
+| 🌊 **Sea Movement** | Units can move on sea tiles with a movement cost of 2 AP. |
+| 🔍 **Continuous Zoom** | Smooth, continuous zoom instead of discrete zoom levels. |
 | 🎨 **Visual Polish** | Smooth unit animations, custom icons, tooltips on hover, and a sleek dark-themed HUD. |
 
 ---
 
 ## 📸 Screenshots
-
 
 | Main Menu | In-Game HUD | Minimap |
 | :---: | :---: | :---: |
@@ -66,9 +79,13 @@ This project was developed as the first phase of the Advanced Programming course
 - **Java 17** or higher installed
 - **Gradle** (wrapped, no manual installation needed)
 
-### Build
+### Build & Run
 
 ```bash
+# Clone the repository
+git clone https://github.com/Pouria-8118/oooi.git
+cd oooi/app
+
 # Build and run the game
 ./gradlew run
 ```
@@ -90,6 +107,7 @@ java -jar build/libs/empire-builder.jar
 - You begin with a **Town Hall** and **5 units**: 1 Builder, 2 Workers, and 2 Explorers.
 - Your starting resources: **50 Food**, **60 Wood**, **20 Stone**, and **0 Iron**.
 - Only the tiles immediately around your Town Hall are visible — the rest is hidden by the **Fog of War**.
+- Neutral tribes are scattered across the map. Interact with them to gain allies or face enemies.
 
 ### 🔄 Turn Structure
 Each turn follows this cycle:
@@ -98,7 +116,7 @@ Each turn follows this cycle:
 2. **Auto-Explore** — Explorers with auto-explore enabled move automatically.
 3. **Resource Production** — Buildings with stationed workers produce resources.
 4. **Upkeep Deduction** — Each active building consumes 1 Wood per turn. If upkeep is missed for 3 consecutive turns, the building collapses.
-5. **Player Actions** — You can move units, build structures, station workers, expand borders, or start production at the Town Hall.
+5. **Player Actions** — You can move units, build structures, station workers, expand borders, attack enemies, trade, or start production at the Town Hall.
 6. **End Turn** — Click the **"End Turn"** button. If any unit still has AP left, you'll receive a warning.
 
 ### 🏗️ Buildings & Production
@@ -110,6 +128,7 @@ Each turn follows this cycle:
 | ⛏️ **Iron Mine** | Mountain (with Iron) | Iron | 2 | 1 Iron/turn |
 | 🌾 **Farm** | Grassland (Wheat/Rice) | Food | 3 | 3 Food/turn |
 | 🐄 **Stable** | Plain (Cattle/Sheep) | Food | 2 | 2 Food/turn |
+| 🏪 **Bazaar** (Tier 1-3) | Any (within border) | Trade Income | — | Generates gold/trade resources based on tier |
 
 ### 🧑‍🌾 Units Overview
 
@@ -119,6 +138,32 @@ Each turn follows this cycle:
 | 🔨 **Builder** | Construction | 4 | 1 tile | Has 3 charges; consumed when charges run out |
 | 🪣 **Worker** | Resource gathering | 3 | 1 tile | Must be stationed in a building to produce |
 | 🚩 **Border Expander** | Territory expansion | 4 | 1 tile | Expands borders and is consumed after use |
+| ⚔️ **Swordsman** | Melee combat | 3 | 1 tile | Can attack adjacent enemies |
+| 🏹 **Archer** | Ranged combat | 2 | 2 tiles | Can attack from a distance |
+| 🐴 **Cavalry** | Fast assault | 4 | 2 tiles | High mobility, can attack and move |
+
+### 🏕️ Tribes & Relations
+
+| Relation State | Description |
+| :--- | :--- |
+| 🤝 **Allied** | Strongest bond. Tribes share resources and provide military support. |
+| 😊 **Friendly** | Positive relations. Tribes offer better trade deals and missions. |
+| 😐 **Neutral** | Default state. No special interactions. |
+| 😠 **Displeased** | Negative relations. Tribes may refuse trade and become hostile. |
+| ⚔️ **Enemy** | Hostile state. Tribes may attack your units and settlements. |
+
+### 📜 Tribe Missions
+- Tribes offer missions (quests) that you can accept.
+- Completing missions improves relations and grants rewards (resources, units, etc.).
+- Mission status can be tracked in the game UI.
+
+### 🏪 Trade System (Bazaar)
+- Build a **Bazaar** in any empty tile within your borders.
+- Upgrade the Bazaar to Tier 2 and Tier 3 for increased trade income.
+- Trade strategies vary based on tribe types:
+  - **Farmer Tribes** — Food-based trade
+  - **Mountain Tribes** — Stone/Iron-based trade
+  - **Coastal Tribes** — Maritime trade routes
 
 ### 🏛️ Town Hall Upgrades
 
@@ -141,10 +186,11 @@ Each turn follows this cycle:
 | **Move Unit** | Left-click on a reachable tile |
 | **Open Context Menu** | Right-click on a unit or tile |
 | **Pan Camera** | Click and drag on the map |
-| **Zoom In/Out** | Mouse scroll wheel |
+| **Zoom In/Out** | Mouse scroll wheel (continuous) |
 | **Deselect Unit** | Press `Esc` |
 | **Toggle Fullscreen** | Press `F11` |
 | **End Turn** | Click the "End Turn" button |
+| **Open Map Editor** | From main menu |
 
 ---
 
@@ -154,8 +200,11 @@ Each turn follows this cycle:
 - **Swing** — GUI framework
 - **Gradle** — Build automation
 - **Java Sound API** — Background music playback
+- **Java Serialization** — Save/Load system
 - **Custom Hex Grid** — Procedural map generation with axial coordinates
 - **MVC Architecture** — Clean separation of concerns
+- **Event-Driven Architecture** — Loose coupling between components
+- **Strategy Pattern** — Trade strategies and tribe behaviors
 
 ---
 
@@ -163,17 +212,35 @@ Each turn follows this cycle:
 
 ```
 empire-builder/
-├── src/
-│   └── main/
-│       ├── java/civgame/
-│       │   ├── controller/     # Game logic & event handling
-│       │   ├── model/          # Data & business logic
-│       │   └── view/           # UI components (Swing)
-│       └── resources/
-│           ├── images/         # Icons, sprites, backgrounds
-│           └── audio/          # Background music
-├── build.gradle
-├── settings.gradle
+├── app/
+│   ├── src/
+│   │   └── main/
+│   │       ├── java/civgame/
+│   │       │   ├── audio/          # Music and sound
+│   │       │   ├── controller/     # Game logic & event handling
+│   │       │   │   ├── game/       # In-game controllers
+│   │       │   │   └── menu/       # Menu controllers
+│   │       │   ├── model/          # Data & business logic
+│   │       │   │   ├── animal/     # Animal system
+│   │       │   │   ├── building/   # Building definitions
+│   │       │   │   ├── combat/     # Combat & military units
+│   │       │   │   ├── event/      # Event system
+│   │       │   │   ├── game/       # Core game logic
+│   │       │   │   ├── map/        # Map & hex grid
+│   │       │   │   ├── pirate/     # Pirate system
+│   │       │   │   ├── resource/   # Resource management
+│   │       │   │   ├── trade/      # Trade system
+│   │       │   │   └── tribe/      # Tribe & relations
+│   │       │   ├── util/           # Utilities & helpers
+│   │       │   └── view/           # UI components (Swing)
+│   │       │       ├── editor/     # Map editor
+│   │       │       ├── game/       # Game view
+│   │       │       ├── hud/        # HUD components
+│   │       │       └── menu/       # Menu views
+│   │       └── resources/          # Images, audio, assets
+│   ├── saves/                      # Save game files
+│   └── build.gradle
+├── screenshots/                    # Screenshots for README
 └── README.md
 ```
 
@@ -181,7 +248,7 @@ empire-builder/
 
 ## 👨‍💻 Credits
 
-**Developed by** — Pouria AsnaAshari
+**Developed by** — *Pouria AsnaAshari*  
 **Course** — Advanced Programming, Sharif University of Technology  
 **Semester** — Spring 2026
 
