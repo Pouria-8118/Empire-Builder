@@ -413,22 +413,39 @@ public class MapPanel extends JPanel {
             double effectY = centerY + pixelPosition.getY();
 
             if (effect.getType() == NaturalDisasterType.EARTHQUAKE) {
-                drawEarthquakeEffect(graphics2D, effectX, effectY, hexSize);
+                drawEarthquakeEffect(graphics2D, effectX, effectY, hexSize, effect.getRemainingTicks());
             } else if (effect.getType() == NaturalDisasterType.FLOOD) {
                 drawFloodEffect(graphics2D, effectX, effectY, hexSize, effect.getRemainingTicks());
+            } else if (effect.getType() == NaturalDisasterType.TSUNAMI) {
+                drawTsunamiEffect(graphics2D, effectX, effectY, hexSize, effect.getRemainingTicks());
+            } else if (effect.getType() == NaturalDisasterType.VOLCANIC_ERUPTION) {
+                drawVolcanicEruptionEffect(graphics2D, effectX, effectY, hexSize, effect.getRemainingTicks());
+            } else if (effect.getType() == NaturalDisasterType.TORNADO) {
+                drawTornadoEffect(graphics2D, effectX, effectY, hexSize, effect.getRemainingTicks());
+            } else if (effect.getType() == NaturalDisasterType.AVALANCHE) {
+                drawAvalancheEffect(graphics2D, effectX, effectY, hexSize, effect.getRemainingTicks());
+            } else if (effect.getType() == NaturalDisasterType.SEA_STORM) {
+                drawSeaStormEffect(graphics2D, effectX, effectY, hexSize, effect.getRemainingTicks());
+            } else if (effect.getType() == NaturalDisasterType.BEAR_ATTACK) {
+                drawBearAttackEffect(graphics2D, effectX, effectY, hexSize, effect.getRemainingTicks());
             }
         }
     }
 
-    private void drawEarthquakeEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize) {
-        graphics2D.setColor(new Color(90, 60, 30));
-        graphics2D.setStroke(new BasicStroke(2f));
+    private void drawEarthquakeEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize, int remainingTicks) {
+        double progress = 1.0 - (remainingTicks / (double) Constants.DISASTER_EFFECT_DURATION_TICKS);
+        
+        int crackCount = 8;
+        int alpha = (int) (220 * (1.0 - progress));
+        
+        graphics2D.setColor(new Color(90, 60, 30, alpha));
+        graphics2D.setStroke(new BasicStroke(3f));
 
-        for (int i = 0; i < 4; i++) {
-            double angle = Math.random() * 360.0;
-            double length = hexSize * 1.5;
-            int endX = (int) (centerX + length * Math.cos(Math.toRadians(angle)));
-            int endY = (int) (centerY + length * Math.sin(Math.toRadians(angle)));
+        for (int i = 0; i < crackCount; i++) {
+            double angle = (i * Math.PI * 2) / crackCount;
+            double length = hexSize * 1.5 * progress;
+            int endX = (int) (centerX + length * Math.cos(angle));
+            int endY = (int) (centerY + length * Math.sin(angle));
             graphics2D.drawLine((int) centerX, (int) centerY, endX, endY);
         }
 
@@ -441,6 +458,124 @@ public class MapPanel extends JPanel {
 
         graphics2D.setColor(new Color(40, 100, 180, 120));
         graphics2D.fillOval((int) (centerX - radius), (int) (centerY - radius), radius * 2, radius * 2);
+    }
+
+    private void drawTsunamiEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize, int remainingTicks) {
+        double progress = 1.0 - (remainingTicks / (double) Constants.DISASTER_EFFECT_DURATION_TICKS);
+        int waveCount = 3;
+        
+        graphics2D.setStroke(new BasicStroke(3f));
+        
+        for (int i = 0; i < waveCount; i++) {
+            double waveProgress = progress - (i * 0.25);
+            if (waveProgress < 0) {
+                continue;
+            }
+            int radius = (int) (hexSize * 3 * waveProgress);
+            int alpha = (int) (200 * (1.0 - waveProgress));
+            
+            graphics2D.setColor(new Color(40, 100, 200, alpha));
+            graphics2D.drawOval((int) (centerX - radius), (int) (centerY - radius), radius * 2, radius * 2);
+        }
+        
+        graphics2D.setStroke(new BasicStroke(1f));
+    }
+
+    private void drawVolcanicEruptionEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize, int remainingTicks) {
+        double progress = 1.0 - (remainingTicks / (double) Constants.DISASTER_EFFECT_DURATION_TICKS);
+        
+        int smokeRadius = (int) (hexSize * 1.5 * progress);
+        int smokeAlpha = (int) (150 * (1.0 - progress));
+        graphics2D.setColor(new Color(80, 80, 80, smokeAlpha));
+        graphics2D.fillOval((int) (centerX - smokeRadius), (int) (centerY - smokeRadius - hexSize), smokeRadius * 2, smokeRadius * 2);
+        
+        int lavaRadius = (int) (hexSize * 0.8);
+        int lavaAlpha = (int) (200 * (1.0 - progress));
+        graphics2D.setColor(new Color(255, 100, 0, lavaAlpha));
+        graphics2D.fillOval((int) (centerX - lavaRadius), (int) (centerY - lavaRadius), lavaRadius * 2, lavaRadius * 2);
+    }
+
+    private void drawTornadoEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize, int remainingTicks) {
+        double progress = 1.0 - (remainingTicks / (double) Constants.DISASTER_EFFECT_DURATION_TICKS);
+        double rotation = progress * Math.PI * 4;
+        
+        graphics2D.setStroke(new BasicStroke(2f));
+        
+        for (int i = 0; i < 8; i++) {
+            double angle = rotation + (i * Math.PI / 4);
+            int radius = (int) (hexSize * 0.8);
+            int endX = (int) (centerX + radius * Math.cos(angle));
+            int endY = (int) (centerY + radius * Math.sin(angle));
+            
+            int alpha = (int) (180 * (1.0 - progress));
+            graphics2D.setColor(new Color(100, 100, 100, alpha));
+            graphics2D.drawLine((int) centerX, (int) centerY, endX, endY);
+        }
+        
+        graphics2D.setStroke(new BasicStroke(1f));
+    }
+
+    private void drawAvalancheEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize, int remainingTicks) {
+        double progress = 1.0 - (remainingTicks / (double) Constants.DISASTER_EFFECT_DURATION_TICKS);
+        
+        int particleCount = 12;
+        int alpha = (int) (200 * (1.0 - progress));
+        
+        for (int i = 0; i < particleCount; i++) {
+            double angle = (i * Math.PI * 2) / particleCount;
+            int radius = (int) (hexSize * 1.5 * progress);
+            int particleX = (int) (centerX + radius * Math.cos(angle));
+            int particleY = (int) (centerY + radius * Math.sin(angle));
+            
+            int particleSize = (int) (hexSize * 0.2);
+            graphics2D.setColor(new Color(220, 220, 220, alpha));
+            graphics2D.fillOval(particleX - particleSize / 2, particleY - particleSize / 2, particleSize, particleSize);
+        }
+    }
+
+    private void drawSeaStormEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize, int remainingTicks) {
+        double progress = 1.0 - (remainingTicks / (double) Constants.DISASTER_EFFECT_DURATION_TICKS);
+        
+        int rainCount = 20;
+        int rainAlpha = (int) (150 * (1.0 - progress));
+        graphics2D.setColor(new Color(100, 150, 200, rainAlpha));
+        graphics2D.setStroke(new BasicStroke(1f));
+        
+        for (int i = 0; i < rainCount; i++) {
+            double angle = (i * Math.PI * 2) / rainCount;
+            int radius = (int) (hexSize * 2 * progress);
+            int rainX = (int) (centerX + radius * Math.cos(angle));
+            int rainY = (int) (centerY + radius * Math.sin(angle));
+            
+            graphics2D.drawLine(rainX, rainY, rainX - 3, rainY + 8);
+        }
+        
+        int waveRadius = (int) (hexSize * 1.5);
+        int waveAlpha = (int) (180 * (1.0 - progress));
+        graphics2D.setColor(new Color(40, 80, 150, waveAlpha));
+        graphics2D.setStroke(new BasicStroke(2f));
+        graphics2D.drawOval((int) (centerX - waveRadius), (int) (centerY - waveRadius), waveRadius * 2, waveRadius * 2);
+        
+        graphics2D.setStroke(new BasicStroke(1f));
+    }
+
+    private void drawBearAttackEffect(Graphics2D graphics2D, double centerX, double centerY, double hexSize, int remainingTicks) {
+        double progress = 1.0 - (remainingTicks / (double) Constants.DISASTER_EFFECT_DURATION_TICKS);
+        
+        int pawSize = (int) (hexSize * 0.6 * (1.0 - progress * 0.5));
+        int alpha = (int) (200 * (1.0 - progress));
+        
+        graphics2D.setColor(new Color(180, 50, 50, alpha));
+        
+        int padSize = pawSize / 2;
+        graphics2D.fillOval((int) (centerX - padSize / 2), (int) (centerY - padSize / 2), padSize, padSize);
+        
+        int toeSize = pawSize / 4;
+        int toeOffset = pawSize / 2;
+        graphics2D.fillOval((int) (centerX - toeOffset - toeSize / 2), (int) (centerY - toeOffset), toeSize, toeSize);
+        graphics2D.fillOval((int) (centerX + toeOffset - toeSize / 2), (int) (centerY - toeOffset), toeSize, toeSize);
+        graphics2D.fillOval((int) (centerX - toeOffset), (int) (centerY + toeOffset / 2 - toeSize / 2), toeSize, toeSize);
+        graphics2D.fillOval((int) (centerX + toeOffset - toeSize), (int) (centerY + toeOffset / 2 - toeSize / 2), toeSize, toeSize);
     }
 
     private Color getSeasonBannerColor(SeasonType season) {
