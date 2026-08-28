@@ -2,12 +2,19 @@ package civgame.server;
 
 import civgame.network.NetworkException;
 import civgame.network.TCPServer;
+import civgame.network.message.Broadcast;
+import civgame.network.message.Message;
+import civgame.network.message.MessageHandler;
+import civgame.network.message.MessageRouter;
+import civgame.network.message.Request;
+import civgame.network.message.Response;
 
 public class ClientHandler extends Thread {
     
     private final TCPServer.ClientConnection connection;
     private final String clientId;
     private final ConnectionManager connectionManager;
+    private final MessageRouter messageRouter;
     private volatile boolean running;
     
     public ClientHandler(TCPServer.ClientConnection connection, 
@@ -16,6 +23,7 @@ public class ClientHandler extends Thread {
         this.connection = connection;
         this.clientId = clientId;
         this.connectionManager = connectionManager;
+        this.messageRouter = new MessageRouter();
         this.running = true;
         this.setName("ClientHandler-" + clientId);
     }
@@ -46,14 +54,46 @@ public class ClientHandler extends Thread {
     }
     
     private void handleMessage(String message) {
-        // TODO: Implement message routing
         System.out.println("Received from " + clientId + ": " + message);
         
         try {
-            connection.sendMessage("ACK: " + message);
+            Message parsedMessage = messageRouter.deserializeMessage(message);
+            messageRouter.routeMessage(parsedMessage, createMessageHandler());
         } catch (NetworkException e) {
-            System.err.println("Failed to send ACK to " + clientId + ": " + e.getMessage());
+            System.err.println("Failed to process message from " + clientId + ": " + e.getMessage());
         }
+    }
+    
+    private MessageHandler createMessageHandler() {
+        return new MessageHandler() {
+            @Override
+            public void handleRequest(Request request) {
+                processRequest(request);
+            }
+            
+            @Override
+            public void handleResponse(Response response) {
+                processResponse(response);
+            }
+            
+            @Override
+            public void handleBroadcast(Broadcast broadcast) {
+                processBroadcast(broadcast);
+            }
+        };
+    }
+    
+    private void processRequest(Request request) {
+        // TODO: Implement specific request handlers
+        System.out.println("Processing request from " + clientId + ": " + request.getType());
+    }
+    
+    private void processResponse(Response response) {
+        System.out.println("Processing response from " + clientId + ": " + response.getType());
+    }
+    
+    private void processBroadcast(Broadcast broadcast) {
+        System.out.println("Processing broadcast from " + clientId + ": " + broadcast.getType());
     }
     
     private void handleDisconnection() {
@@ -78,5 +118,10 @@ public class ClientHandler extends Thread {
         if (running && connection.isConnected()) {
             connection.sendMessage(message);
         }
+    }
+    
+    public void sendMessageObject(Message message) throws NetworkException {
+        String json = messageRouter.serializeMessage(message);
+        sendMessage(json);
     }
 }
