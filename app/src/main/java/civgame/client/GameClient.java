@@ -2,6 +2,7 @@ package civgame.client;
 
 import civgame.network.NetworkConfig;
 import civgame.network.NetworkException;
+import civgame.network.message.Message;
 
 public class GameClient {
     
@@ -23,6 +24,13 @@ public class GameClient {
             public void onMessageReceived(String message) {
                 if (clientCallback != null) {
                     clientCallback.onServerMessage(message);
+                }
+            }
+            
+            @Override
+            public void onMessageObjectReceived(Message message) {
+                if (clientCallback != null) {
+                    clientCallback.onServerMessageObject(message);
                 }
             }
             
@@ -59,8 +67,16 @@ public class GameClient {
         networkManager.sendMessage(message);
     }
     
+    public void sendMessageObject(Message message) throws NetworkException {
+        networkManager.sendMessageObject(message);
+    }
+    
     public void sendMessageAsync(String message) {
         networkManager.sendMessageAsync(message);
+    }
+    
+    public void sendMessageObjectAsync(Message message) {
+        networkManager.sendMessageObjectAsync(message);
     }
     
     public void sendUDPMessage(String message) throws NetworkException {
@@ -83,5 +99,6 @@ public class GameClient {
         void onConnected();
         void onDisconnected(String reason);
         void onServerMessage(String message);
+        void onServerMessageObject(Message message);
     }
 }

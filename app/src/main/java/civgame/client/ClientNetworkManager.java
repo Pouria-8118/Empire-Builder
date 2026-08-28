@@ -4,6 +4,9 @@ import civgame.network.NetworkConfig;
 import civgame.network.NetworkException;
 import civgame.network.TCPClient;
 import civgame.network.UDPClient;
+import civgame.network.message.Message;
+import civgame.network.message.MessageRouter;
+
 
 import javax.swing.SwingUtilities;
 
@@ -13,6 +16,7 @@ public class ClientNetworkManager {
     private TCPClient tcpClient;
     private UDPClient udpClient;
     private ServerListener serverListener;
+    private final MessageRouter messageRouter;
     private volatile boolean connected;
     private ClientEventCallback eventCallback;
     
@@ -20,6 +24,7 @@ public class ClientNetworkManager {
         this.config = config;
         this.tcpClient = new TCPClient(config);
         this.udpClient = new UDPClient(config);
+        this.messageRouter = new MessageRouter();
         this.connected = false;
         this.eventCallback = null;
     }
@@ -76,16 +81,31 @@ public class ClientNetworkManager {
     }
     
     private void handleIncomingMessage(String message) {
-        // TODO: Parse and route messages properly
         System.out.println("Received message: " + message);
         
-        if (eventCallback != null) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    eventCallback.onMessageReceived(message);
-                }
-            });
+        try {
+            Message parsedMessage = messageRouter.deserializeMessage(message);
+            
+            if (eventCallback != null) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        eventCallback.onMessageObjectReceived(parsedMessage);
+                    }
+                });
+            }
+            
+        } catch (NetworkException e) {
+            System.err.println("Failed to parse message: " + e.getMessage());
+            
+            if (eventCallback != null) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        eventCallback.onMessageReceived(message);
+                    }
+                });
+            }
         }
     }
     
@@ -110,6 +130,11 @@ public class ClientNetworkManager {
         tcpClient.sendMessage(message);
     }
     
+    public void sendMessageObject(Message message) throws NetworkException {
+        String json = messageRouter.serializeMessage(message);
+        sendMessage(json);
+    }
+    
     public void sendMessageAsync(String message) {
         new Thread(new Runnable() {
             @Override
@@ -121,6 +146,19 @@ public class ClientNetworkManager {
                 }
             }
         }, "SendMessageThread").start();
+    }
+    
+    public void sendMessageObjectAsync(Message message) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    sendMessageObject(message);
+                } catch (NetworkException e) {
+                    System.err.println("Failed to send message object: " + e.getMessage());
+                }
+            }
+        }, "SendMessageObjectThread").start();
     }
     
     public void sendUDPMessage(String message) throws NetworkException {
@@ -141,6 +179,7 @@ public class ClientNetworkManager {
     
     public interface ClientEventCallback {
         void onMessageReceived(String message);
+        void onMessageObjectReceived(Message message);
         void onConnectionLost(String errorMessage);
     }
 }
