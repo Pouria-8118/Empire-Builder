@@ -8,21 +8,26 @@ import civgame.network.message.MessageHandler;
 import civgame.network.message.MessageRouter;
 import civgame.network.message.Request;
 import civgame.network.message.Response;
+import civgame.network.message.lobby.JoinLobbyRequest;
+import civgame.network.message.lobby.LeaveLobbyRequest;
+import civgame.network.message.lobby.SelectMapRequest;
+import civgame.network.message.lobby.SetReadyRequest;
+import civgame.network.message.lobby.StartGameRequest;
 
 public class ClientHandler extends Thread {
     
     private final TCPServer.ClientConnection connection;
     private final String clientId;
-    private final ConnectionManager connectionManager;
+    private final GameServer gameServer;
     private final MessageRouter messageRouter;
     private volatile boolean running;
     
     public ClientHandler(TCPServer.ClientConnection connection, 
                         String clientId, 
-                        ConnectionManager connectionManager) {
+                        GameServer gameServer) {
         this.connection = connection;
         this.clientId = clientId;
-        this.connectionManager = connectionManager;
+        this.gameServer = gameServer;
         this.messageRouter = new MessageRouter();
         this.running = true;
         this.setName("ClientHandler-" + clientId);
@@ -84,8 +89,22 @@ public class ClientHandler extends Thread {
     }
     
     private void processRequest(Request request) {
-        // TODO: Implement specific request handlers
-        System.out.println("Processing request from " + clientId + ": " + request.getType());
+        String type = request.getType();
+        request.setSenderId(clientId);
+        
+        if (type.equals(civgame.network.message.MessageType.JOIN_LOBBY_REQUEST)) {
+            gameServer.handleJoinLobbyRequest(clientId, (JoinLobbyRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.LEAVE_LOBBY_REQUEST)) {
+            gameServer.handleLeaveLobbyRequest(clientId, (LeaveLobbyRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.SET_READY_REQUEST)) {
+            gameServer.handleSetReadyRequest(clientId, (SetReadyRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.SELECT_MAP_REQUEST)) {
+            gameServer.handleSelectMapRequest(clientId, (SelectMapRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.START_GAME_REQUEST)) {
+            gameServer.handleStartGameRequest(clientId, (StartGameRequest) request);
+        } else {
+            System.out.println("Processing unknown request from " + clientId + ": " + type);
+        }
     }
     
     private void processResponse(Response response) {
@@ -98,7 +117,7 @@ public class ClientHandler extends Thread {
     
     private void handleDisconnection() {
         System.out.println("Client disconnected: " + clientId);
-        connectionManager.removeConnection(clientId);
+        gameServer.handleClientDisconnect(clientId);
         running = false;
     }
     
