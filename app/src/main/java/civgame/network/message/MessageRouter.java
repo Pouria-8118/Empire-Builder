@@ -24,6 +24,18 @@ public class MessageRouter {
         registerMessageType(MessageType.ERROR_RESPONSE, ErrorResponse.class);
         registerMessageType(MessageType.PING_REQUEST, PingRequest.class);
         registerMessageType(MessageType.PONG_RESPONSE, PongResponse.class);
+        
+        registerMessageType(MessageType.JOIN_LOBBY_REQUEST, civgame.network.message.lobby.JoinLobbyRequest.class);
+        registerMessageType(MessageType.JOIN_LOBBY_RESPONSE, civgame.network.message.lobby.JoinLobbyResponse.class);
+        registerMessageType(MessageType.LEAVE_LOBBY_REQUEST, civgame.network.message.lobby.LeaveLobbyRequest.class);
+        registerMessageType(MessageType.PLAYER_JOINED_BROADCAST, civgame.network.message.lobby.PlayerJoinedBroadcast.class);
+        registerMessageType(MessageType.PLAYER_LEFT_BROADCAST, civgame.network.message.lobby.PlayerLeftBroadcast.class);
+        registerMessageType(MessageType.SET_READY_REQUEST, civgame.network.message.lobby.SetReadyRequest.class);
+        registerMessageType(MessageType.PLAYER_READY_BROADCAST, civgame.network.message.lobby.PlayerReadyBroadcast.class);
+        registerMessageType(MessageType.SELECT_MAP_REQUEST, civgame.network.message.lobby.SelectMapRequest.class);
+        registerMessageType(MessageType.MAP_SELECTED_BROADCAST, civgame.network.message.lobby.MapSelectedBroadcast.class);
+        registerMessageType(MessageType.START_GAME_REQUEST, civgame.network.message.lobby.StartGameRequest.class);
+        registerMessageType(MessageType.START_GAME_RESPONSE, civgame.network.message.lobby.StartGameResponse.class);
     }
     
     public void registerMessageType(String type, Class<? extends Message> messageClass) {
