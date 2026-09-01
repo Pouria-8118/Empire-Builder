@@ -19,6 +19,9 @@ import civgame.network.message.lobby.SelectMapRequest;
 import civgame.network.message.lobby.SetReadyRequest;
 import civgame.network.message.lobby.StartGameRequest;
 import civgame.network.message.lobby.StartGameResponse;
+import civgame.network.message.chat.ChatMessageBroadcast;
+import civgame.network.message.chat.ChatMessageRequest;
+import civgame.server.chat.ChatManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +39,15 @@ public class GameServer {
     private Thread acceptThread;
     private final List<ClientHandler> clientHandlers;
     
+    private final ChatManager chatManager;
+    
     public GameServer(NetworkConfig config) {
         this.config = config;
         this.tcpServer = new TCPServer(config);
         this.udpServer = new UDPServer(config);
         this.connectionManager = new ConnectionManager();
         this.lobbyManager = new LobbyManager();
+        this.chatManager = new ChatManager();
         this.clientUsernames = new java.util.concurrent.ConcurrentHashMap<>();
         this.state = ServerState.STOPPED;
         this.clientHandlers = new ArrayList<>();
@@ -363,6 +369,34 @@ public class GameServer {
         System.out.println("Game is about to start for lobby: " + lobby.getLobbyId());
         System.out.println("Players: " + lobby.getPlayerInfos().size());
         System.out.println("Map: " + lobby.getSelectedMapName());
+    }
+    
+    public void handleChatMessageRequest(String clientId, ChatMessageRequest request) {
+        String content = request.getContent();
+        if (content == null || content.trim().isEmpty()) {
+            return;
+        }
+        
+        Lobby lobby = lobbyManager.getLobbyForClient(clientId);
+        if (lobby == null) {
+            return;
+        }
+        
+        String username = getClientUsername(clientId);
+        ChatMessageBroadcast broadcast = chatManager.createChatBroadcast(clientId, username, content.trim());
+        
+        List<ClientHandler> lobbyHandlers = new ArrayList<>();
+        List<String> playerIds = lobby.getPlayerClientIds();
+        for (int i = 0; i < playerIds.size(); i++) {
+            ClientHandler handler = findClientHandler(playerIds.get(i));
+            if (handler != null) {
+                lobbyHandlers.add(handler);
+            }
+        }
+        
+        chatManager.broadcastToClients(broadcast, lobbyHandlers);
+        
+        System.out.println("Chat [" + username + "]: " + content);
     }
     
     private void broadcastToLobby(Lobby lobby, Broadcast broadcast, String excludeClientId) {

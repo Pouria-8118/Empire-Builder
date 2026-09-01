@@ -102,6 +102,8 @@ public class ClientHandler extends Thread {
             gameServer.handleSelectMapRequest(clientId, (SelectMapRequest) request);
         } else if (type.equals(civgame.network.message.MessageType.START_GAME_REQUEST)) {
             gameServer.handleStartGameRequest(clientId, (StartGameRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.CHAT_MESSAGE_REQUEST)) {
+            gameServer.handleChatMessageRequest(clientId, (civgame.network.message.chat.ChatMessageRequest) request);
         } else {
             System.out.println("Processing unknown request from " + clientId + ": " + type);
         }

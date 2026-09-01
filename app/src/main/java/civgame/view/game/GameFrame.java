@@ -11,6 +11,7 @@ import civgame.view.hud.MinimapPanel;
 import civgame.view.hud.NotificationEntry;
 import civgame.view.hud.SelectedUnitPanel;
 import civgame.view.hud.TurnNotificationPanel;
+import civgame.view.chat.ChatPanel;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -41,6 +42,8 @@ public class GameFrame extends JFrame {
     private static final int END_TURN_PANEL_WIDTH = 260;
     private static final int MINIMAP_WIDTH = 230;
     private static final int MINIMAP_HEIGHT = 170;
+    private static final int CHAT_WIDTH = 320;
+    private static final int CHAT_HEIGHT = 280;
     private static final int MARGIN = 15;
     private static final int MINIMUM_CENTERED_AREA_WIDTH = 300;
 
@@ -55,6 +58,7 @@ public class GameFrame extends JFrame {
     private final ControlsHintPanel controlsHintPanel;
     private final TurnNotificationPanel turnNotificationPanel;
     private final MinimapPanel minimapPanel;
+    private final ChatPanel chatPanel;
     private final FullScreenToggler fullScreenToggler;
     private final ResourceRateCalculator resourceRateCalculator;
 
@@ -71,6 +75,7 @@ public class GameFrame extends JFrame {
         this.turnNotificationPanel = new TurnNotificationPanel();
         this.endTurnPanel = new EndTurnPanel();
         this.minimapPanel = new MinimapPanel(gameSession, cameraState);
+        this.chatPanel = new ChatPanel();
         this.layeredPane = new JLayeredPane();
         this.fullScreenToggler = new FullScreenToggler(this);
         this.resourceRateCalculator = new ResourceRateCalculator();
@@ -111,11 +116,13 @@ public class GameFrame extends JFrame {
         layeredPane.add(selectedUnitPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(endTurnPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(minimapPanel, JLayeredPane.PALETTE_LAYER);
+        layeredPane.add(chatPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(turnNotificationPanel, JLayeredPane.DRAG_LAYER);
 
         setContentPane(layeredPane);
         relayoutComponents();
     }
+    
 
     private void registerResizeListener() {
         layeredPane.addComponentListener(new ComponentAdapter() {
@@ -151,8 +158,12 @@ public class GameFrame extends JFrame {
 
         int minimapX = frameWidth - MINIMAP_WIDTH - MARGIN;
         minimapPanel.setBounds(minimapX, MARGIN, MINIMAP_WIDTH, MINIMAP_HEIGHT);
+        
+        int chatX = frameWidth - CHAT_WIDTH - MARGIN;
+        int chatY = MARGIN + MINIMAP_HEIGHT + MARGIN;
+        chatPanel.setBounds(chatX, chatY, CHAT_WIDTH, CHAT_HEIGHT);
 
-        int reservedRightWidth = MINIMAP_WIDTH + MARGIN * 2;
+        int reservedRightWidth = Math.max(MINIMAP_WIDTH, CHAT_WIDTH) + MARGIN * 2;
         int centeredAreaWidth = Math.max(MINIMUM_CENTERED_AREA_WIDTH, frameWidth - reservedRightWidth - MARGIN);
 
         int hudWidth = Math.min(HUD_MAX_WIDTH, centeredAreaWidth);
@@ -228,5 +239,9 @@ public class GameFrame extends JFrame {
 
     public SelectedUnitPanel getSelectedUnitPanel() {
         return selectedUnitPanel;
+    }
+    
+    public ChatPanel getChatPanel() {
+        return chatPanel;
     }
 }

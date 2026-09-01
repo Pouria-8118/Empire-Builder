@@ -1,6 +1,8 @@
 package civgame.controller.lobby;
 
 import civgame.client.GameClient;
+import civgame.controller.chat.ChatController;
+import civgame.network.message.chat.ChatMessageBroadcast;
 import civgame.network.NetworkConfig;
 import civgame.network.NetworkException;
 import civgame.network.message.Message;
@@ -34,6 +36,8 @@ public class LobbyController {
     private String currentHostClientId;
     private boolean isReady;
     
+    private final ChatController chatController;
+    
     public LobbyController(LobbyFrame lobbyFrame, String username) {
         this.lobbyFrame = lobbyFrame;
         this.username = username;
@@ -42,6 +46,7 @@ public class LobbyController {
         this.currentHostClientId = null;
         this.isReady = false;
         this.gameClient = null;
+        this.chatController = new ChatController(lobbyFrame.getChatPanel());
         
         registerListeners();
     }
@@ -101,6 +106,7 @@ public class LobbyController {
                     });
                     
                     gameClient.connect();
+                    chatController.setGameClient(gameClient, myClientId);
                     
                     JoinLobbyRequest request = new JoinLobbyRequest("pending", username, null);
                     gameClient.sendMessageObject(request);
@@ -147,6 +153,8 @@ public class LobbyController {
             handleMapSelectedBroadcast((MapSelectedBroadcast) message);
         } else if (type.equals(MessageType.START_GAME_RESPONSE)) {
             handleStartGameResponse((StartGameResponse) message);
+        } else if (type.equals(MessageType.CHAT_MESSAGE_BROADCAST)) {
+            chatController.handleChatBroadcast((ChatMessageBroadcast) message);
         } else if (type.equals(MessageType.ERROR_RESPONSE)) {
             handleErrorResponse((civgame.network.message.ErrorResponse) message);
         }
