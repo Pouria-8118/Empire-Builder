@@ -39,6 +39,8 @@ public class MessageRouter {
         
         registerMessageType(MessageType.CHAT_MESSAGE_REQUEST, civgame.network.message.chat.ChatMessageRequest.class);
         registerMessageType(MessageType.CHAT_MESSAGE_BROADCAST, civgame.network.message.chat.ChatMessageBroadcast.class);
+        
+        registerMessageType(MessageType.GAME_START_BROADCAST, civgame.network.message.game.GameStartBroadcast.class);
     }
     
     public void registerMessageType(String type, Class<? extends Message> messageClass) {

@@ -21,7 +21,12 @@ import civgame.network.message.lobby.StartGameRequest;
 import civgame.network.message.lobby.StartGameResponse;
 import civgame.network.message.chat.ChatMessageBroadcast;
 import civgame.network.message.chat.ChatMessageRequest;
+import civgame.network.message.game.GameStartBroadcast;
 import civgame.server.chat.ChatManager;
+import civgame.server.game.GameStateSnapshotBuilder;
+import civgame.server.game.MultiplayerGameSessionManager;
+import civgame.server.game.MultiplayerGameState;
+import civgame.server.game.PlayerState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +45,8 @@ public class GameServer {
     private final List<ClientHandler> clientHandlers;
     
     private final ChatManager chatManager;
+    private final MultiplayerGameSessionManager gameSessionManager;
+    private final GameStateSnapshotBuilder snapshotBuilder;
     
     public GameServer(NetworkConfig config) {
         this.config = config;
@@ -48,6 +55,8 @@ public class GameServer {
         this.connectionManager = new ConnectionManager();
         this.lobbyManager = new LobbyManager();
         this.chatManager = new ChatManager();
+        this.gameSessionManager = new MultiplayerGameSessionManager();
+        this.snapshotBuilder = new GameStateSnapshotBuilder();
         this.clientUsernames = new java.util.concurrent.ConcurrentHashMap<>();
         this.state = ServerState.STOPPED;
         this.clientHandlers = new ArrayList<>();
@@ -140,6 +149,8 @@ public class GameServer {
             );
             broadcastToLobby(lobby, broadcast, null);
         }
+
+        gameSessionManager.handleClientDisconnect(clientId);
         
         connectionManager.removeConnection(clientId);
         
@@ -200,6 +211,7 @@ public class GameServer {
         JoinLobbyResponse successResponse = new JoinLobbyResponse(
                 request.getRequestId(),
                 true,
+                clientId,
                 lobby.getLobbyId(),
                 lobby.getHostClientId(),
                 lobby.getPlayerInfos(),
@@ -365,10 +377,40 @@ public class GameServer {
             System.err.println("Failed to send start game response: " + e.getMessage());
         }
         
-        // TODO: Implement actual game start
-        System.out.println("Game is about to start for lobby: " + lobby.getLobbyId());
-        System.out.println("Players: " + lobby.getPlayerInfos().size());
-        System.out.println("Map: " + lobby.getSelectedMapName());
+        MultiplayerGameState game = gameSessionManager.createGameFromLobby(lobby);
+        if (game == null) {
+            StartGameResponse failResponse = new StartGameResponse(
+                    request.getRequestId(),
+                    false,
+                    "Failed to create game session"
+            );
+            try {
+                handler.sendMessageObject(failResponse);
+            } catch (NetworkException e) {
+                System.err.println("Failed to send start game response: " + e.getMessage());
+            }
+            return;
+        }
+
+        sendGameStartBroadcasts(game);
+        lobbyManager.markLobbyInGame(lobby.getLobbyId());
+
+        System.out.println("Game started: " + game.getGameId() + " with " + game.getAllPlayers().size() + " players");
+    }
+
+    private void sendGameStartBroadcasts(MultiplayerGameState game) {
+        for (PlayerState player : game.getAllPlayers()) {
+            GameStartBroadcast broadcast = snapshotBuilder.buildSnapshotForPlayer(game, player);
+            ClientHandler handler = findClientHandler(player.getClientId());
+            if (handler == null) {
+                continue;
+            }
+            try {
+                handler.sendMessageObject(broadcast);
+            } catch (NetworkException e) {
+                System.err.println("Failed to send game start to " + player.getClientId() + ": " + e.getMessage());
+            }
+        }
     }
     
     public void handleChatMessageRequest(String clientId, ChatMessageRequest request) {

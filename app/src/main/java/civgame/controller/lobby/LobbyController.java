@@ -1,12 +1,32 @@
 package civgame.controller.lobby;
 
 import civgame.client.GameClient;
+import civgame.client.MultiplayerGameClientState;
 import civgame.controller.chat.ChatController;
-import civgame.network.message.chat.ChatMessageBroadcast;
+import civgame.controller.game.GameController;
+import civgame.controller.game.TurnController;
+import civgame.model.building.TownHall;
+import civgame.model.building.TownHallLevel;
+import civgame.model.game.FogOfWarCalculator;
+import civgame.model.game.GameSession;
+import civgame.model.game.TurnEngine;
+import civgame.model.map.HexCoordinate;
+import civgame.model.map.HexMap;
+import civgame.model.map.HexTile;
+import civgame.model.map.TerrainType;
+import civgame.model.map.TileResourceType;
+import civgame.model.map.TileVisibility;
+import civgame.model.resource.ResourceType;
+import civgame.model.unit.Unit;
+import civgame.model.unit.UnitFactory;
+import civgame.model.unit.UnitType;
 import civgame.network.NetworkConfig;
 import civgame.network.NetworkException;
+import civgame.network.message.ErrorResponse;
 import civgame.network.message.Message;
 import civgame.network.message.MessageType;
+import civgame.network.message.chat.ChatMessageBroadcast;
+import civgame.network.message.game.GameStartBroadcast;
 import civgame.network.message.lobby.JoinLobbyRequest;
 import civgame.network.message.lobby.JoinLobbyResponse;
 import civgame.network.message.lobby.LeaveLobbyRequest;
@@ -19,24 +39,28 @@ import civgame.network.message.lobby.SetReadyRequest;
 import civgame.network.message.lobby.StartGameRequest;
 import civgame.network.message.lobby.StartGameResponse;
 import civgame.server.lobby.PlayerSlot;
+import civgame.util.Constants;
+import civgame.view.game.GameFrame;
 import civgame.view.lobby.LobbyFrame;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
+import java.util.Map;
 
 public class LobbyController {
     
     private final LobbyFrame lobbyFrame;
+    private final ChatController chatController;
     private GameClient gameClient;
     private final String username;
     private String myClientId;
     private String currentLobbyId;
     private String currentHostClientId;
     private boolean isReady;
-    
-    private final ChatController chatController;
+    private MultiplayerGameClientState multiplayerState;
     
     public LobbyController(LobbyFrame lobbyFrame, String username) {
         this.lobbyFrame = lobbyFrame;
@@ -47,6 +71,7 @@ public class LobbyController {
         this.isReady = false;
         this.gameClient = null;
         this.chatController = new ChatController(lobbyFrame.getChatPanel());
+        this.multiplayerState = null;
         
         registerListeners();
     }
@@ -106,7 +131,6 @@ public class LobbyController {
                     });
                     
                     gameClient.connect();
-                    chatController.setGameClient(gameClient, myClientId);
                     
                     JoinLobbyRequest request = new JoinLobbyRequest("pending", username, null);
                     gameClient.sendMessageObject(request);
@@ -153,10 +177,12 @@ public class LobbyController {
             handleMapSelectedBroadcast((MapSelectedBroadcast) message);
         } else if (type.equals(MessageType.START_GAME_RESPONSE)) {
             handleStartGameResponse((StartGameResponse) message);
+        } else if (type.equals(MessageType.GAME_START_BROADCAST)) {
+            handleGameStartBroadcast((GameStartBroadcast) message);
         } else if (type.equals(MessageType.CHAT_MESSAGE_BROADCAST)) {
             chatController.handleChatBroadcast((ChatMessageBroadcast) message);
         } else if (type.equals(MessageType.ERROR_RESPONSE)) {
-            handleErrorResponse((civgame.network.message.ErrorResponse) message);
+            handleErrorResponse((ErrorResponse) message);
         }
     }
     
@@ -172,9 +198,13 @@ public class LobbyController {
             return;
         }
         
+        myClientId = response.getMyClientId();
         currentLobbyId = response.getLobbyId();
         currentHostClientId = response.getHostClientId();
         
+        chatController.setGameClient(gameClient, myClientId);
+        
+        lobbyFrame.getLobbyPanel().initializeWithClientId(myClientId);
         lobbyFrame.getLobbyPanel().updatePlayerList(response.getCurrentPlayers(), currentHostClientId);
         lobbyFrame.getLobbyPanel().updateMapSelection(response.getSelectedMapName());
         lobbyFrame.getLobbyPanel().setStatusMessage("Joined lobby: " + currentLobbyId);
@@ -232,10 +262,89 @@ public class LobbyController {
             return;
         }
         
-        lobbyFrame.getLobbyPanel().setStatusMessage("Game is starting...");
+        lobbyFrame.getLobbyPanel().setStatusMessage("Game is starting... waiting for snapshot from server");
     }
     
-    private void handleErrorResponse(civgame.network.message.ErrorResponse response) {
+    private void handleGameStartBroadcast(GameStartBroadcast broadcast) {
+        multiplayerState = new MultiplayerGameClientState(broadcast);
+        lobbyFrame.getLobbyPanel().setStatusMessage("Loading game...");
+        launchMultiplayerGame();
+    }
+    
+    private void launchMultiplayerGame() {
+        if (multiplayerState == null) {
+            return;
+        }
+        
+        GameStartBroadcast snapshot = multiplayerState.getInitialSnapshot();
+        GameSession localSession = rebuildLocalSessionFromSnapshot(snapshot);
+        
+        FogOfWarCalculator fogCalculator = new FogOfWarCalculator();
+        fogCalculator.updateVisibility(localSession);
+        
+        GameFrame gameFrame = new GameFrame(localSession);
+        new GameController(gameFrame, localSession, fogCalculator, null);
+        TurnEngine turnEngine = new TurnEngine();
+        new TurnController(gameFrame, localSession, turnEngine, fogCalculator);
+        
+        if (gameClient != null) {
+            ChatController gameChatController = new ChatController(gameFrame.getChatPanel());
+            gameChatController.setGameClient(gameClient, multiplayerState.getMyClientId());
+        }
+        
+        gameFrame.setVisible(true);
+        lobbyFrame.dispose();
+    }
+    
+    private GameSession rebuildLocalSessionFromSnapshot(GameStartBroadcast snapshot) {
+        int radius = snapshot.getMapRadius();
+        HexMap localMap = new HexMap(radius);
+        
+        Map<String, GameStartBroadcast.TileDTO> tiles = snapshot.getTiles();
+        for (Map.Entry<String, GameStartBroadcast.TileDTO> entry : tiles.entrySet()) {
+            GameStartBroadcast.TileDTO dto = entry.getValue();
+            HexCoordinate coordinate = new HexCoordinate(dto.getQ(), dto.getR());
+            TerrainType terrain = TerrainType.valueOf(dto.getTerrainType());
+            TileResourceType resource = TileResourceType.valueOf(dto.getResourceType());
+            HexTile tile = new HexTile(coordinate, terrain, resource);
+            tile.setVisibility(TileVisibility.valueOf(dto.getVisibility()));
+            localMap.setTile(coordinate, tile);
+        }
+        
+        GameStartBroadcast.PlayerSnapshotDTO playerSnapshot = snapshot.getMySnapshot();
+        HexCoordinate townHallCoord = new HexCoordinate(
+                playerSnapshot.getTownHallQ(), playerSnapshot.getTownHallR()
+        );
+        TownHall townHall = new TownHall(townHallCoord);
+        townHall.setLevel(TownHallLevel.valueOf(playerSnapshot.getTownHallLevel()));
+        townHall.setMaxHitPoints(playerSnapshot.getTownHallMaxHp());
+        int damage = playerSnapshot.getTownHallMaxHp() - playerSnapshot.getTownHallCurrentHp();
+        if (damage > 0) {
+            townHall.applyCombatDamage(damage);
+        }
+        townHall.setDefense(playerSnapshot.getTownHallDefense());
+        
+        GameSession session = new GameSession(localMap, townHall, Constants.INITIAL_UNIT_CAP);
+        
+        session.getResourceStorage().addResource(ResourceType.FOOD, playerSnapshot.getFood());
+        session.getResourceStorage().addResource(ResourceType.WOOD, playerSnapshot.getWood());
+        session.getResourceStorage().addResource(ResourceType.STONE, playerSnapshot.getStone());
+        session.getResourceStorage().addResource(ResourceType.IRON, playerSnapshot.getIron());
+        
+        UnitFactory unitFactory = new UnitFactory();
+        List<GameStartBroadcast.UnitDTO> units = playerSnapshot.getUnits();
+        for (int i = 0; i < units.size(); i++) {
+            GameStartBroadcast.UnitDTO unitDTO = units.get(i);
+            UnitType unitType = UnitType.valueOf(unitDTO.getUnitType());
+            HexCoordinate unitCoord = new HexCoordinate(unitDTO.getQ(), unitDTO.getR());
+            Unit unit = unitFactory.createUnit(unitType, unitCoord);
+            session.addUnit(unit);
+        }
+        
+        return session;
+    }
+    
+    private void handleErrorResponse(ErrorResponse response) {
         JOptionPane.showMessageDialog(
                 lobbyFrame,
                 "Error: " + response.getErrorMessage(),
