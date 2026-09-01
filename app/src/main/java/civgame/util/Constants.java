@@ -13,6 +13,7 @@ public class Constants {
     public static final String EXIT_ICON_PATH = "/images/menu/exit_icon.png";
     public static final String MAP_EDITOR_ICON_PATH = "/images/menu/map_editor.png";
     public static final String LOAD_GAME_ICON_PATH = "/images/menu/load_game.png";
+    public static final String MULTIPLAYER_ICON_PATH = "/images/menu/multiplayer.png";
 
     public static final String BACKGROUND_MUSIC_PATH = "/audio/background_music.wav";
 

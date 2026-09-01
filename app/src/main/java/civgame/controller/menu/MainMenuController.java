@@ -14,6 +14,7 @@ import civgame.util.Constants;
 import civgame.view.editor.MapEditorFrame;
 import civgame.view.game.GameFrame;
 import civgame.view.game.SaveLoadDialog;
+import civgame.view.lobby.ConnectDialog;
 import civgame.view.menu.ExitConfirmationDialog;
 import civgame.view.menu.MainMenuFrame;
 import civgame.view.menu.MainMenuPanel;
@@ -42,6 +43,7 @@ public class MainMenuController {
         SettingsPanel settingsPanel = mainMenuFrame.getSettingsPanel();
 
         menuPanel.getStartButton().addActionListener(new StartButtonListener());
+        menuPanel.getMultiplayerButton().addActionListener(new MultiplayerButtonListener());
         menuPanel.getLoadGameButton().addActionListener(new LoadGameButtonListener());
         menuPanel.getMapEditorButton().addActionListener(new MapEditorButtonListener());
         menuPanel.getSettingsButton().addActionListener(new SettingsButtonListener());
@@ -119,6 +121,22 @@ public class MainMenuController {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             mainMenuFrame.showSettingsCard();
+        }
+    }
+
+    private class MultiplayerButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            ConnectDialog.ConnectResult result = ConnectDialog.showConnectDialog(mainMenuFrame);
+            if (!result.isConfirmed()) {
+                return;
+            }
+            
+            civgame.view.lobby.LobbyFrame lobbyFrame = new civgame.view.lobby.LobbyFrame();
+            civgame.controller.lobby.LobbyController lobbyController = 
+                    new civgame.controller.lobby.LobbyController(lobbyFrame, result.getUsername());
+            lobbyFrame.setVisible(true);
+            lobbyController.connectAndJoin();
         }
     }
 

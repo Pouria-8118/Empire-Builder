@@ -16,6 +16,7 @@ import java.net.URL;
 public class MainMenuPanel extends JPanel {
 
     private StyledButton startButton;
+    private StyledButton multiplayerButton;
     private StyledButton loadGameButton;
     private StyledButton mapEditorButton;
     private StyledButton settingsButton;
@@ -38,12 +39,14 @@ public class MainMenuPanel extends JPanel {
 
     private void createButtons() {
         startButton = new StyledButton("Start");
+        multiplayerButton = new StyledButton("Multiplayer");
         loadGameButton = new StyledButton("Load Game");
         mapEditorButton = new StyledButton("Map Editor");
         settingsButton = new StyledButton("Settings");
         exitButton = new StyledButton("Exit");
 
         setButtonIcon(startButton, Constants.START_ICON_PATH);
+        setButtonIcon(multiplayerButton, Constants.MULTIPLAYER_ICON_PATH);
         setButtonIcon(loadGameButton, Constants.LOAD_GAME_ICON_PATH);
         setButtonIcon(mapEditorButton, Constants.MAP_EDITOR_ICON_PATH);
         setButtonIcon(settingsButton, Constants.SETTINGS_ICON_PATH);
@@ -51,12 +54,14 @@ public class MainMenuPanel extends JPanel {
 
         Dimension buttonSize = new Dimension(220, 55);
         startButton.setPreferredSize(buttonSize);
+        multiplayerButton.setPreferredSize(buttonSize);
         loadGameButton.setPreferredSize(buttonSize);
         mapEditorButton.setPreferredSize(buttonSize);
         settingsButton.setPreferredSize(buttonSize);
         exitButton.setPreferredSize(buttonSize);
 
         startButton.setIconTextGap(12);
+        multiplayerButton.setIconTextGap(12);
         loadGameButton.setIconTextGap(12);
         mapEditorButton.setIconTextGap(12);
         settingsButton.setIconTextGap(12);
@@ -82,15 +87,18 @@ public class MainMenuPanel extends JPanel {
         add(startButton, constraints);
 
         constraints.gridy = 1;
-        add(loadGameButton, constraints);
+        add(multiplayerButton, constraints);
 
         constraints.gridy = 2;
-        add(mapEditorButton, constraints);
+        add(loadGameButton, constraints);
 
         constraints.gridy = 3;
-        add(settingsButton, constraints);
+        add(mapEditorButton, constraints);
 
         constraints.gridy = 4;
+        add(settingsButton, constraints);
+
+        constraints.gridy = 5;
         add(exitButton, constraints);
     }
 
@@ -104,6 +112,10 @@ public class MainMenuPanel extends JPanel {
 
     public StyledButton getStartButton() {
         return startButton;
+    }
+
+    public StyledButton getMultiplayerButton() {
+        return multiplayerButton;
     }
 
     public StyledButton getLoadGameButton() {
