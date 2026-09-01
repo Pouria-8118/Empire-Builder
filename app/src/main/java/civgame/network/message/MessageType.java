@@ -21,6 +21,9 @@ public final class MessageType {
     public static final String START_GAME_REQUEST = "START_GAME_REQUEST";
     public static final String START_GAME_RESPONSE = "START_GAME_RESPONSE";
     
+    public static final String CHAT_MESSAGE_REQUEST = "CHAT_MESSAGE_REQUEST";
+    public static final String CHAT_MESSAGE_BROADCAST = "CHAT_MESSAGE_BROADCAST";
+    
     private MessageType() {
     }
 }

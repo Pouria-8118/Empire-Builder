@@ -36,6 +36,9 @@ public class MessageRouter {
         registerMessageType(MessageType.MAP_SELECTED_BROADCAST, civgame.network.message.lobby.MapSelectedBroadcast.class);
         registerMessageType(MessageType.START_GAME_REQUEST, civgame.network.message.lobby.StartGameRequest.class);
         registerMessageType(MessageType.START_GAME_RESPONSE, civgame.network.message.lobby.StartGameResponse.class);
+        
+        registerMessageType(MessageType.CHAT_MESSAGE_REQUEST, civgame.network.message.chat.ChatMessageRequest.class);
+        registerMessageType(MessageType.CHAT_MESSAGE_BROADCAST, civgame.network.message.chat.ChatMessageBroadcast.class);
     }
     
     public void registerMessageType(String type, Class<? extends Message> messageClass) {
