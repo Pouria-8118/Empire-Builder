@@ -44,6 +44,19 @@ public class MessageRouter {
         registerMessageType(MessageType.END_TURN_REQUEST, civgame.network.message.game.EndTurnRequest.class);
         registerMessageType(MessageType.END_TURN_RESPONSE, civgame.network.message.game.EndTurnResponse.class);
         registerMessageType(MessageType.TURN_UPDATE_BROADCAST, civgame.network.message.game.TurnUpdateBroadcast.class);
+        
+        registerMessageType(MessageType.DECLARE_WAR_REQUEST, civgame.network.message.diplomacy.DeclareWarRequest.class);
+        registerMessageType(MessageType.DECLARE_WAR_BROADCAST, civgame.network.message.diplomacy.DeclareWarBroadcast.class);
+        registerMessageType(MessageType.OFFER_PEACE_REQUEST, civgame.network.message.diplomacy.OfferPeaceRequest.class);
+        registerMessageType(MessageType.PEACE_OFFER_BROADCAST, civgame.network.message.diplomacy.PeaceOfferBroadcast.class);
+        registerMessageType(MessageType.PEACE_RESPONSE_REQUEST, civgame.network.message.diplomacy.PeaceResponseRequest.class);
+        registerMessageType(MessageType.PEACE_ESTABLISHED_BROADCAST, civgame.network.message.diplomacy.PeaceEstablishedBroadcast.class);
+        registerMessageType(MessageType.PROPOSE_ALLIANCE_REQUEST, civgame.network.message.diplomacy.ProposeAllianceRequest.class);
+        registerMessageType(MessageType.ALLIANCE_PROPOSAL_BROADCAST, civgame.network.message.diplomacy.AllianceProposalBroadcast.class);
+        registerMessageType(MessageType.ALLIANCE_RESPONSE_REQUEST, civgame.network.message.diplomacy.AllianceResponseRequest.class);
+        registerMessageType(MessageType.ALLIANCE_ESTABLISHED_BROADCAST, civgame.network.message.diplomacy.AllianceEstablishedBroadcast.class);
+        registerMessageType(MessageType.RELATION_UPDATE_BROADCAST, civgame.network.message.diplomacy.RelationUpdateBroadcast.class);
+        registerMessageType(MessageType.DIPLOMACY_RESPONSE, civgame.network.message.diplomacy.DiplomacyResponse.class);
     }
     
     public void registerMessageType(String type, Class<? extends Message> messageClass) {
