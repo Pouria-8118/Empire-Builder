@@ -4,12 +4,11 @@ import civgame.client.GameClient;
 import civgame.client.MultiplayerGameClientState;
 import civgame.controller.chat.ChatController;
 import civgame.controller.game.GameController;
-import civgame.controller.game.TurnController;
+import civgame.controller.game.MultiplayerTurnController;
 import civgame.model.building.TownHall;
 import civgame.model.building.TownHallLevel;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
-import civgame.model.game.TurnEngine;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
@@ -284,16 +283,65 @@ public class LobbyController {
         
         GameFrame gameFrame = new GameFrame(localSession);
         new GameController(gameFrame, localSession, fogCalculator, null);
-        TurnEngine turnEngine = new TurnEngine();
-        new TurnController(gameFrame, localSession, turnEngine, fogCalculator);
         
         if (gameClient != null) {
+            final MultiplayerTurnController turnController = new MultiplayerTurnController(
+                    gameFrame,
+                    localSession,
+                    gameClient,
+                    multiplayerState.getMyClientId(),
+                    multiplayerState.getInitialSnapshot().getInitialTurnClientId()
+            );
+            
+            gameClient.setClientCallback(new GameClient.GameClientCallback() {
+                @Override
+                public void onConnected() {
+                }
+                
+                @Override
+                public void onDisconnected(String reason) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            JOptionPane.showMessageDialog(
+                                    gameFrame,
+                                    "Disconnected from server: " + reason,
+                                    "Connection Lost",
+                                    JOptionPane.ERROR_MESSAGE
+                            );
+                            gameFrame.dispose();
+                        }
+                    });
+                }
+                
+                @Override
+                public void onServerMessage(String message) {
+                }
+                
+                @Override
+                public void onServerMessageObject(civgame.network.message.Message message) {
+                    handleGameMessage(message, turnController);
+                }
+            });
+            
             ChatController gameChatController = new ChatController(gameFrame.getChatPanel());
             gameChatController.setGameClient(gameClient, multiplayerState.getMyClientId());
         }
         
         gameFrame.setVisible(true);
         lobbyFrame.dispose();
+    }
+    
+    private void handleGameMessage(civgame.network.message.Message message, MultiplayerTurnController turnController) {
+        String type = message.getType();
+        
+        if (type.equals(civgame.network.message.MessageType.END_TURN_RESPONSE)) {
+            turnController.handleEndTurnResponse((civgame.network.message.game.EndTurnResponse) message);
+        } else if (type.equals(civgame.network.message.MessageType.TURN_UPDATE_BROADCAST)) {
+            turnController.handleTurnUpdate((civgame.network.message.game.TurnUpdateBroadcast) message);
+        } else if (type.equals(civgame.network.message.MessageType.CHAT_MESSAGE_BROADCAST)) {
+            // Chat handled by ChatController
+        }
     }
     
     private GameSession rebuildLocalSessionFromSnapshot(GameStartBroadcast snapshot) {

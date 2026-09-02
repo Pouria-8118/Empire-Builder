@@ -21,12 +21,16 @@ import civgame.network.message.lobby.StartGameRequest;
 import civgame.network.message.lobby.StartGameResponse;
 import civgame.network.message.chat.ChatMessageBroadcast;
 import civgame.network.message.chat.ChatMessageRequest;
+import civgame.network.message.game.EndTurnRequest;
+import civgame.network.message.game.EndTurnResponse;
 import civgame.network.message.game.GameStartBroadcast;
+import civgame.network.message.game.TurnUpdateBroadcast;
 import civgame.server.chat.ChatManager;
 import civgame.server.game.GameStateSnapshotBuilder;
 import civgame.server.game.MultiplayerGameSessionManager;
 import civgame.server.game.MultiplayerGameState;
 import civgame.server.game.PlayerState;
+import civgame.server.game.TurnManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +51,7 @@ public class GameServer {
     private final ChatManager chatManager;
     private final MultiplayerGameSessionManager gameSessionManager;
     private final GameStateSnapshotBuilder snapshotBuilder;
+    private final TurnManager turnManager;
     
     public GameServer(NetworkConfig config) {
         this.config = config;
@@ -57,6 +62,7 @@ public class GameServer {
         this.chatManager = new ChatManager();
         this.gameSessionManager = new MultiplayerGameSessionManager();
         this.snapshotBuilder = new GameStateSnapshotBuilder();
+        this.turnManager = new TurnManager();
         this.clientUsernames = new java.util.concurrent.ConcurrentHashMap<>();
         this.state = ServerState.STOPPED;
         this.clientHandlers = new ArrayList<>();
@@ -439,6 +445,63 @@ public class GameServer {
         chatManager.broadcastToClients(broadcast, lobbyHandlers);
         
         System.out.println("Chat [" + username + "]: " + content);
+    }
+    
+    public void handleEndTurnRequest(String clientId, EndTurnRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendEndTurnError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        
+        TurnManager.EndTurnResult result = turnManager.handleEndTurn(game, clientId);
+        
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        
+        if (!result.isSuccess()) {
+            sendEndTurnError(clientId, request.getRequestId(), result.getMessage());
+            return;
+        }
+        
+        EndTurnResponse successResponse = new EndTurnResponse(request.getRequestId(), true, result.getMessage());
+        try {
+            handler.sendMessageObject(successResponse);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send end turn response: " + e.getMessage());
+        }
+        
+        TurnUpdateBroadcast broadcast = result.getBroadcast();
+        broadcastTurnUpdateToAllPlayers(game, broadcast);
+    }
+    
+    private void sendEndTurnError(String clientId, String requestId, String message) {
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        EndTurnResponse errorResponse = new EndTurnResponse(requestId, false, message);
+        try {
+            handler.sendMessageObject(errorResponse);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send end turn error: " + e.getMessage());
+        }
+    }
+    
+    private void broadcastTurnUpdateToAllPlayers(MultiplayerGameState game, TurnUpdateBroadcast broadcast) {
+        for (PlayerState player : game.getAllPlayers()) {
+            ClientHandler handler = findClientHandler(player.getClientId());
+            if (handler == null) {
+                continue;
+            }
+            try {
+                handler.sendMessageObject(broadcast);
+            } catch (NetworkException e) {
+                System.err.println("Failed to send turn update to " + player.getClientId() + ": " + e.getMessage());
+            }
+        }
     }
     
     private void broadcastToLobby(Lobby lobby, Broadcast broadcast, String excludeClientId) {

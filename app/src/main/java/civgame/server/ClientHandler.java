@@ -13,6 +13,7 @@ import civgame.network.message.lobby.LeaveLobbyRequest;
 import civgame.network.message.lobby.SelectMapRequest;
 import civgame.network.message.lobby.SetReadyRequest;
 import civgame.network.message.lobby.StartGameRequest;
+import civgame.network.message.game.EndTurnRequest;
 
 public class ClientHandler extends Thread {
     
@@ -104,6 +105,8 @@ public class ClientHandler extends Thread {
             gameServer.handleStartGameRequest(clientId, (StartGameRequest) request);
         } else if (type.equals(civgame.network.message.MessageType.CHAT_MESSAGE_REQUEST)) {
             gameServer.handleChatMessageRequest(clientId, (civgame.network.message.chat.ChatMessageRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.END_TURN_REQUEST)) {
+            gameServer.handleEndTurnRequest(clientId, (EndTurnRequest) request);
         } else {
             System.out.println("Processing unknown request from " + clientId + ": " + type);
         }

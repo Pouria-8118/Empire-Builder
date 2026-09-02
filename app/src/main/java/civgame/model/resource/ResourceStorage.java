@@ -79,4 +79,15 @@ public class ResourceStorage implements java.io.Serializable {
         currentAmounts.put(resourceType, 0);
         return amount - available;
     }
+    
+    public void setAmount(ResourceType resourceType, int amount) {
+        int capacity = getCapacity(resourceType);
+        if (amount > capacity) {
+            amount = capacity;
+        }
+        if (amount < 0) {
+            amount = 0;
+        }
+        currentAmounts.put(resourceType, amount);
+    }
 }

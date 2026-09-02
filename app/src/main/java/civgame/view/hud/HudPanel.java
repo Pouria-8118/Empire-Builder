@@ -180,4 +180,8 @@ public class HudPanel extends JPanel {
             queueLabel.setText("Queue: " + currentCommand.describeForHud());
         }
     }
+    
+    public void setTurnIndicatorText(String text) {
+        turnLabel.setText(text);
+    }
 }
