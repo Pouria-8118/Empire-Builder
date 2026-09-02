@@ -115,6 +115,16 @@ public class GameStartBroadcast extends Broadcast {
     public void setInitialTurnClientId(String initialTurnClientId) {
         this.initialTurnClientId = initialTurnClientId;
     }
+    
+    private List<RelationEntryDTO> initialRelations;
+    
+    public List<RelationEntryDTO> getInitialRelations() {
+        return initialRelations;
+    }
+    
+    public void setInitialRelations(List<RelationEntryDTO> initialRelations) {
+        this.initialRelations = initialRelations;
+    }
 
     public static class TileDTO {
         private int q;
@@ -443,6 +453,45 @@ public class GameStartBroadcast extends Broadcast {
             return relation;
         }
 
+        public void setRelation(String relation) {
+            this.relation = relation;
+        }
+    }
+    
+    public static class RelationEntryDTO {
+        private String playerAClientId;
+        private String playerBClientId;
+        private String relation;
+        
+        public RelationEntryDTO() {
+        }
+        
+        public RelationEntryDTO(String playerAClientId, String playerBClientId, String relation) {
+            this.playerAClientId = playerAClientId;
+            this.playerBClientId = playerBClientId;
+            this.relation = relation;
+        }
+        
+        public String getPlayerAClientId() {
+            return playerAClientId;
+        }
+        
+        public void setPlayerAClientId(String playerAClientId) {
+            this.playerAClientId = playerAClientId;
+        }
+        
+        public String getPlayerBClientId() {
+            return playerBClientId;
+        }
+        
+        public void setPlayerBClientId(String playerBClientId) {
+            this.playerBClientId = playerBClientId;
+        }
+        
+        public String getRelation() {
+            return relation;
+        }
+        
         public void setRelation(String relation) {
             this.relation = relation;
         }

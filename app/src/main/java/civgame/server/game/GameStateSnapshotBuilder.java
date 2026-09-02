@@ -36,8 +36,33 @@ public class GameStateSnapshotBuilder {
         broadcast.setTiles(buildTilesMap(map));
         broadcast.setMySnapshot(buildPlayerSnapshot(session));
         broadcast.setOpponents(buildOpponentsList(game, targetPlayer));
+        broadcast.setInitialRelations(buildInitialRelationsList(game));
 
         return broadcast;
+    }
+    
+    private List<GameStartBroadcast.RelationEntryDTO> buildInitialRelationsList(MultiplayerGameState game) {
+        List<GameStartBroadcast.RelationEntryDTO> relations = new ArrayList<>();
+        civgame.model.diplomacy.PlayerRelationMap relationMap = game.getRelationMap();
+        if (relationMap == null) {
+            return relations;
+        }
+        List<PlayerState> players = game.getAllPlayers();
+        for (int i = 0; i < players.size(); i++) {
+            for (int j = i + 1; j < players.size(); j++) {
+                PlayerState playerA = players.get(i);
+                PlayerState playerB = players.get(j);
+                civgame.model.diplomacy.PlayerRelation relation = relationMap.getRelation(
+                        playerA.getClientId(), playerB.getClientId()
+                );
+                relations.add(new GameStartBroadcast.RelationEntryDTO(
+                        playerA.getClientId(),
+                        playerB.getClientId(),
+                        relation.name()
+                ));
+            }
+        }
+        return relations;
     }
 
     private Map<String, GameStartBroadcast.TileDTO> buildTilesMap(HexMap map) {
