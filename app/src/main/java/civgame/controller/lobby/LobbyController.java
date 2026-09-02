@@ -3,6 +3,7 @@ package civgame.controller.lobby;
 import civgame.client.GameClient;
 import civgame.client.MultiplayerGameClientState;
 import civgame.controller.chat.ChatController;
+import civgame.controller.diplomacy.DiplomacyController;
 import civgame.controller.game.GameController;
 import civgame.controller.game.MultiplayerTurnController;
 import civgame.model.building.TownHall;
@@ -21,11 +22,15 @@ import civgame.model.unit.UnitFactory;
 import civgame.model.unit.UnitType;
 import civgame.network.NetworkConfig;
 import civgame.network.NetworkException;
+import civgame.network.message.Broadcast;
 import civgame.network.message.ErrorResponse;
 import civgame.network.message.Message;
 import civgame.network.message.MessageType;
 import civgame.network.message.chat.ChatMessageBroadcast;
+import civgame.network.message.diplomacy.DiplomacyResponse;
+import civgame.network.message.game.EndTurnResponse;
 import civgame.network.message.game.GameStartBroadcast;
+import civgame.network.message.game.TurnUpdateBroadcast;
 import civgame.network.message.lobby.JoinLobbyRequest;
 import civgame.network.message.lobby.JoinLobbyResponse;
 import civgame.network.message.lobby.LeaveLobbyRequest;
@@ -60,6 +65,7 @@ public class LobbyController {
     private String currentHostClientId;
     private boolean isReady;
     private MultiplayerGameClientState multiplayerState;
+    private DiplomacyController diplomacyController;
     
     public LobbyController(LobbyFrame lobbyFrame, String username) {
         this.lobbyFrame = lobbyFrame;
@@ -319,29 +325,51 @@ public class LobbyController {
                 }
                 
                 @Override
-                public void onServerMessageObject(civgame.network.message.Message message) {
+                public void onServerMessageObject(Message message) {
                     handleGameMessage(message, turnController);
                 }
             });
             
             ChatController gameChatController = new ChatController(gameFrame.getChatPanel());
             gameChatController.setGameClient(gameClient, multiplayerState.getMyClientId());
+            
+            this.diplomacyController = new DiplomacyController(gameFrame, multiplayerState.getMyClientId());
+            diplomacyController.setGameClient(gameClient);
+            diplomacyController.initializeFromOpponents(snapshot.getOpponents());
+            diplomacyController.initializeFromRelations(snapshot.getInitialRelations());
         }
         
         gameFrame.setVisible(true);
         lobbyFrame.dispose();
     }
     
-    private void handleGameMessage(civgame.network.message.Message message, MultiplayerTurnController turnController) {
+    private void handleGameMessage(Message message, MultiplayerTurnController turnController) {
         String type = message.getType();
         
-        if (type.equals(civgame.network.message.MessageType.END_TURN_RESPONSE)) {
-            turnController.handleEndTurnResponse((civgame.network.message.game.EndTurnResponse) message);
-        } else if (type.equals(civgame.network.message.MessageType.TURN_UPDATE_BROADCAST)) {
-            turnController.handleTurnUpdate((civgame.network.message.game.TurnUpdateBroadcast) message);
-        } else if (type.equals(civgame.network.message.MessageType.CHAT_MESSAGE_BROADCAST)) {
+        if (type.equals(MessageType.END_TURN_RESPONSE)) {
+            turnController.handleEndTurnResponse((EndTurnResponse) message);
+        } else if (type.equals(MessageType.TURN_UPDATE_BROADCAST)) {
+            turnController.handleTurnUpdate((TurnUpdateBroadcast) message);
+        } else if (type.equals(MessageType.CHAT_MESSAGE_BROADCAST)) {
             // Chat handled by ChatController
+        } else if (type.equals(MessageType.DIPLOMACY_RESPONSE)) {
+            if (diplomacyController != null) {
+                diplomacyController.handleDiplomacyResponse((DiplomacyResponse) message);
+            }
+        } else if (isDiplomacyBroadcast(type)) {
+            if (diplomacyController != null) {
+                diplomacyController.handleBroadcast((Broadcast) message);
+            }
         }
+    }
+    
+    private boolean isDiplomacyBroadcast(String type) {
+        return type.equals(MessageType.DECLARE_WAR_BROADCAST)
+                || type.equals(MessageType.PEACE_OFFER_BROADCAST)
+                || type.equals(MessageType.PEACE_ESTABLISHED_BROADCAST)
+                || type.equals(MessageType.ALLIANCE_PROPOSAL_BROADCAST)
+                || type.equals(MessageType.ALLIANCE_ESTABLISHED_BROADCAST)
+                || type.equals(MessageType.RELATION_UPDATE_BROADCAST);
     }
     
     private GameSession rebuildLocalSessionFromSnapshot(GameStartBroadcast snapshot) {

@@ -5,13 +5,14 @@ import civgame.model.game.ResourceRateCalculator;
 import civgame.model.resource.ResourceType;
 import civgame.util.Constants;
 import civgame.util.FullScreenToggler;
+import civgame.view.chat.ChatPanel;
+import civgame.view.diplomacy.DiplomacyPanel;
 import civgame.view.hud.ControlsHintPanel;
 import civgame.view.hud.HudPanel;
 import civgame.view.hud.MinimapPanel;
 import civgame.view.hud.NotificationEntry;
 import civgame.view.hud.SelectedUnitPanel;
 import civgame.view.hud.TurnNotificationPanel;
-import civgame.view.chat.ChatPanel;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -44,6 +45,7 @@ public class GameFrame extends JFrame {
     private static final int MINIMAP_HEIGHT = 170;
     private static final int CHAT_WIDTH = 320;
     private static final int CHAT_HEIGHT = 280;
+    private static final int DIPLOMACY_HEIGHT = 60;
     private static final int MARGIN = 15;
     private static final int MINIMUM_CENTERED_AREA_WIDTH = 300;
 
@@ -59,6 +61,7 @@ public class GameFrame extends JFrame {
     private final TurnNotificationPanel turnNotificationPanel;
     private final MinimapPanel minimapPanel;
     private final ChatPanel chatPanel;
+    private final DiplomacyPanel diplomacyPanel;
     private final FullScreenToggler fullScreenToggler;
     private final ResourceRateCalculator resourceRateCalculator;
 
@@ -76,6 +79,7 @@ public class GameFrame extends JFrame {
         this.endTurnPanel = new EndTurnPanel();
         this.minimapPanel = new MinimapPanel(gameSession, cameraState);
         this.chatPanel = new ChatPanel();
+        this.diplomacyPanel = new DiplomacyPanel();
         this.layeredPane = new JLayeredPane();
         this.fullScreenToggler = new FullScreenToggler(this);
         this.resourceRateCalculator = new ResourceRateCalculator();
@@ -117,12 +121,12 @@ public class GameFrame extends JFrame {
         layeredPane.add(endTurnPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(minimapPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(chatPanel, JLayeredPane.PALETTE_LAYER);
+        layeredPane.add(diplomacyPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(turnNotificationPanel, JLayeredPane.DRAG_LAYER);
 
         setContentPane(layeredPane);
         relayoutComponents();
     }
-    
 
     private void registerResizeListener() {
         layeredPane.addComponentListener(new ComponentAdapter() {
@@ -169,6 +173,11 @@ public class GameFrame extends JFrame {
         int hudWidth = Math.min(HUD_MAX_WIDTH, centeredAreaWidth);
         int hudX = MARGIN + (centeredAreaWidth - hudWidth) / 2;
         hudPanel.setBounds(hudX, MARGIN, hudWidth, HUD_HEIGHT);
+
+        int diplomacyX = MARGIN;
+        int diplomacyY = MARGIN + HUD_HEIGHT + CONTROLS_HINT_GAP + CONTROLS_HINT_HEIGHT + CONTROLS_HINT_GAP;
+        int diplomacyWidth = hudWidth;
+        diplomacyPanel.setBounds(diplomacyX, diplomacyY, diplomacyWidth, DIPLOMACY_HEIGHT);
 
         int hintWidth = Math.min(CONTROLS_HINT_MAX_WIDTH, centeredAreaWidth);
         int hintX = MARGIN + (centeredAreaWidth - hintWidth) / 2;
@@ -243,5 +252,9 @@ public class GameFrame extends JFrame {
     
     public ChatPanel getChatPanel() {
         return chatPanel;
+    }
+    
+    public DiplomacyPanel getDiplomacyPanel() {
+        return diplomacyPanel;
     }
 }
