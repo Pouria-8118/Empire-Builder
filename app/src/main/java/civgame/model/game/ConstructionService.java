@@ -143,4 +143,87 @@ public class ConstructionService {
 
         return Math.max(0, baseCost);
     }
+    
+    public boolean canFoundTownHall(GameSession gameSession, Builder builder, HexCoordinate targetCoordinate) {
+        if (builder.isOutOfCharges()) {
+            return false;
+        }
+        if (!builder.getCoordinate().equals(targetCoordinate)) {
+            return false;
+        }
+        if (gameSession.getBuildingAt(targetCoordinate) != null) {
+            return false;
+        }
+        if (targetCoordinate.equals(gameSession.getTownHall().getCoordinate())) {
+            return false;
+        }
+        if (isTownHallOutpostAt(gameSession, targetCoordinate)) {
+            return false;
+        }
+        if (isWithinAnyTribeTerritory(gameSession, targetCoordinate)) {
+            return false;
+        }
+        
+        HexTile targetTile = gameSession.getHexMap().getTile(targetCoordinate);
+        if (targetTile == null) {
+            return false;
+        }
+        if (!BuildingPlacementValidator.isTownHallTerrainValid(targetTile)) {
+            return false;
+        }
+        
+        if (!builder.hasEnoughActionPoints(Constants.TOWN_HALL_FOUNDING_AP_COST)) {
+            return false;
+        }
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, Constants.TOWN_HALL_FOUNDING_WOOD_COST)) {
+            return false;
+        }
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.STONE, Constants.TOWN_HALL_FOUNDING_STONE_COST)) {
+            return false;
+        }
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.IRON, Constants.TOWN_HALL_FOUNDING_IRON_COST)) {
+            return false;
+        }
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.FOOD, Constants.TOWN_HALL_FOUNDING_FOOD_COST)) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public boolean foundTownHall(GameSession gameSession, Builder builder, HexCoordinate targetCoordinate) {
+        if (!canFoundTownHall(gameSession, builder, targetCoordinate)) {
+            return false;
+        }
+        
+        builder.consumeActionPoints(Constants.TOWN_HALL_FOUNDING_AP_COST);
+        gameSession.getResourceStorage().removeResource(ResourceType.WOOD, Constants.TOWN_HALL_FOUNDING_WOOD_COST);
+        gameSession.getResourceStorage().removeResource(ResourceType.STONE, Constants.TOWN_HALL_FOUNDING_STONE_COST);
+        gameSession.getResourceStorage().removeResource(ResourceType.IRON, Constants.TOWN_HALL_FOUNDING_IRON_COST);
+        gameSession.getResourceStorage().removeResource(ResourceType.FOOD, Constants.TOWN_HALL_FOUNDING_FOOD_COST);
+        
+        String newId = civgame.util.BuildingIdGenerator.generateNextId("TOWN_HALL");
+        civgame.model.building.TownHallBuilding newTownHall = new civgame.model.building.TownHallBuilding(newId, targetCoordinate);
+        gameSession.addBuilding(newTownHall);
+        gameSession.addTownHallOutpost(newTownHall);
+        gameSession.claimBorderAroundCoordinate(targetCoordinate, Constants.NEW_TOWN_HALL_BORDER_RADIUS);
+        gameSession.getEventBus().publish(new BuildingPlacedEvent(newTownHall));
+        
+        builder.consumeCharge();
+        if (builder.isOutOfCharges()) {
+            gameSession.removeUnit(builder);
+        }
+        
+        return true;
+    }
+    
+    private boolean isTownHallOutpostAt(GameSession gameSession, HexCoordinate coordinate) {
+        List<civgame.model.building.TownHallBuilding> outposts = gameSession.getTownHallOutposts();
+        for (int i = 0; i < outposts.size(); i++) {
+            if (outposts.get(i).getCoordinate().equals(coordinate)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

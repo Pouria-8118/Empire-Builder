@@ -201,6 +201,14 @@ public class Constants {
 
     public static final int TOWN_HALL_BASE_DEFENSE = 10;
 
+    public static final int TOWN_HALL_FOUNDING_WOOD_COST = 200;
+    public static final int TOWN_HALL_FOUNDING_STONE_COST = 200;
+    public static final int TOWN_HALL_FOUNDING_IRON_COST = 100;
+    public static final int TOWN_HALL_FOUNDING_FOOD_COST = 100;
+    public static final int TOWN_HALL_FOUNDING_AP_COST = 3;
+    public static final int NEW_TOWN_HALL_BORDER_RADIUS = 2;
+    public static final int NEW_TOWN_HALL_MAX_HIT_POINTS = 150;
+
     public static final int NAVAL_TECHNIQUES_WOOD_COST = 80;
     public static final int NAVAL_TECHNIQUES_TURNS = 4;
 

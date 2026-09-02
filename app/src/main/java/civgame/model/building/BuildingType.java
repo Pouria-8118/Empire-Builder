@@ -8,5 +8,6 @@ public enum BuildingType {
     STABLE,
     DOCK,
     MONUMENT,
-    BAZAAR
+    BAZAAR,
+    TOWN_HALL
 }

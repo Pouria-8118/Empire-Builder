@@ -71,11 +71,7 @@ public class PlayerState {
     }
 
     public int countActiveTownHalls() {
-        // TODO: Implement multi-TownHall tracking
-        if (session.getTownHall().isDestroyedByCombat()) {
-            return 0;
-        }
-        return 1;
+        return session.countActiveTownHalls();
     }
 
     public List<String> getVisibleUnitIds() {

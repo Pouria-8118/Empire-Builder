@@ -51,6 +51,9 @@ public class ConstructionMenuFactory {
         JPopupMenu popupMenu = new JPopupMenu();
         PopupMenuStyler.style(popupMenu);
 
+        popupMenu.add(createFoundTownHallMenuItem(gameSession, builder, onBuildSuccess));
+        popupMenu.add(new JSeparator());
+
         HexTile tile = gameSession.getHexMap().getTile(builder.getCoordinate());
         List<BuildingType> availableTypes = BuildingPlacementValidator.getAvailableBuildingTypes(tile, gameSession.getHexMap());
 
@@ -69,6 +72,100 @@ public class ConstructionMenuFactory {
         popupMenu.add(createDemolishMenu(gameSession, builder, onBuildSuccess));
 
         return popupMenu;
+    }
+    
+    private JMenuItem createFoundTownHallMenuItem(GameSession gameSession, Builder builder, Runnable onBuildSuccess) {
+        HexCoordinate targetCoordinate = builder.getCoordinate();
+        boolean canBuild = constructionService.canFoundTownHall(gameSession, builder, targetCoordinate);
+        String reason = canBuild ? "" : buildTownHallUnavailabilityReason(gameSession, builder, targetCoordinate);
+        
+        String detailText = "Wood: " + Constants.TOWN_HALL_FOUNDING_WOOD_COST
+                + "   Stone: " + Constants.TOWN_HALL_FOUNDING_STONE_COST
+                + "   Iron: " + Constants.TOWN_HALL_FOUNDING_IRON_COST
+                + "   Food: " + Constants.TOWN_HALL_FOUNDING_FOOD_COST
+                + "   AP: " + Constants.TOWN_HALL_FOUNDING_AP_COST;
+        
+        ActionListener actionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                int confirmation = JOptionPane.showConfirmDialog(
+                        null,
+                        "Found a new Town Hall here? This creates a new territory under your control.",
+                        "Found New Town Hall",
+                        JOptionPane.YES_NO_OPTION
+                );
+                if (confirmation != JOptionPane.YES_OPTION) {
+                    return;
+                }
+                boolean success = constructionService.foundTownHall(gameSession, builder, targetCoordinate);
+                if (success && onBuildSuccess != null) {
+                    onBuildSuccess.run();
+                }
+            }
+        };
+        
+        Icon townHallIcon = MenuIconResolver.resolveForBuilding(BuildingType.TOWN_HALL);
+        if (townHallIcon == null) {
+            townHallIcon = MenuIconResolver.resolveForBuilding(BuildingType.MONUMENT);
+        }
+        
+        return StyledMenuItemFactory.createItem(
+                townHallIcon,
+                "Found New Town Hall",
+                detailText,
+                reason,
+                canBuild,
+                actionListener
+        );
+    }
+    
+    private String buildTownHallUnavailabilityReason(GameSession gameSession, Builder builder, HexCoordinate targetCoordinate) {
+        if (builder.isOutOfCharges()) {
+            return "No charges left on this Builder";
+        }
+        if (gameSession.getBuildingAt(targetCoordinate) != null) {
+            return "This tile is already occupied";
+        }
+        if (targetCoordinate.equals(gameSession.getTownHall().getCoordinate())) {
+            return "Cannot build on top of existing Town Hall";
+        }
+        if (isWithinAnyTribeTerritory(gameSession, targetCoordinate)) {
+            return "Too close to a tribe camp";
+        }
+        HexTile targetTile = gameSession.getHexMap().getTile(targetCoordinate);
+        if (targetTile == null || !BuildingPlacementValidator.isTownHallTerrainValid(targetTile)) {
+            return "Invalid terrain (cannot build on sea, mountain range, or volcano)";
+        }
+        if (!builder.hasEnoughActionPoints(Constants.TOWN_HALL_FOUNDING_AP_COST)) {
+            return "Not enough Action Points";
+        }
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.WOOD, Constants.TOWN_HALL_FOUNDING_WOOD_COST)) {
+            return "Not enough Wood";
+        }
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.STONE, Constants.TOWN_HALL_FOUNDING_STONE_COST)) {
+            return "Not enough Stone";
+        }
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.IRON, Constants.TOWN_HALL_FOUNDING_IRON_COST)) {
+            return "Not enough Iron";
+        }
+        if (!gameSession.getResourceStorage().hasEnough(ResourceType.FOOD, Constants.TOWN_HALL_FOUNDING_FOOD_COST)) {
+            return "Not enough Food";
+        }
+        return "Cannot found Town Hall here";
+    }
+    
+    private boolean isWithinAnyTribeTerritory(GameSession gameSession, HexCoordinate coordinate) {
+        List<civgame.model.tribe.Tribe> tribes = gameSession.getTribes();
+        for (int i = 0; i < tribes.size(); i++) {
+            civgame.model.tribe.Tribe tribe = tribes.get(i);
+            if (tribe.isAllied()) {
+                continue;
+            }
+            if (tribe.getCampCoordinate().equals(coordinate) || tribe.getCampCoordinate().getNeighbors().contains(coordinate)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private JMenu createDemolishMenu(GameSession gameSession, Builder builder, Runnable onActionSuccess) {

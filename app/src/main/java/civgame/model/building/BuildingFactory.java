@@ -34,6 +34,10 @@ public class BuildingFactory {
             String id = BuildingIdGenerator.generateNextId("BAZAAR");
             return new Bazaar(id, coordinate);
         }
+        if (buildingType == BuildingType.TOWN_HALL) {
+            String id = BuildingIdGenerator.generateNextId("TOWN_HALL");
+            return new TownHallBuilding(id, coordinate);
+        }
 
         String id = BuildingIdGenerator.generateNextId("STABLE");
         return new Stable(id, coordinate);

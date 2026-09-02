@@ -48,6 +48,7 @@ public class GameSession implements java.io.Serializable {
     private final List<ActiveDisasterEffect> activeDisasterEffects;
     private final Map<HexCoordinate, Integer> temporarilyBlockedHexes;
     private final List<Pirate> pirates;
+    private final List<civgame.model.building.TownHallBuilding> townHallOutposts;
     private boolean bazaarTradedThisTurn;
     private boolean tradingPostTradedThisTurn;
     private boolean pendingDockDiscount;
@@ -77,6 +78,7 @@ public class GameSession implements java.io.Serializable {
         this.activeDisasterEffects = new ArrayList<ActiveDisasterEffect>();
         this.temporarilyBlockedHexes = new HashMap<HexCoordinate, Integer>();
         this.pirates = new ArrayList<Pirate>();
+        this.townHallOutposts = new ArrayList<civgame.model.building.TownHallBuilding>();
         this.bazaarTradedThisTurn = false;
         this.pendingDockDiscount = false;
         this.tradingPostTradedThisTurn = false;
@@ -444,5 +446,37 @@ public class GameSession implements java.io.Serializable {
 
     public void setInStarvation(boolean inStarvation) {
         this.inStarvation = inStarvation;
+    }
+    
+    public void addTownHallOutpost(civgame.model.building.TownHallBuilding outpost) {
+        townHallOutposts.add(outpost);
+    }
+    
+    public List<civgame.model.building.TownHallBuilding> getTownHallOutposts() {
+        return new ArrayList<civgame.model.building.TownHallBuilding>(townHallOutposts);
+    }
+    
+    public void removeTownHallOutpost(civgame.model.building.TownHallBuilding outpost) {
+        townHallOutposts.remove(outpost);
+    }
+    
+    public int countActiveTownHalls() {
+        int count = 0;
+        if (!townHall.isDestroyedByCombat()) {
+            count = count + 1;
+        }
+        for (int i = 0; i < townHallOutposts.size(); i++) {
+            if (!townHallOutposts.get(i).isDestroyed()) {
+                count = count + 1;
+            }
+        }
+        return count;
+    }
+    
+    public void claimBorderAroundCoordinate(HexCoordinate center, int radius) {
+        List<HexTile> tilesInRange = hexMap.getTilesInRange(center, radius);
+        for (int i = 0; i < tilesInRange.size(); i++) {
+            claimedBorderTiles.add(tilesInRange.get(i).getCoordinate());
+        }
     }
 }

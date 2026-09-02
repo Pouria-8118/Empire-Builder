@@ -15,6 +15,9 @@ public class BuildingPlacementValidator {
     }
 
     public static boolean isTerrainValid(BuildingType buildingType, HexTile tile, HexMap hexMap) {
+        if (buildingType == BuildingType.TOWN_HALL) {
+            return false;
+        }
         if (buildingType == BuildingType.LUMBER_MILL) {
             return tile.getTerrainType() == TerrainType.FOREST;
         }
@@ -37,6 +40,14 @@ public class BuildingPlacementValidator {
             return tile.getTerrainType() != TerrainType.SEA && tile.getTerrainType() != TerrainType.MOUNTAIN_RANGE;
         }
         return isStableResourcePresent(tile);
+    }
+    
+    public static boolean isTownHallTerrainValid(HexTile tile) {
+        if (tile == null) {
+            return false;
+        }
+        TerrainType terrain = tile.getTerrainType();
+        return terrain != TerrainType.SEA && terrain != TerrainType.MOUNTAIN_RANGE && terrain != TerrainType.VOLCANO;
     }
 
     private static boolean isFarmResourcePresent(HexTile tile) {
