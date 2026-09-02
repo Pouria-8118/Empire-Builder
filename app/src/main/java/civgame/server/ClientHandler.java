@@ -14,6 +14,11 @@ import civgame.network.message.lobby.SelectMapRequest;
 import civgame.network.message.lobby.SetReadyRequest;
 import civgame.network.message.lobby.StartGameRequest;
 import civgame.network.message.game.EndTurnRequest;
+import civgame.network.message.diplomacy.DeclareWarRequest;
+import civgame.network.message.diplomacy.OfferPeaceRequest;
+import civgame.network.message.diplomacy.PeaceResponseRequest;
+import civgame.network.message.diplomacy.ProposeAllianceRequest;
+import civgame.network.message.diplomacy.AllianceResponseRequest;
 
 public class ClientHandler extends Thread {
     
@@ -107,6 +112,16 @@ public class ClientHandler extends Thread {
             gameServer.handleChatMessageRequest(clientId, (civgame.network.message.chat.ChatMessageRequest) request);
         } else if (type.equals(civgame.network.message.MessageType.END_TURN_REQUEST)) {
             gameServer.handleEndTurnRequest(clientId, (EndTurnRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.DECLARE_WAR_REQUEST)) {
+            gameServer.handleDeclareWarRequest(clientId, (DeclareWarRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.OFFER_PEACE_REQUEST)) {
+            gameServer.handleOfferPeaceRequest(clientId, (OfferPeaceRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.PEACE_RESPONSE_REQUEST)) {
+            gameServer.handlePeaceResponseRequest(clientId, (PeaceResponseRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.PROPOSE_ALLIANCE_REQUEST)) {
+            gameServer.handleProposeAllianceRequest(clientId, (ProposeAllianceRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.ALLIANCE_RESPONSE_REQUEST)) {
+            gameServer.handleAllianceResponseRequest(clientId, (AllianceResponseRequest) request);
         } else {
             System.out.println("Processing unknown request from " + clientId + ": " + type);
         }
