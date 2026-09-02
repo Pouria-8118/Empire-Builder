@@ -30,6 +30,19 @@ public final class MessageType {
     public static final String END_TURN_REQUEST = "END_TURN_REQUEST";
     public static final String END_TURN_RESPONSE = "END_TURN_RESPONSE";
     
+    public static final String DECLARE_WAR_REQUEST = "DECLARE_WAR_REQUEST";
+    public static final String DECLARE_WAR_BROADCAST = "DECLARE_WAR_BROADCAST";
+    public static final String OFFER_PEACE_REQUEST = "OFFER_PEACE_REQUEST";
+    public static final String PEACE_OFFER_BROADCAST = "PEACE_OFFER_BROADCAST";
+    public static final String PEACE_RESPONSE_REQUEST = "PEACE_RESPONSE_REQUEST";
+    public static final String PEACE_ESTABLISHED_BROADCAST = "PEACE_ESTABLISHED_BROADCAST";
+    public static final String PROPOSE_ALLIANCE_REQUEST = "PROPOSE_ALLIANCE_REQUEST";
+    public static final String ALLIANCE_PROPOSAL_BROADCAST = "ALLIANCE_PROPOSAL_BROADCAST";
+    public static final String ALLIANCE_RESPONSE_REQUEST = "ALLIANCE_RESPONSE_REQUEST";
+    public static final String ALLIANCE_ESTABLISHED_BROADCAST = "ALLIANCE_ESTABLISHED_BROADCAST";
+    public static final String RELATION_UPDATE_BROADCAST = "RELATION_UPDATE_BROADCAST";
+    public static final String DIPLOMACY_RESPONSE = "DIPLOMACY_RESPONSE";
+    
     private MessageType() {
     }
 }
