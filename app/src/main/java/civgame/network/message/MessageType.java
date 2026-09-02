@@ -27,6 +27,8 @@ public final class MessageType {
     public static final String GAME_START_BROADCAST = "GAME_START_BROADCAST";
     public static final String TURN_UPDATE_BROADCAST = "TURN_UPDATE_BROADCAST";
     public static final String GAME_OVER_BROADCAST = "GAME_OVER_BROADCAST";
+    public static final String END_TURN_REQUEST = "END_TURN_REQUEST";
+    public static final String END_TURN_RESPONSE = "END_TURN_RESPONSE";
     
     private MessageType() {
     }
