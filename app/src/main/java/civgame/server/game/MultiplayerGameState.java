@@ -15,6 +15,7 @@ public class MultiplayerGameState {
     private final HexMap sharedMap;
     private final Map<String, PlayerState> playersByClientId;
     private final List<String> turnOrder;
+    private final civgame.model.diplomacy.PlayerRelationMap relationMap;
     private int currentTurnIndex;
     private int turnNumber;
     private boolean finished;
@@ -28,6 +29,10 @@ public class MultiplayerGameState {
         this.sharedMap = prebuiltMap.getHexMap();
         this.playersByClientId = new ConcurrentHashMap<>();
         this.turnOrder = new ArrayList<>(orderedClientIds);
+        this.relationMap = new civgame.model.diplomacy.PlayerRelationMap();
+        for (int i = 0; i < orderedClientIds.size(); i++) {
+            this.relationMap.addPlayer(orderedClientIds.get(i));
+        }
         this.currentTurnIndex = 0;
         this.turnNumber = 1;
         this.finished = false;
@@ -43,6 +48,10 @@ public class MultiplayerGameState {
 
     public HexMap getSharedMap() {
         return sharedMap;
+    }
+
+    public civgame.model.diplomacy.PlayerRelationMap getRelationMap() {
+        return relationMap;
     }
 
     public void addPlayer(PlayerState playerState) {
