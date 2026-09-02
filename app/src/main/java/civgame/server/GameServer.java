@@ -31,6 +31,13 @@ import civgame.server.game.MultiplayerGameSessionManager;
 import civgame.server.game.MultiplayerGameState;
 import civgame.server.game.PlayerState;
 import civgame.server.game.TurnManager;
+import civgame.server.diplomacy.DiplomacyManager;
+import civgame.network.message.diplomacy.DeclareWarRequest;
+import civgame.network.message.diplomacy.OfferPeaceRequest;
+import civgame.network.message.diplomacy.PeaceResponseRequest;
+import civgame.network.message.diplomacy.ProposeAllianceRequest;
+import civgame.network.message.diplomacy.AllianceResponseRequest;
+import civgame.network.message.diplomacy.DiplomacyResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +59,7 @@ public class GameServer {
     private final MultiplayerGameSessionManager gameSessionManager;
     private final GameStateSnapshotBuilder snapshotBuilder;
     private final TurnManager turnManager;
+    private final DiplomacyManager diplomacyManager;
     
     public GameServer(NetworkConfig config) {
         this.config = config;
@@ -63,6 +71,7 @@ public class GameServer {
         this.gameSessionManager = new MultiplayerGameSessionManager();
         this.snapshotBuilder = new GameStateSnapshotBuilder();
         this.turnManager = new TurnManager();
+        this.diplomacyManager = new DiplomacyManager();
         this.clientUsernames = new java.util.concurrent.ConcurrentHashMap<>();
         this.state = ServerState.STOPPED;
         this.clientHandlers = new ArrayList<>();
@@ -157,6 +166,7 @@ public class GameServer {
         }
 
         gameSessionManager.handleClientDisconnect(clientId);
+        diplomacyManager.handleClientDisconnect(clientId);
         
         connectionManager.removeConnection(clientId);
         
@@ -501,6 +511,243 @@ public class GameServer {
             } catch (NetworkException e) {
                 System.err.println("Failed to send turn update to " + player.getClientId() + ": " + e.getMessage());
             }
+        }
+    }
+    
+    public void handleDeclareWarRequest(String clientId, DeclareWarRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendDiplomacyError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        
+        String targetClientId = request.getTargetClientId();
+        if (targetClientId == null || targetClientId.isEmpty()) {
+            sendDiplomacyError(clientId, request.getRequestId(), "No target specified");
+            return;
+        }
+        
+        DiplomacyManager.DeclareWarResult result = diplomacyManager.handleDeclareWar(game, clientId, targetClientId);
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        
+        if (!result.isSuccess()) {
+            sendDiplomacyError(clientId, request.getRequestId(), result.getMessage());
+            return;
+        }
+        
+        DiplomacyResponse successResponse = new DiplomacyResponse(request.getRequestId(), true, result.getMessage());
+        try {
+            handler.sendMessageObject(successResponse);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send diplomacy response: " + e.getMessage());
+        }
+        
+        if (result.getWarBroadcast() != null) {
+            broadcastToAllInGame(game, result.getWarBroadcast());
+        }
+        if (result.getUpdateBroadcast() != null) {
+            broadcastToAllInGame(game, result.getUpdateBroadcast());
+        }
+    }
+    
+    public void handleOfferPeaceRequest(String clientId, OfferPeaceRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendDiplomacyError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        
+        String targetClientId = request.getTargetClientId();
+        if (targetClientId == null || targetClientId.isEmpty()) {
+            sendDiplomacyError(clientId, request.getRequestId(), "No target specified");
+            return;
+        }
+        
+        DiplomacyManager.OfferResult result = diplomacyManager.handleOfferPeace(game, clientId, targetClientId);
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        
+        if (!result.isSuccess()) {
+            sendDiplomacyError(clientId, request.getRequestId(), result.getMessage());
+            return;
+        }
+        
+        DiplomacyResponse successResponse = new DiplomacyResponse(request.getRequestId(), true, result.getMessage());
+        try {
+            handler.sendMessageObject(successResponse);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send diplomacy response: " + e.getMessage());
+        }
+        
+        if (result.getBroadcast() != null) {
+            ClientHandler targetHandler = findClientHandler(targetClientId);
+            if (targetHandler != null) {
+                try {
+                    targetHandler.sendMessageObject(result.getBroadcast());
+                } catch (NetworkException e) {
+                    System.err.println("Failed to send peace offer to " + targetClientId + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+    
+    public void handlePeaceResponseRequest(String clientId, PeaceResponseRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendDiplomacyError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        
+        String proposerClientId = request.getProposerClientId();
+        if (proposerClientId == null || proposerClientId.isEmpty()) {
+            sendDiplomacyError(clientId, request.getRequestId(), "No proposer specified");
+            return;
+        }
+        
+        DiplomacyManager.ResponseResult result = diplomacyManager.handlePeaceResponse(
+                game, clientId, proposerClientId, request.isAccepted()
+        );
+        
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        
+        if (!result.isSuccess()) {
+            sendDiplomacyError(clientId, request.getRequestId(), result.getMessage());
+            return;
+        }
+        
+        DiplomacyResponse successResponse = new DiplomacyResponse(request.getRequestId(), true, result.getMessage());
+        try {
+            handler.sendMessageObject(successResponse);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send diplomacy response: " + e.getMessage());
+        }
+        
+        if (result.getPrimaryBroadcast() != null) {
+            broadcastToAllInGame(game, result.getPrimaryBroadcast());
+        }
+        if (result.getUpdateBroadcast() != null) {
+            broadcastToAllInGame(game, result.getUpdateBroadcast());
+        }
+    }
+    
+    public void handleProposeAllianceRequest(String clientId, ProposeAllianceRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendDiplomacyError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        
+        String targetClientId = request.getTargetClientId();
+        if (targetClientId == null || targetClientId.isEmpty()) {
+            sendDiplomacyError(clientId, request.getRequestId(), "No target specified");
+            return;
+        }
+        
+        DiplomacyManager.OfferResult result = diplomacyManager.handleProposeAlliance(game, clientId, targetClientId);
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        
+        if (!result.isSuccess()) {
+            sendDiplomacyError(clientId, request.getRequestId(), result.getMessage());
+            return;
+        }
+        
+        DiplomacyResponse successResponse = new DiplomacyResponse(request.getRequestId(), true, result.getMessage());
+        try {
+            handler.sendMessageObject(successResponse);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send diplomacy response: " + e.getMessage());
+        }
+        
+        if (result.getBroadcast() != null) {
+            ClientHandler targetHandler = findClientHandler(targetClientId);
+            if (targetHandler != null) {
+                try {
+                    targetHandler.sendMessageObject(result.getBroadcast());
+                } catch (NetworkException e) {
+                    System.err.println("Failed to send alliance proposal to " + targetClientId + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+    
+    public void handleAllianceResponseRequest(String clientId, AllianceResponseRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendDiplomacyError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        
+        String proposerClientId = request.getProposerClientId();
+        if (proposerClientId == null || proposerClientId.isEmpty()) {
+            sendDiplomacyError(clientId, request.getRequestId(), "No proposer specified");
+            return;
+        }
+        
+        DiplomacyManager.ResponseResult result = diplomacyManager.handleAllianceResponse(
+                game, clientId, proposerClientId, request.isAccepted()
+        );
+        
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        
+        if (!result.isSuccess()) {
+            sendDiplomacyError(clientId, request.getRequestId(), result.getMessage());
+            return;
+        }
+        
+        DiplomacyResponse successResponse = new DiplomacyResponse(request.getRequestId(), true, result.getMessage());
+        try {
+            handler.sendMessageObject(successResponse);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send diplomacy response: " + e.getMessage());
+        }
+        
+        if (result.getPrimaryBroadcast() != null) {
+            broadcastToAllInGame(game, result.getPrimaryBroadcast());
+        }
+        if (result.getUpdateBroadcast() != null) {
+            broadcastToAllInGame(game, result.getUpdateBroadcast());
+        }
+    }
+    
+    private void broadcastToAllInGame(MultiplayerGameState game, Broadcast broadcast) {
+        for (int i = 0; i < game.getAllPlayers().size(); i++) {
+            PlayerState player = game.getAllPlayers().get(i);
+            ClientHandler handler = findClientHandler(player.getClientId());
+            if (handler == null) {
+                continue;
+            }
+            try {
+                handler.sendMessageObject(broadcast);
+            } catch (NetworkException e) {
+                System.err.println("Failed to broadcast diplomacy to " + player.getClientId() + ": " + e.getMessage());
+            }
+        }
+    }
+    
+    private void sendDiplomacyError(String clientId, String requestId, String message) {
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        DiplomacyResponse errorResponse = new DiplomacyResponse(requestId, false, message);
+        try {
+            handler.sendMessageObject(errorResponse);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send diplomacy error: " + e.getMessage());
         }
     }
     
