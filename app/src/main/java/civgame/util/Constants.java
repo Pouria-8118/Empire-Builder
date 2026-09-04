@@ -486,6 +486,13 @@ public class Constants {
     public static final String CATTLE_ICON_PATH = "/images/resources/cattle.png";
     public static final String SHEEP_ICON_PATH = "/images/resources/sheep.png";
     public static final String FISH_ICON_PATH = "/images/resources/fish.png";
+    public static final String APOTHECARY_ICON_PATH = "/images/buildings/apothecary.png";
+    public static final String TRADE_ICON_PATH = "/images/ui/trade_icon.png";
+    public static final String INVENTORY_ICON_PATH = "/images/ui/inventory_icon.png";
+    public static final String ITEM_TELEPORT_ICON_PATH = "/images/items/teleport_scroll.png";
+    public static final String ITEM_MOBILITY_ICON_PATH = "/images/items/mobility_potion.png";
+    public static final String ITEM_COMBAT_ICON_PATH = "/images/items/combat_elixir.png";
+
 
     private Constants() {
     }
