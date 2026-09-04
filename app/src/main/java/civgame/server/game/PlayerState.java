@@ -2,6 +2,8 @@ package civgame.server.game;
 
 import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
+import civgame.model.trade.TradeInbox;
+import civgame.server.trade.TradeService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,8 @@ public class PlayerState {
     private final int playerIndex;
     private final GameSession session;
     private final HexCoordinate spawnCoordinate;
+    private final TradeInbox tradeInbox;
+    private final TradeService tradeService;
     private boolean eliminated;
     private boolean disconnected;
 
@@ -26,6 +30,8 @@ public class PlayerState {
         this.playerIndex = playerIndex;
         this.session = session;
         this.spawnCoordinate = spawnCoordinate;
+        this.tradeInbox = new TradeInbox();
+        this.tradeService = new TradeService();
         this.eliminated = false;
         this.disconnected = false;
     }
@@ -80,5 +86,13 @@ public class PlayerState {
             ids.add(session.getUnits().get(i).getId());
         }
         return ids;
+    }
+
+    public TradeInbox getTradeInbox() {
+        return tradeInbox;
+    }
+
+    public TradeService getTradeService() {
+        return tradeService;
     }
 }
