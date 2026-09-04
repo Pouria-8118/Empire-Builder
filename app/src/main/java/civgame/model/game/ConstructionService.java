@@ -84,6 +84,10 @@ public class ConstructionService {
         if (buildingType == BuildingType.BAZAAR) {
             return gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.SETTLEMENT);
         }
+        if (buildingType == BuildingType.APOTHECARY) {
+            return gameSession.getTownHallLevelService().isAtLeastLevel(gameSession, TownHallLevel.SETTLEMENT);
+        }
+
         return true;
     }
 
