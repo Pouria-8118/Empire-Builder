@@ -61,6 +61,18 @@ public class MessageRouter {
         registerMessageType(MessageType.ATTACK_REQUEST, civgame.network.message.combat.AttackRequest.class);
         registerMessageType(MessageType.ATTACK_RESPONSE, civgame.network.message.combat.AttackResponse.class);
         registerMessageType(MessageType.COMBAT_RESULT_BROADCAST, civgame.network.message.combat.CombatResultBroadcast.class);
+    
+        registerMessageType(MessageType.TRADE_OFFER_REQUEST, civgame.network.message.trade.TradeOfferRequest.class);
+        registerMessageType(MessageType.TRADE_ACCEPT_REQUEST, civgame.network.message.trade.TradeAcceptRequest.class);
+        registerMessageType(MessageType.TRADE_REJECT_REQUEST, civgame.network.message.trade.TradeRejectRequest.class);
+        registerMessageType(MessageType.TRADE_CANCEL_REQUEST, civgame.network.message.trade.TradeCancelRequest.class);
+        registerMessageType(MessageType.TRADE_OFFER_BROADCAST, civgame.network.message.trade.TradeOfferBroadcast.class);
+        registerMessageType(MessageType.TRADE_INBOX_UPDATE_BROADCAST, civgame.network.message.trade.TradeInboxUpdateBroadcast.class);
+        registerMessageType(MessageType.ITEM_PRODUCE_REQUEST, civgame.network.message.item.ItemProduceRequest.class);
+        registerMessageType(MessageType.ITEM_USE_REQUEST, civgame.network.message.item.ItemUseRequest.class);
+        registerMessageType(MessageType.ITEM_ACTION_RESPONSE, civgame.network.message.item.ItemActionResponse.class);
+        registerMessageType(MessageType.ITEM_ACTION_BROADCAST, civgame.network.message.item.ItemActionBroadcast.class);
+
     }
     
     public void registerMessageType(String type, Class<? extends Message> messageClass) {
