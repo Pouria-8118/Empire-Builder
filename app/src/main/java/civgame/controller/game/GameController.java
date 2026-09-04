@@ -727,4 +727,61 @@ public class GameController {
             }
         });
     }
+    public void openTradeDialog() {
+        java.util.List<String> playerNames = new java.util.ArrayList<>();
+        java.util.List<String> playerIds = new java.util.ArrayList<>();
+        // TODO: Get player list from MultiplayerGameClientState
+        civgame.view.trade.TradeDialog dialog = new civgame.view.trade.TradeDialog(gameFrame, playerNames, playerIds);
+        dialog.setSubmitListener(new civgame.view.trade.TradeDialog.TradeSubmitListener() {
+            @Override
+            public void onTradeSubmitted(String receiverClientId,
+                                         java.util.Map<civgame.model.resource.ResourceType, Integer> offered,
+                                         java.util.Map<civgame.model.resource.ResourceType, Integer> requested) {
+                sendTradeOffer(receiverClientId, offered, requested);
+            }
+        });
+        dialog.setVisible(true);
+    }
+
+    private void sendTradeOffer(String receiverClientId,
+                                java.util.Map<civgame.model.resource.ResourceType, Integer> offered,
+                                java.util.Map<civgame.model.resource.ResourceType, Integer> requested) {
+        // TODO: Get clientId from MultiplayerGameClientState and network manager
+    }
+
+    public void openTradeInbox() {
+        civgame.view.trade.TradeInboxDialog dialog = new civgame.view.trade.TradeInboxDialog(gameFrame);
+        dialog.setActionListener(new civgame.view.trade.TradeInboxDialog.TradeActionListener() {
+            @Override
+            public void onAccept(String offerId) {
+                sendTradeAccept(offerId);
+            }
+
+            @Override
+            public void onReject(String offerId) {
+                sendTradeReject(offerId);
+            }
+        });
+        dialog.setVisible(true);
+    }
+
+    private void sendTradeAccept(String offerId) {
+        // TODO: Implement with network manager
+    }
+
+    private void sendTradeReject(String offerId) {
+        // TODO: Implement with network manager
+    }
+
+    public void openInventory() {
+        civgame.view.item.InventoryPanel panel = new civgame.view.item.InventoryPanel(gameFrame);
+        // TODO: Get items from client state
+        panel.setUseListener(new civgame.view.item.InventoryPanel.ItemUseListener() {
+            @Override
+            public void onItemUse(String itemId) {
+                // TODO: Implement target selection for item use
+            }
+        });
+        panel.setVisible(true);
+    }
 }
