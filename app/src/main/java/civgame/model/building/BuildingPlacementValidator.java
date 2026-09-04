@@ -39,6 +39,9 @@ public class BuildingPlacementValidator {
         if (buildingType == BuildingType.BAZAAR) {
             return tile.getTerrainType() != TerrainType.SEA && tile.getTerrainType() != TerrainType.MOUNTAIN_RANGE;
         }
+        if (buildingType == BuildingType.APOTHECARY){
+            return tile.getTerrainType() == TerrainType.PLAIN;
+        }
         return isStableResourcePresent(tile);
     }
     

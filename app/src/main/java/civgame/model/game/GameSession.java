@@ -51,6 +51,9 @@ public class GameSession implements java.io.Serializable {
     private boolean bazaarTradedThisTurn;
     private final List<civgame.model.game.EnemyUnitMarker> visibleEnemyUnits;
     private final List<civgame.model.building.TownHallBuilding> townHallOutposts;
+    private final civgame.model.item.Inventory inventory;
+    private final civgame.model.game.ApothecaryProductionQueue apothecaryQueue;
+    private final java.util.Set<String> affectedUnitIdsThisTurn;
     private boolean tradingPostTradedThisTurn;
     private boolean pendingDockDiscount;
     private int unitCap;
@@ -81,6 +84,9 @@ public class GameSession implements java.io.Serializable {
         this.pirates = new ArrayList<Pirate>();
         this.visibleEnemyUnits = new ArrayList<civgame.model.game.EnemyUnitMarker>();
         this.townHallOutposts = new ArrayList<civgame.model.building.TownHallBuilding>();
+        this.inventory = new civgame.model.item.Inventory();
+        this.apothecaryQueue = new civgame.model.game.ApothecaryProductionQueue();
+        this.affectedUnitIdsThisTurn = new java.util.HashSet<String>();
         this.bazaarTradedThisTurn = false;
         this.pendingDockDiscount = false;
         this.tradingPostTradedThisTurn = false;
@@ -509,5 +515,36 @@ public class GameSession implements java.io.Serializable {
             }
         }
         return null;
+    }
+
+    public civgame.model.item.Inventory getInventory() {
+        return inventory;
+    }
+
+    public civgame.model.game.ApothecaryProductionQueue getApothecaryQueue() {
+        return apothecaryQueue;
+    }
+
+    public boolean hasActiveApothecary() {
+        List<Building> allBuildings = getAllBuildings();
+        for (int i = 0; i < allBuildings.size(); i++) {
+            Building building = allBuildings.get(i);
+            if (!building.isDestroyed() && building.getBuildingType() == BuildingType.APOTHECARY) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isUnitAffectedThisTurn(String unitId) {
+        return affectedUnitIdsThisTurn.contains(unitId);
+    }
+
+    public void markUnitAsAffectedThisTurn(String unitId) {
+        affectedUnitIdsThisTurn.add(unitId);
+    }
+
+    public void clearAffectedUnits() {
+        affectedUnitIdsThisTurn.clear();
     }
 }

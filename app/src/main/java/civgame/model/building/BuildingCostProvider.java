@@ -29,6 +29,9 @@ public class BuildingCostProvider {
         if (buildingType == BuildingType.BAZAAR) {
             return Constants.BAZAAR_WOOD_COST;
         }
+        if (buildingType == BuildingType.BAZAAR){
+            return Constants.APOTHECARY_WOOD_COST;
+        }
         return Constants.STABLE_WOOD_COST;
     }
 
@@ -60,6 +63,9 @@ public class BuildingCostProvider {
         }
         if (buildingType == BuildingType.BAZAAR) {
             return Constants.BAZAAR_CONSTRUCTION_AP_COST;
+        }
+        if (buildingType == BuildingType.APOTHECARY){
+            return Constants.APOTHECARY_CONSTRUCTION_AP_COST;
         }
         return Constants.STABLE_CONSTRUCTION_AP_COST;
     }

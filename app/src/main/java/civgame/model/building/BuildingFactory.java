@@ -38,6 +38,10 @@ public class BuildingFactory {
             String id = BuildingIdGenerator.generateNextId("TOWN_HALL");
             return new TownHallBuilding(id, coordinate);
         }
+        if (buildingType == BuildingType.APOTHECARY) {
+            String id = BuildingIdGenerator.generateNextId("APOTHECARY");
+            return new Apothecary(id, coordinate);
+        }
 
         String id = BuildingIdGenerator.generateNextId("STABLE");
         return new Stable(id, coordinate);

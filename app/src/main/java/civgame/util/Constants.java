@@ -369,6 +369,20 @@ public class Constants {
     public static final double TRADER_ALLY_TRADE_RATE_BONUS = 0.1;
     public static final int COASTAL_ALLY_DOCK_DISCOUNT = 10;
 
+    public static final int APOTHECARY_WOOD_COST = 40;
+    public static final int APOTHECARY_STONE_COST = 30;
+    public static final int APOTHECARY_CONSTRUCTION_AP_COST = 2;
+    public static final int APOTHECARY_MAX_HIT_POINTS = 80;
+
+    public static final int TELEPORT_ITEM_FOOD_COST = 30;
+    public static final int TELEPORT_ITEM_WOOD_COST = 20;
+
+    public static final int MOBILITY_ITEM_FOOD_COST = 20;
+    public static final int MOBILITY_ITEM_WOOD_COST = 10;
+
+    public static final int COMBAT_ITEM_FOOD_COST = 40;
+    public static final int COMBAT_ITEM_IRON_COST = 15;
+
     public static final int SPRING_FARM_STABLE_BONUS = 1;
     public static final int WINTER_FARM_PENALTY = 1;
 
