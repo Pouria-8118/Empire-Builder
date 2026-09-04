@@ -42,10 +42,20 @@ public final class MessageType {
     public static final String ALLIANCE_ESTABLISHED_BROADCAST = "ALLIANCE_ESTABLISHED_BROADCAST";
     public static final String RELATION_UPDATE_BROADCAST = "RELATION_UPDATE_BROADCAST";
     public static final String DIPLOMACY_RESPONSE = "DIPLOMACY_RESPONSE";
-    
+
     public static final String ATTACK_REQUEST = "ATTACK_REQUEST";
     public static final String ATTACK_RESPONSE = "ATTACK_RESPONSE";
     public static final String COMBAT_RESULT_BROADCAST = "COMBAT_RESULT_BROADCAST";
+    public static final String TRADE_OFFER_REQUEST = "TRADE_OFFER_REQUEST";
+    public static final String TRADE_ACCEPT_REQUEST = "TRADE_ACCEPT_REQUEST";
+    public static final String TRADE_REJECT_REQUEST = "TRADE_REJECT_REQUEST";
+    public static final String TRADE_CANCEL_REQUEST = "TRADE_CANCEL_REQUEST";
+    public static final String TRADE_OFFER_BROADCAST = "TRADE_OFFER_BROADCAST";
+    public static final String TRADE_INBOX_UPDATE_BROADCAST = "TRADE_INBOX_UPDATE_BROADCAST";
+    public static final String ITEM_PRODUCE_REQUEST = "ITEM_PRODUCE_REQUEST";
+    public static final String ITEM_USE_REQUEST = "ITEM_USE_REQUEST";
+    public static final String ITEM_ACTION_RESPONSE = "ITEM_ACTION_RESPONSE";
+    public static final String ITEM_ACTION_BROADCAST = "ITEM_ACTION_BROADCAST";
     
     private MessageType() {
     }
