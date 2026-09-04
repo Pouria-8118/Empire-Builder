@@ -250,6 +250,10 @@ public class GameController {
         this.pvpAttackRequestListener = listener;
     }
     
+    public PvpAttackRequestListener getPvpAttackRequestListener() {
+        return pvpAttackRequestListener;
+    }
+    
     public interface PvpAttackRequestListener {
         void onAttackRequested(Unit attackerUnit, civgame.model.game.EnemyUnitMarker enemyUnit);
     }

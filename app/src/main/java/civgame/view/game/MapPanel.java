@@ -19,6 +19,7 @@ import civgame.model.pirate.Pirate;
 import civgame.model.tribe.Tribe;
 import civgame.model.map.TradingPost;
 import civgame.model.unit.Unit;
+import civgame.model.game.EnemyUnitMarker;
 import civgame.util.BuildingColorProvider;
 import civgame.util.BuildingIconProvider;
 import civgame.util.Constants;
@@ -862,10 +863,10 @@ public class MapPanel extends JPanel {
     }
 
     private void drawAllEnemyUnits(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
-        List<civgame.model.game.EnemyUnitMarker> enemyUnits = gameSession.getVisibleEnemyUnits();
+        List<EnemyUnitMarker> enemyUnits = gameSession.getVisibleEnemyUnits();
         
         for (int i = 0; i < enemyUnits.size(); i++) {
-            civgame.model.game.EnemyUnitMarker marker = enemyUnits.get(i);
+            EnemyUnitMarker marker = enemyUnits.get(i);
             HexTile tile = gameSession.getHexMap().getTile(marker.getCoordinate());
             if (tile == null || tile.getVisibility() == TileVisibility.UNSEEN) {
                 continue;
@@ -881,7 +882,7 @@ public class MapPanel extends JPanel {
     }
     
     private void drawEnemyUnitMarker(Graphics2D graphics2D,
-                                      civgame.model.game.EnemyUnitMarker marker,
+                                      EnemyUnitMarker marker,
                                       double drawX,
                                       double drawY,
                                       int iconSize) {
@@ -923,7 +924,7 @@ public class MapPanel extends JPanel {
     }
     
     private void drawEnemyUnitFallbackShape(Graphics2D graphics2D,
-                                             civgame.model.game.EnemyUnitMarker marker,
+                                             EnemyUnitMarker marker,
                                              double drawX,
                                              double drawY,
                                              int iconSize) {
@@ -942,7 +943,7 @@ public class MapPanel extends JPanel {
     }
     
     private void drawEnemyOwnerBadge(Graphics2D graphics2D,
-                                      civgame.model.game.EnemyUnitMarker marker,
+                                      EnemyUnitMarker marker,
                                       double drawX,
                                       double drawY,
                                       int iconSize) {

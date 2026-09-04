@@ -8,6 +8,8 @@ import civgame.controller.game.GameController;
 import civgame.controller.game.MultiplayerTurnController;
 import civgame.model.building.TownHall;
 import civgame.model.building.TownHallLevel;
+import civgame.model.game.CombatResult;
+import civgame.model.game.EnemyUnitMarker;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
@@ -27,6 +29,9 @@ import civgame.network.message.ErrorResponse;
 import civgame.network.message.Message;
 import civgame.network.message.MessageType;
 import civgame.network.message.chat.ChatMessageBroadcast;
+import civgame.network.message.combat.AttackRequest;
+import civgame.network.message.combat.AttackResponse;
+import civgame.network.message.combat.CombatResultBroadcast;
 import civgame.network.message.diplomacy.DiplomacyResponse;
 import civgame.network.message.game.EndTurnResponse;
 import civgame.network.message.game.GameStartBroadcast;
@@ -44,6 +49,7 @@ import civgame.network.message.lobby.StartGameRequest;
 import civgame.network.message.lobby.StartGameResponse;
 import civgame.server.lobby.PlayerSlot;
 import civgame.util.Constants;
+import civgame.view.game.CombatResultDialog;
 import civgame.view.game.GameFrame;
 import civgame.view.lobby.LobbyFrame;
 
@@ -66,6 +72,10 @@ public class LobbyController {
     private boolean isReady;
     private MultiplayerGameClientState multiplayerState;
     private DiplomacyController diplomacyController;
+    private GameClient currentGameClient;
+    private GameSession currentGameSession;
+    private GameFrame currentGameFrame;
+    private GameController currentGameController;
     
     public LobbyController(LobbyFrame lobbyFrame, String username) {
         this.lobbyFrame = lobbyFrame;
@@ -288,7 +298,10 @@ public class LobbyController {
         fogCalculator.updateVisibility(localSession);
         
         GameFrame gameFrame = new GameFrame(localSession);
-        new GameController(gameFrame, localSession, fogCalculator, null);
+        this.currentGameFrame = gameFrame;
+        this.currentGameSession = localSession;
+        GameController gameController = new GameController(gameFrame, localSession, fogCalculator, null);
+        this.currentGameController = gameController;
         
         if (gameClient != null) {
             final MultiplayerTurnController turnController = new MultiplayerTurnController(
@@ -337,6 +350,9 @@ public class LobbyController {
             diplomacyController.setGameClient(gameClient);
             diplomacyController.initializeFromOpponents(snapshot.getOpponents());
             diplomacyController.initializeFromRelations(snapshot.getInitialRelations());
+            
+            initializeEnemyUnits(localSession, snapshot.getVisibleEnemyUnits());
+            setupPvpAttackListener(gameFrame, localSession, gameClient);
         }
         
         gameFrame.setVisible(true);
@@ -360,6 +376,10 @@ public class LobbyController {
             if (diplomacyController != null) {
                 diplomacyController.handleBroadcast((Broadcast) message);
             }
+        } else if (type.equals(MessageType.ATTACK_RESPONSE)) {
+            handleAttackResponse((AttackResponse) message);
+        } else if (type.equals(MessageType.COMBAT_RESULT_BROADCAST)) {
+            handleCombatResultBroadcast((CombatResultBroadcast) message);
         }
     }
     
@@ -531,5 +551,134 @@ public class LobbyController {
                 );
             }
         }
+    }
+    
+    private void initializeEnemyUnits(GameSession session,
+                                       List<GameStartBroadcast.EnemyUnitDTO> enemyUnits) {
+        if (enemyUnits == null) {
+            return;
+        }
+        
+        session.clearVisibleEnemyUnits();
+        for (int i = 0; i < enemyUnits.size(); i++) {
+            GameStartBroadcast.EnemyUnitDTO dto = enemyUnits.get(i);
+            EnemyUnitMarker marker = new EnemyUnitMarker(
+                    dto.getUnitId(),
+                    dto.getOwnerClientId(),
+                    dto.getOwnerUsername(),
+                    UnitType.valueOf(dto.getUnitType()),
+                    new HexCoordinate(dto.getQ(), dto.getR()),
+                    dto.getCurrentHp(),
+                    dto.getMaxHp(),
+                    dto.isFloating()
+            );
+            session.addVisibleEnemyUnit(marker);
+        }
+    }
+    
+    private void setupPvpAttackListener(GameFrame gameFrame, GameSession session, GameClient client) {
+        this.currentGameClient = client;
+        this.currentGameSession = session;
+        
+        GameController.PvpAttackRequestListener listener = new GameController.PvpAttackRequestListener() {
+            @Override
+            public void onAttackRequested(Unit attackerUnit, EnemyUnitMarker enemyUnit) {
+                sendPvPAttackRequest(attackerUnit, enemyUnit);
+            }
+        };
+        
+        currentGameController.setPvpAttackRequestListener(listener);
+    }
+    
+    private void sendPvPAttackRequest(Unit attackerUnit, EnemyUnitMarker enemyUnit) {
+        if (currentGameClient == null || !currentGameClient.isConnected()) {
+            return;
+        }
+        
+        AttackRequest request = new AttackRequest(
+                multiplayerState.getMyClientId(),
+                attackerUnit.getCoordinate(),
+                enemyUnit.getCoordinate(),
+                enemyUnit.getUnitId(),
+                enemyUnit.getOwnerClientId()
+        );
+        
+        try {
+            currentGameClient.sendMessageObject(request);
+        } catch (NetworkException e) {
+            JOptionPane.showMessageDialog(
+                    currentGameFrame,
+                    "Failed to send attack request: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+    
+    private void handleAttackResponse(AttackResponse response) {
+        if (!response.isSuccess()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    JOptionPane.showMessageDialog(
+                            currentGameFrame,
+                            "Attack failed: " + response.getReason(),
+                            "Attack Failed",
+                            JOptionPane.WARNING_MESSAGE
+                    );
+                }
+            });
+        }
+    }
+    
+    private void handleCombatResultBroadcast(CombatResultBroadcast broadcast) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (currentGameSession != null) {
+                    updateEnemyUnitsFromCombat(broadcast);
+                    currentGameSession.clearTribeNotifications();
+                }
+                
+                showCombatResultDialog(broadcast);
+                
+                if (currentGameClient != null && currentGameFrame != null) {
+                    currentGameFrame.refreshHud(currentGameSession);
+                    currentGameFrame.getMapPanel().repaint();
+                }
+            }
+        });
+    }
+    
+    private void updateEnemyUnitsFromCombat(CombatResultBroadcast broadcast) {
+        if (currentGameSession == null) {
+            return;
+        }
+        
+        List<CombatResultBroadcast.UnitLossDTO> defenderLosses = broadcast.getDefenderLosses();
+        
+        for (int i = 0; i < defenderLosses.size(); i++) {
+            CombatResultBroadcast.UnitLossDTO loss = defenderLosses.get(i);
+            if (!loss.getOwnerClientId().equals(multiplayerState.getMyClientId())) {
+                currentGameSession.removeVisibleEnemyUnit(loss.getUnitId());
+            }
+        }
+    }
+    
+    private void showCombatResultDialog(CombatResultBroadcast broadcast) {
+        if (broadcast.getCombatResult() == null) {
+            return;
+        }
+        
+        CombatResult localResult = new CombatResult(
+                broadcast.getCombatResult().getAttackerDice(),
+                broadcast.getCombatResult().getDefenderDice(),
+                broadcast.getCombatResult().getAttackerHits(),
+                broadcast.getCombatResult().getDefenderHits()
+        );
+        
+        CombatResultDialog dialog = new CombatResultDialog(localResult);
+        dialog.setTitle("Combat: " + broadcast.getAttackerUsername() + " vs " + broadcast.getDefenderUsername());
+        dialog.setVisible(true);
     }
 }
