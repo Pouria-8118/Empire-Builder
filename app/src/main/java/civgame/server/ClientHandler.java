@@ -13,12 +13,19 @@ import civgame.network.message.lobby.LeaveLobbyRequest;
 import civgame.network.message.lobby.SelectMapRequest;
 import civgame.network.message.lobby.SetReadyRequest;
 import civgame.network.message.lobby.StartGameRequest;
+import civgame.network.message.trade.TradeAcceptRequest;
+import civgame.network.message.trade.TradeCancelRequest;
+import civgame.network.message.trade.TradeOfferRequest;
+import civgame.network.message.trade.TradeRejectRequest;
 import civgame.network.message.game.EndTurnRequest;
+import civgame.network.message.item.ItemProduceRequest;
+import civgame.network.message.item.ItemUseRequest;
 import civgame.network.message.diplomacy.DeclareWarRequest;
 import civgame.network.message.diplomacy.OfferPeaceRequest;
 import civgame.network.message.diplomacy.PeaceResponseRequest;
 import civgame.network.message.diplomacy.ProposeAllianceRequest;
 import civgame.network.message.diplomacy.AllianceResponseRequest;
+
 
 public class ClientHandler extends Thread {
     
@@ -124,6 +131,18 @@ public class ClientHandler extends Thread {
             gameServer.handleAllianceResponseRequest(clientId, (AllianceResponseRequest) request);
         } else if (type.equals(civgame.network.message.MessageType.ATTACK_REQUEST)) {
             gameServer.handleAttackRequest(clientId, (civgame.network.message.combat.AttackRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.TRADE_OFFER_REQUEST)) {
+            gameServer.handleTradeOfferRequest(clientId, (TradeOfferRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.TRADE_ACCEPT_REQUEST)) {
+            gameServer.handleTradeAcceptRequest(clientId, (TradeAcceptRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.TRADE_REJECT_REQUEST)) {
+            gameServer.handleTradeRejectRequest(clientId, (TradeRejectRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.TRADE_CANCEL_REQUEST)) {
+            gameServer.handleTradeCancelRequest(clientId, (TradeCancelRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.ITEM_PRODUCE_REQUEST)) {
+            gameServer.handleItemProduceRequest(clientId, (ItemProduceRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.ITEM_USE_REQUEST)) {
+            gameServer.handleItemUseRequest(clientId, (ItemUseRequest) request);
         } else {
             System.out.println("Processing unknown request from " + clientId + ": " + type);
         }

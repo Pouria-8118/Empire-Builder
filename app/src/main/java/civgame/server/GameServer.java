@@ -880,4 +880,287 @@ public class GameServer {
     public NetworkConfig getConfig() {
         return config;
     }
+    public void handleTradeOfferRequest(String clientId, civgame.network.message.trade.TradeOfferRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendTradeError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        if (!clientId.equals(game.getCurrentTurnClientId())) {
+            sendTradeError(clientId, request.getRequestId(), "It is not your turn");
+            return;
+        }
+
+        PlayerState sender = game.getPlayer(clientId);
+        PlayerState receiver = game.getPlayer(request.getReceiverClientId());
+        if (sender == null || receiver == null || !receiver.isActive()) {
+            sendTradeError(clientId, request.getRequestId(), "Target player not available");
+            return;
+        }
+
+        java.util.Map<civgame.model.resource.ResourceType, Integer> offered = toResourceMap(request.getOfferedResources());
+        java.util.Map<civgame.model.resource.ResourceType, Integer> requested = toResourceMap(request.getRequestedResources());
+
+        if (!sender.getTradeService().validateOffer(sender.getSession().getResourceStorage(), offered, requested)) {
+            sendTradeError(clientId, request.getRequestId(), "You do not have enough resources");
+            return;
+        }
+
+        civgame.model.trade.TradeOffer offer = new civgame.model.trade.TradeOffer(clientId, request.getReceiverClientId(), offered, requested);
+        if (!sender.getTradeService().lockOfferedResources(sender.getSession().getResourceStorage(), offer)) {
+            sendTradeError(clientId, request.getRequestId(), "Failed to lock resources");
+            return;
+        }
+
+        receiver.getTradeInbox().addOffer(offer);
+
+        civgame.network.message.trade.TradeOfferBroadcast broadcast = new civgame.network.message.trade.TradeOfferBroadcast("server");
+        broadcast.setOfferId(offer.getId());
+        broadcast.setSenderClientId(clientId);
+        broadcast.setSenderUsername(getClientUsername(clientId));
+        broadcast.setReceiverClientId(request.getReceiverClientId());
+        broadcast.setOfferedResources(request.getOfferedResources());
+        broadcast.setRequestedResources(request.getRequestedResources());
+        broadcast.setCreatedAt(offer.getCreatedAt().toString());
+
+        ClientHandler senderHandler = findClientHandler(clientId);
+        ClientHandler receiverHandler = findClientHandler(request.getReceiverClientId());
+
+        sendSuccessResponse(senderHandler, request.getRequestId());
+        if (receiverHandler != null) {
+            receiverHandler.sendMessageObjectIgnoreError(broadcast);
+        }
+    }
+
+    public void handleTradeAcceptRequest(String clientId, civgame.network.message.trade.TradeAcceptRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendTradeError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+
+        PlayerState acceptor = game.getPlayer(clientId);
+        civgame.model.trade.TradeOffer offer = acceptor.getTradeInbox().getOfferById(request.getOfferId());
+        if (offer == null) {
+            sendTradeError(clientId, request.getRequestId(), "Trade offer not found");
+            return;
+        }
+
+        PlayerState sender = game.getPlayer(offer.getSenderClientId());
+        if (sender == null) {
+            sendTradeError(clientId, request.getRequestId(), "Sender not available");
+            return;
+        }
+
+        boolean success = acceptor.getTradeService().acceptTrade(
+                sender.getSession().getResourceStorage(),
+                acceptor.getSession().getResourceStorage(),
+                offer);
+        if (!success) {
+            sendTradeError(clientId, request.getRequestId(), "You do not have enough resources");
+            return;
+        }
+
+        acceptor.getTradeInbox().removeOffer(offer.getId());
+
+        ClientHandler handler = findClientHandler(clientId);
+        sendSuccessResponse(handler, request.getRequestId());
+        broadcastGameStateUpdate(game);
+    }
+
+    public void handleTradeRejectRequest(String clientId, civgame.network.message.trade.TradeRejectRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendTradeError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+
+        PlayerState rejector = game.getPlayer(clientId);
+        civgame.model.trade.TradeOffer offer = rejector.getTradeInbox().getOfferById(request.getOfferId());
+        if (offer == null) {
+            sendTradeError(clientId, request.getRequestId(), "Trade offer not found");
+            return;
+        }
+
+        PlayerState sender = game.getPlayer(offer.getSenderClientId());
+        offer.cancel();
+        rejector.getTradeInbox().removeOffer(offer.getId());
+
+        if (sender != null && sender.isActive()) {
+            sender.getTradeService().cancelOffer(sender.getSession().getResourceStorage(), offer);
+        }
+
+        ClientHandler handler = findClientHandler(clientId);
+        sendSuccessResponse(handler, request.getRequestId());
+    }
+
+    public void handleTradeCancelRequest(String clientId, civgame.network.message.trade.TradeCancelRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendTradeError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+
+        for (PlayerState other : game.getAllPlayers()) {
+            if (other.getClientId().equals(clientId)) {
+                continue;
+            }
+            civgame.model.trade.TradeOffer offer = other.getTradeInbox().getOfferById(request.getOfferId());
+            if (offer != null && offer.getSenderClientId().equals(clientId)) {
+                offer.cancel();
+                other.getTradeInbox().removeOffer(offer.getId());
+                PlayerState canceller = game.getPlayer(clientId);
+                canceller.getTradeService().cancelOffer(canceller.getSession().getResourceStorage(), offer);
+                break;
+            }
+        }
+
+        ClientHandler handler = findClientHandler(clientId);
+        sendSuccessResponse(handler, request.getRequestId());
+    }
+
+    public void handleItemProduceRequest(String clientId, civgame.network.message.item.ItemProduceRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendItemError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        if (!clientId.equals(game.getCurrentTurnClientId())) {
+            sendItemError(clientId, request.getRequestId(), "It is not your turn");
+            return;
+        }
+
+        PlayerState player = game.getPlayer(clientId);
+        civgame.model.item.ItemType itemType;
+        try {
+            itemType = civgame.model.item.ItemType.valueOf(request.getItemType());
+        } catch (IllegalArgumentException e) {
+            sendItemError(clientId, request.getRequestId(), "Invalid item type");
+            return;
+        }
+
+        civgame.server.item.ItemService itemService = new civgame.server.item.ItemService();
+        if (!itemService.canProduceItem(player.getSession(), itemType)) {
+            sendItemError(clientId, request.getRequestId(), "Cannot produce item");
+            return;
+        }
+
+        itemService.startProduction(player.getSession(), itemType);
+
+        ClientHandler handler = findClientHandler(clientId);
+        sendSuccessResponse(handler, request.getRequestId());
+        broadcastGameStateUpdate(game);
+    }
+
+    public void handleItemUseRequest(String clientId, civgame.network.message.item.ItemUseRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendItemError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        if (!clientId.equals(game.getCurrentTurnClientId())) {
+            sendItemError(clientId, request.getRequestId(), "It is not your turn");
+            return;
+        }
+
+        PlayerState player = game.getPlayer(clientId);
+        civgame.server.item.ItemService itemService = new civgame.server.item.ItemService();
+
+        if (!itemService.canUseItem(player.getSession(), request.getItemId(), request.getTargetUnitId())) {
+            sendItemError(clientId, request.getRequestId(), "Cannot use item");
+            return;
+        }
+
+        civgame.model.unit.Unit unit = findUnitById(player, request.getTargetUnitId());
+        if (unit == null) {
+            sendItemError(clientId, request.getRequestId(), "Unit not found");
+            return;
+        }
+
+        civgame.model.item.Item item = player.getSession().getInventory().getItemById(request.getItemId());
+        if (item == null) {
+            sendItemError(clientId, request.getRequestId(), "Item not found");
+            return;
+        }
+
+        if (item.getItemType() == civgame.model.item.ItemType.TELEPORT) {
+            civgame.model.map.HexCoordinate destination = new civgame.model.map.HexCoordinate(request.getTargetQ(), request.getTargetR());
+            if (!itemService.validateTeleportDestination(player.getSession(), unit, destination)) {
+                sendItemError(clientId, request.getRequestId(), "Invalid teleport destination");
+                return;
+            }
+            unit.setCoordinate(destination);
+        }
+
+        itemService.applyItem(player.getSession(), request.getItemId(), request.getTargetUnitId(), new civgame.server.item.ItemService.MobilityAction());
+
+        civgame.network.message.item.ItemActionBroadcast broadcast = new civgame.network.message.item.ItemActionBroadcast("server");
+        broadcast.setActionType(item.getItemType().name());
+        broadcast.setActorClientId(clientId);
+        broadcast.setActorUsername(getClientUsername(clientId));
+        broadcast.setTargetUnitId(request.getTargetUnitId());
+        broadcast.setTargetClientId(clientId);
+        broadcast.setTargetQ(request.getTargetQ());
+        broadcast.setTargetR(request.getTargetR());
+
+        ClientHandler handler = findClientHandler(clientId);
+        sendSuccessResponse(handler, request.getRequestId());
+        broadcastToAllInGame(game, broadcast);
+        broadcastGameStateUpdate(game);
+    }
+
+    private void sendTradeError(String clientId, String requestId, String message) {
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        civgame.network.message.item.ItemActionResponse errorResponse = 
+                new civgame.network.message.item.ItemActionResponse(requestId, message, "TRADE");
+        handler.sendMessageObjectIgnoreError(errorResponse);
+    }
+
+    private void sendItemError(String clientId, String requestId, String message) {
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        civgame.network.message.item.ItemActionResponse errorResponse = 
+                new civgame.network.message.item.ItemActionResponse(requestId, message, "ITEM");
+        handler.sendMessageObjectIgnoreError(errorResponse);
+    }
+
+    private void sendSuccessResponse(ClientHandler handler, String requestId) {
+        if (handler == null) {
+            return;
+        }
+        civgame.network.message.item.ItemActionResponse response = 
+                new civgame.network.message.item.ItemActionResponse(requestId, true, "SUCCESS");
+        handler.sendMessageObjectIgnoreError(response);
+    }
+
+    private java.util.Map<civgame.model.resource.ResourceType, Integer> toResourceMap(java.util.Map<String, Integer> stringMap) {
+        java.util.Map<civgame.model.resource.ResourceType, Integer> result = new java.util.HashMap<>();
+        for (String key : stringMap.keySet()) {
+            try {
+                civgame.model.resource.ResourceType type = civgame.model.resource.ResourceType.valueOf(key);
+                result.put(type, stringMap.get(key));
+            } catch (IllegalArgumentException e) {
+            }
+        }
+        return result;
+    }
+
+    private civgame.model.unit.Unit findUnitById(PlayerState player, String unitId) {
+        java.util.List<civgame.model.unit.Unit> units = player.getSession().getUnits();
+        for (int i = 0; i < units.size(); i++) {
+            if (units.get(i).getId().equals(unitId)) {
+                return units.get(i);
+            }
+        }
+        return null;
+    }
+
+    private void broadcastGameStateUpdate(MultiplayerGameState game) {
+        // TODO: Implement full game state broadcast with Fog of War
+    }
 }
