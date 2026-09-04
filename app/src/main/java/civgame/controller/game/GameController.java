@@ -107,6 +107,7 @@ public class GameController {
     private final FogOfWarCalculator fogOfWarCalculator;
     private final StationingService stationingService;
     private final GameFrame gameFrame;
+    private PvpAttackRequestListener pvpAttackRequestListener;
     private int lastDragX;
     private int lastDragY;
     private boolean wasDragged;
@@ -212,6 +213,12 @@ public class GameController {
             return;
         }
 
+        civgame.model.game.EnemyUnitMarker enemyUnit = gameSession.getEnemyUnitAt(clickedCoordinate);
+        if (enemyUnit != null) {
+            sendPvPAttackRequest(selectedUnit, enemyUnit);
+            return;
+        }
+
         AttackOutcome outcome;
         if (gameSession.getHexMap().hasActiveWall(attackerCoordinate, clickedCoordinate)) {
             outcome = resolveWallChoiceAndAttack(attackerCoordinate, clickedCoordinate);
@@ -231,6 +238,20 @@ public class GameController {
 
         refreshSelectedUnitDisplay();
         mapPanel.repaint();
+    }
+    
+    private void sendPvPAttackRequest(Unit attackerUnit, civgame.model.game.EnemyUnitMarker enemyUnit) {
+        if (pvpAttackRequestListener != null) {
+            pvpAttackRequestListener.onAttackRequested(attackerUnit, enemyUnit);
+        }
+    }
+    
+    public void setPvpAttackRequestListener(PvpAttackRequestListener listener) {
+        this.pvpAttackRequestListener = listener;
+    }
+    
+    public interface PvpAttackRequestListener {
+        void onAttackRequested(Unit attackerUnit, civgame.model.game.EnemyUnitMarker enemyUnit);
     }
 
     private AttackOutcome resolveWallChoiceAndAttack(HexCoordinate attackerCoordinate, HexCoordinate defenderCoordinate) {
@@ -357,6 +378,10 @@ public class GameController {
 
         int nextIndex = (currentIndex + 1) % unitsHere.size();
         return unitsHere.get(nextIndex);
+    }
+    
+    public boolean canAttackEnemyUnit(civgame.model.game.EnemyUnitMarker enemyUnit) {
+        return enemyUnit != null && enemyUnit.isMilitaryUnit();
     }
 
     private void showTownHallMenu(MouseEvent mouseEvent) {

@@ -43,6 +43,10 @@ public final class MessageType {
     public static final String RELATION_UPDATE_BROADCAST = "RELATION_UPDATE_BROADCAST";
     public static final String DIPLOMACY_RESPONSE = "DIPLOMACY_RESPONSE";
     
+    public static final String ATTACK_REQUEST = "ATTACK_REQUEST";
+    public static final String ATTACK_RESPONSE = "ATTACK_RESPONSE";
+    public static final String COMBAT_RESULT_BROADCAST = "COMBAT_RESULT_BROADCAST";
+    
     private MessageType() {
     }
 }

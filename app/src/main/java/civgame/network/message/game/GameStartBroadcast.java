@@ -19,6 +19,7 @@ public class GameStartBroadcast extends Broadcast {
     private Map<String, TileDTO> tiles;
     private PlayerSnapshotDTO mySnapshot;
     private List<OpponentInfoDTO> opponents;
+    private List<EnemyUnitDTO> visibleEnemyUnits;
     private int initialTurnNumber;
     private String initialTurnClientId;
 
@@ -27,6 +28,7 @@ public class GameStartBroadcast extends Broadcast {
         setType(MessageType.GAME_START_BROADCAST);
         this.tiles = new HashMap<>();
         this.opponents = new ArrayList<>();
+        this.visibleEnemyUnits = new ArrayList<>();
     }
 
     public GameStartBroadcast(String broadcasterId, String gameId) {
@@ -34,6 +36,7 @@ public class GameStartBroadcast extends Broadcast {
         this.gameId = gameId;
         this.tiles = new HashMap<>();
         this.opponents = new ArrayList<>();
+        this.visibleEnemyUnits = new ArrayList<>();
     }
 
     public String getGameId() {
@@ -98,6 +101,14 @@ public class GameStartBroadcast extends Broadcast {
 
     public void setOpponents(List<OpponentInfoDTO> opponents) {
         this.opponents = opponents;
+    }
+    
+    public List<EnemyUnitDTO> getVisibleEnemyUnits() {
+        return visibleEnemyUnits;
+    }
+    
+    public void setVisibleEnemyUnits(List<EnemyUnitDTO> visibleEnemyUnits) {
+        this.visibleEnemyUnits = visibleEnemyUnits;
     }
 
     public int getInitialTurnNumber() {
@@ -340,6 +351,7 @@ public class GameStartBroadcast extends Broadcast {
         private int maxAp;
         private int currentHp;
         private int maxHp;
+        private boolean floating;
 
         public UnitDTO() {
         }
@@ -406,6 +418,101 @@ public class GameStartBroadcast extends Broadcast {
 
         public void setMaxHp(int maxHp) {
             this.maxHp = maxHp;
+        }
+        
+        public boolean isFloating() {
+            return floating;
+        }
+        
+        public void setFloating(boolean floating) {
+            this.floating = floating;
+        }
+    }
+    
+    public static class EnemyUnitDTO {
+        private String unitId;
+        private String ownerClientId;
+        private String ownerUsername;
+        private String unitType;
+        private int q;
+        private int r;
+        private int currentHp;
+        private int maxHp;
+        private boolean floating;
+
+        public EnemyUnitDTO() {
+        }
+
+        public String getUnitId() {
+            return unitId;
+        }
+
+        public void setUnitId(String unitId) {
+            this.unitId = unitId;
+        }
+
+        public String getOwnerClientId() {
+            return ownerClientId;
+        }
+
+        public void setOwnerClientId(String ownerClientId) {
+            this.ownerClientId = ownerClientId;
+        }
+
+        public String getOwnerUsername() {
+            return ownerUsername;
+        }
+
+        public void setOwnerUsername(String ownerUsername) {
+            this.ownerUsername = ownerUsername;
+        }
+
+        public String getUnitType() {
+            return unitType;
+        }
+
+        public void setUnitType(String unitType) {
+            this.unitType = unitType;
+        }
+
+        public int getQ() {
+            return q;
+        }
+
+        public void setQ(int q) {
+            this.q = q;
+        }
+
+        public int getR() {
+            return r;
+        }
+
+        public void setR(int r) {
+            this.r = r;
+        }
+
+        public int getCurrentHp() {
+            return currentHp;
+        }
+
+        public void setCurrentHp(int currentHp) {
+            this.currentHp = currentHp;
+        }
+
+        public int getMaxHp() {
+            return maxHp;
+        }
+
+        public void setMaxHp(int maxHp) {
+            this.maxHp = maxHp;
+        }
+
+        public boolean isFloating() {
+            return floating;
+        }
+
+        public void setFloating(boolean floating) {
+            this.floating = floating;
         }
     }
 

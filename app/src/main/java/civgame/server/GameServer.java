@@ -1,13 +1,28 @@
 package civgame.server;
 
+import civgame.model.diplomacy.PlayerRelation;
+import civgame.model.diplomacy.PlayerRelationMap;
+import civgame.model.map.HexCoordinate;
 import civgame.network.NetworkConfig;
 import civgame.network.NetworkException;
 import civgame.network.TCPServer;
 import civgame.network.UDPServer;
-import civgame.server.lobby.Lobby;
-import civgame.server.lobby.LobbyManager;
-import civgame.server.lobby.PlayerSlot;
 import civgame.network.message.Broadcast;
+import civgame.network.message.ErrorResponse;
+import civgame.network.message.chat.ChatMessageBroadcast;
+import civgame.network.message.chat.ChatMessageRequest;
+import civgame.network.message.combat.AttackRequest;
+import civgame.network.message.combat.AttackResponse;
+import civgame.network.message.diplomacy.AllianceResponseRequest;
+import civgame.network.message.diplomacy.DeclareWarRequest;
+import civgame.network.message.diplomacy.DiplomacyResponse;
+import civgame.network.message.diplomacy.OfferPeaceRequest;
+import civgame.network.message.diplomacy.PeaceResponseRequest;
+import civgame.network.message.diplomacy.ProposeAllianceRequest;
+import civgame.network.message.game.EndTurnRequest;
+import civgame.network.message.game.EndTurnResponse;
+import civgame.network.message.game.GameStartBroadcast;
+import civgame.network.message.game.TurnUpdateBroadcast;
 import civgame.network.message.lobby.JoinLobbyRequest;
 import civgame.network.message.lobby.JoinLobbyResponse;
 import civgame.network.message.lobby.LeaveLobbyRequest;
@@ -19,29 +34,22 @@ import civgame.network.message.lobby.SelectMapRequest;
 import civgame.network.message.lobby.SetReadyRequest;
 import civgame.network.message.lobby.StartGameRequest;
 import civgame.network.message.lobby.StartGameResponse;
-import civgame.network.message.chat.ChatMessageBroadcast;
-import civgame.network.message.chat.ChatMessageRequest;
-import civgame.network.message.game.EndTurnRequest;
-import civgame.network.message.game.EndTurnResponse;
-import civgame.network.message.game.GameStartBroadcast;
-import civgame.network.message.game.TurnUpdateBroadcast;
 import civgame.server.chat.ChatManager;
+import civgame.server.combat.PvPCombatService;
+import civgame.server.diplomacy.DiplomacyManager;
 import civgame.server.game.GameStateSnapshotBuilder;
 import civgame.server.game.MultiplayerGameSessionManager;
 import civgame.server.game.MultiplayerGameState;
 import civgame.server.game.PlayerState;
 import civgame.server.game.TurnManager;
-import civgame.server.diplomacy.DiplomacyManager;
-import civgame.network.message.diplomacy.DeclareWarRequest;
-import civgame.network.message.diplomacy.OfferPeaceRequest;
-import civgame.network.message.diplomacy.PeaceResponseRequest;
-import civgame.network.message.diplomacy.ProposeAllianceRequest;
-import civgame.network.message.diplomacy.AllianceResponseRequest;
-import civgame.network.message.diplomacy.DiplomacyResponse;
+import civgame.server.lobby.Lobby;
+import civgame.server.lobby.LobbyManager;
+import civgame.server.lobby.PlayerSlot;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GameServer {
     
@@ -60,6 +68,7 @@ public class GameServer {
     private final GameStateSnapshotBuilder snapshotBuilder;
     private final TurnManager turnManager;
     private final DiplomacyManager diplomacyManager;
+    private final PvPCombatService pvpCombatService;
     
     public GameServer(NetworkConfig config) {
         this.config = config;
@@ -72,7 +81,8 @@ public class GameServer {
         this.snapshotBuilder = new GameStateSnapshotBuilder();
         this.turnManager = new TurnManager();
         this.diplomacyManager = new DiplomacyManager();
-        this.clientUsernames = new java.util.concurrent.ConcurrentHashMap<>();
+        this.pvpCombatService = new PvPCombatService();
+        this.clientUsernames = new ConcurrentHashMap<>();
         this.state = ServerState.STOPPED;
         this.clientHandlers = new ArrayList<>();
     }
@@ -296,7 +306,7 @@ public class GameServer {
         if (!lobby.isHost(clientId)) {
             ClientHandler handler = findClientHandler(clientId);
             if (handler != null) {
-                civgame.network.message.ErrorResponse error = new civgame.network.message.ErrorResponse(
+                ErrorResponse error = new ErrorResponse(
                         request.getRequestId(),
                         "NOT_HOST",
                         "Only the host can select the map"
@@ -723,6 +733,74 @@ public class GameServer {
         }
     }
     
+    public void handleAttackRequest(String clientId, AttackRequest request) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendAttackError(clientId, request.getRequestId(), "You are not in a game");
+            return;
+        }
+        
+        if (!clientId.equals(game.getCurrentTurnClientId())) {
+            sendAttackError(clientId, request.getRequestId(), "It is not your turn");
+            return;
+        }
+        
+        PlayerRelationMap relationMap = game.getRelationMap();
+        String defenderClientId = request.getDefenderClientId();
+        
+        if (defenderClientId == null || defenderClientId.isEmpty()) {
+            sendAttackError(clientId, request.getRequestId(), "No defender specified");
+            return;
+        }
+        
+        PlayerRelation relation = relationMap.getRelation(clientId, defenderClientId);
+        if (!relation.canAttack()) {
+            sendAttackError(clientId, request.getRequestId(), 
+                    "Cannot attack: you are " + relation.getDisplayName() + " with this player");
+            return;
+        }
+        
+        PlayerState attackerPlayer = game.getPlayer(clientId);
+        PlayerState defenderPlayer = game.getPlayer(defenderClientId);
+        
+        if (attackerPlayer == null || defenderPlayer == null) {
+            sendAttackError(clientId, request.getRequestId(), "Invalid player");
+            return;
+        }
+        
+        HexCoordinate attackerCoordinate = new HexCoordinate(request.getAttackerQ(), request.getAttackerR());
+        HexCoordinate defenderCoordinate = new HexCoordinate(request.getDefenderQ(), request.getDefenderR());
+        
+        PvPCombatService.PvPCombatResult result = pvpCombatService.executePvPAttack(
+                game, attackerPlayer, defenderPlayer, attackerCoordinate, defenderCoordinate);
+        
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        
+        if (!result.isSuccess()) {
+            sendAttackError(clientId, request.getRequestId(), result.getMessage());
+            return;
+        }
+        
+        AttackResponse successResponse = new AttackResponse(request.getRequestId(), true, result.getMessage());
+        handler.sendMessageObjectIgnoreError(successResponse);
+        
+        if (result.getBroadcast() != null) {
+            broadcastToAllInGame(game, result.getBroadcast());
+        }
+    }
+    
+    private void sendAttackError(String clientId, String requestId, String message) {
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        AttackResponse errorResponse = new AttackResponse(requestId, false, message);
+        handler.sendMessageObjectIgnoreError(errorResponse);
+    }
+    
     private void broadcastToAllInGame(MultiplayerGameState game, Broadcast broadcast) {
         for (int i = 0; i < game.getAllPlayers().size(); i++) {
             PlayerState player = game.getAllPlayers().get(i);
@@ -733,7 +811,7 @@ public class GameServer {
             try {
                 handler.sendMessageObject(broadcast);
             } catch (NetworkException e) {
-                System.err.println("Failed to broadcast diplomacy to " + player.getClientId() + ": " + e.getMessage());
+                System.err.println("Failed to broadcast to " + player.getClientId() + ": " + e.getMessage());
             }
         }
     }

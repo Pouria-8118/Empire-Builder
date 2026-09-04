@@ -57,6 +57,10 @@ public class MessageRouter {
         registerMessageType(MessageType.ALLIANCE_ESTABLISHED_BROADCAST, civgame.network.message.diplomacy.AllianceEstablishedBroadcast.class);
         registerMessageType(MessageType.RELATION_UPDATE_BROADCAST, civgame.network.message.diplomacy.RelationUpdateBroadcast.class);
         registerMessageType(MessageType.DIPLOMACY_RESPONSE, civgame.network.message.diplomacy.DiplomacyResponse.class);
+        
+        registerMessageType(MessageType.ATTACK_REQUEST, civgame.network.message.combat.AttackRequest.class);
+        registerMessageType(MessageType.ATTACK_RESPONSE, civgame.network.message.combat.AttackResponse.class);
+        registerMessageType(MessageType.COMBAT_RESULT_BROADCAST, civgame.network.message.combat.CombatResultBroadcast.class);
     }
     
     public void registerMessageType(String type, Class<? extends Message> messageClass) {

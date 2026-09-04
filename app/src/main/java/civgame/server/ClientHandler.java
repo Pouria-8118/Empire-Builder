@@ -122,6 +122,8 @@ public class ClientHandler extends Thread {
             gameServer.handleProposeAllianceRequest(clientId, (ProposeAllianceRequest) request);
         } else if (type.equals(civgame.network.message.MessageType.ALLIANCE_RESPONSE_REQUEST)) {
             gameServer.handleAllianceResponseRequest(clientId, (AllianceResponseRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.ATTACK_REQUEST)) {
+            gameServer.handleAttackRequest(clientId, (civgame.network.message.combat.AttackRequest) request);
         } else {
             System.out.println("Processing unknown request from " + clientId + ": " + type);
         }
@@ -162,5 +164,13 @@ public class ClientHandler extends Thread {
     public void sendMessageObject(Message message) throws NetworkException {
         String json = messageRouter.serializeMessage(message);
         sendMessage(json);
+    }
+    
+    public void sendMessageObjectIgnoreError(Message message) {
+        try {
+            sendMessageObject(message);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send message to " + clientId + ": " + e.getMessage());
+        }
     }
 }

@@ -35,10 +35,17 @@ public class CombatTargetService {
         if (attackerCoordinate.equals(defenderCoordinate)) {
             return false;
         }
+
+        boolean hasEnemyUnit = gameSession.getEnemyUnitAt(defenderCoordinate) != null;
+        if (hasEnemyUnit) {
+            return true;
+        }
+
         boolean hasWildAnimal = gameSession.getWildAnimalAt(defenderCoordinate) != null;
         if (gameSession.isWithinBorder(defenderCoordinate) && !hasWildAnimal) {
             return false;
         }
+
         if (!hasAnyMilitaryUnit(gameSession, attackerCoordinate)) {
             return false;
         }
@@ -109,12 +116,22 @@ public class CombatTargetService {
 
     private boolean hasUnitOfType(GameSession gameSession, HexCoordinate coordinate, UnitType unitType) {
         List<Unit> units = gameSession.getUnits();
+
         for (int i = 0; i < units.size(); i++) {
             Unit unit = units.get(i);
             if (unit.getCoordinate().equals(coordinate) && unit.getUnitType() == unitType) {
                 return true;
             }
         }
+
         return false;
+    }
+    
+    public boolean isEnemyUnitAt(GameSession gameSession, HexCoordinate coordinate) {
+        return gameSession.getEnemyUnitAt(coordinate) != null;
+    }
+    
+    public boolean hasMilitaryUnitForAttack(GameSession gameSession, HexCoordinate coordinate) {
+        return hasAnyMilitaryUnit(gameSession, coordinate);
     }
 }

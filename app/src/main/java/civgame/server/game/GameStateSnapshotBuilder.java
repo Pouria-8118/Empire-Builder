@@ -37,8 +37,47 @@ public class GameStateSnapshotBuilder {
         broadcast.setMySnapshot(buildPlayerSnapshot(session));
         broadcast.setOpponents(buildOpponentsList(game, targetPlayer));
         broadcast.setInitialRelations(buildInitialRelationsList(game));
+        broadcast.setVisibleEnemyUnits(buildVisibleEnemyUnits(game, targetPlayer, session));
 
         return broadcast;
+    }
+    
+    private List<GameStartBroadcast.EnemyUnitDTO> buildVisibleEnemyUnits(MultiplayerGameState game,
+                                                                            PlayerState targetPlayer,
+                                                                            GameSession targetSession) {
+        List<GameStartBroadcast.EnemyUnitDTO> enemyUnits = new ArrayList<>();
+        civgame.model.map.HexMap targetMap = targetSession.getHexMap();
+        
+        for (PlayerState otherPlayer : game.getAllPlayers()) {
+            if (otherPlayer.getClientId().equals(targetPlayer.getClientId())) {
+                continue;
+            }
+            
+            List<Unit> otherUnits = otherPlayer.getSession().getUnits();
+            for (int i = 0; i < otherUnits.size(); i++) {
+                Unit enemyUnit = otherUnits.get(i);
+                civgame.model.map.HexCoordinate enemyCoord = enemyUnit.getCoordinate();
+                
+                if (targetMap.containsCoordinate(enemyCoord)) {
+                    civgame.model.map.HexTile tile = targetMap.getTile(enemyCoord);
+                    if (tile != null && tile.getVisibility() != civgame.model.map.TileVisibility.UNSEEN) {
+                        GameStartBroadcast.EnemyUnitDTO dto = new GameStartBroadcast.EnemyUnitDTO();
+                        dto.setUnitId(enemyUnit.getId());
+                        dto.setOwnerClientId(otherPlayer.getClientId());
+                        dto.setOwnerUsername(otherPlayer.getUsername());
+                        dto.setUnitType(enemyUnit.getUnitType().name());
+                        dto.setQ(enemyCoord.getQ());
+                        dto.setR(enemyCoord.getR());
+                        dto.setCurrentHp(enemyUnit.getCurrentHitPoints());
+                        dto.setMaxHp(enemyUnit.getMaxHitPoints());
+                        dto.setFloating(enemyUnit.isFloating());
+                        enemyUnits.add(dto);
+                    }
+                }
+            }
+        }
+        
+        return enemyUnits;
     }
     
     private List<GameStartBroadcast.RelationEntryDTO> buildInitialRelationsList(MultiplayerGameState game) {
@@ -117,6 +156,7 @@ public class GameStateSnapshotBuilder {
             unitDTO.setMaxAp(unit.getMaxActionPoints());
             unitDTO.setCurrentHp(unit.getCurrentHitPoints());
             unitDTO.setMaxHp(unit.getMaxHitPoints());
+            unitDTO.setFloating(unit.isFloating());
             unitDTOs.add(unitDTO);
         }
         snapshot.setUnits(unitDTOs);

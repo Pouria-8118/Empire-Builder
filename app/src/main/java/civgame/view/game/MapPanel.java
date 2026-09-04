@@ -164,6 +164,7 @@ public class MapPanel extends JPanel {
         drawActiveDisasterEffects(graphics2D, hexSize, centerX, centerY);
         drawAllBuildings(graphics2D, hexSize, centerX, centerY);
         drawAllSettlements(graphics2D, hexSize, centerX, centerY);
+        drawAllEnemyUnits(graphics2D, hexSize, centerX, centerY);
         drawAllUnits(graphics2D, hexSize, centerX, centerY);
     }
 
@@ -858,6 +859,107 @@ public class MapPanel extends JPanel {
 
         graphics2D.setColor(Color.BLACK);
         graphics2D.drawOval((int) (drawX - markerRadius), (int) (drawY - markerRadius), markerRadius * 2, markerRadius * 2);
+    }
+
+    private void drawAllEnemyUnits(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {
+        List<civgame.model.game.EnemyUnitMarker> enemyUnits = gameSession.getVisibleEnemyUnits();
+        
+        for (int i = 0; i < enemyUnits.size(); i++) {
+            civgame.model.game.EnemyUnitMarker marker = enemyUnits.get(i);
+            HexTile tile = gameSession.getHexMap().getTile(marker.getCoordinate());
+            if (tile == null || tile.getVisibility() == TileVisibility.UNSEEN) {
+                continue;
+            }
+            
+            Point2D pixelPosition = HexGeometry.axialToPixel(marker.getCoordinate(), hexSize);
+            double drawX = centerX + pixelPosition.getX();
+            double drawY = centerY + pixelPosition.getY();
+            int iconSize = (int) (hexSize * UNIT_SIZE_FACTOR);
+            
+            drawEnemyUnitMarker(graphics2D, marker, drawX, drawY, iconSize);
+        }
+    }
+    
+    private void drawEnemyUnitMarker(Graphics2D graphics2D,
+                                      civgame.model.game.EnemyUnitMarker marker,
+                                      double drawX,
+                                      double drawY,
+                                      int iconSize) {
+        if (marker.isFloating()) {
+            drawFloatingEnemyUnit(graphics2D, drawX, drawY, iconSize);
+        } else {
+            Image unitIcon = IconProvider.loadImage(UnitIconProvider.getIconPath(marker.getUnitType()));
+            if (unitIcon != null) {
+                graphics2D.drawImage(unitIcon, (int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize, this);
+            } else {
+                drawEnemyUnitFallbackShape(graphics2D, marker, drawX, drawY, iconSize);
+            }
+        }
+        
+        drawEnemyOwnerBadge(graphics2D, marker, drawX, drawY, iconSize);
+    }
+    
+    private void drawFloatingEnemyUnit(Graphics2D graphics2D, double drawX, double drawY, int iconSize) {
+        Image boatIcon = IconProvider.loadImage(Constants.FLOATING_UNIT_ICON_PATH);
+        if (boatIcon != null) {
+            graphics2D.drawImage(boatIcon, (int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize, this);
+            return;
+        }
+        
+        int hullTop = (int) (drawY - iconSize * 0.15);
+        int hullBottom = (int) (drawY + iconSize * 0.45);
+        int hullLeft = (int) (drawX - iconSize * 0.5);
+        int hullRight = (int) (drawX + iconSize * 0.5);
+        
+        Polygon hullPolygon = new Polygon();
+        hullPolygon.addPoint((int) drawX, hullBottom);
+        hullPolygon.addPoint(hullLeft, hullTop);
+        hullPolygon.addPoint(hullRight, hullTop);
+        
+        graphics2D.setColor(new Color(120, 80, 40));
+        graphics2D.fillPolygon(hullPolygon);
+        graphics2D.setColor(Color.BLACK);
+        graphics2D.drawPolygon(hullPolygon);
+    }
+    
+    private void drawEnemyUnitFallbackShape(Graphics2D graphics2D,
+                                             civgame.model.game.EnemyUnitMarker marker,
+                                             double drawX,
+                                             double drawY,
+                                             int iconSize) {
+        graphics2D.setColor(UnitColorProvider.getColorForUnitType(marker.getUnitType()));
+        graphics2D.fillOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+        
+        graphics2D.setColor(new Color(220, 40, 40));
+        graphics2D.setStroke(new BasicStroke(2f));
+        graphics2D.drawOval((int) (drawX - iconSize / 2.0), (int) (drawY - iconSize / 2.0), iconSize, iconSize);
+        graphics2D.setStroke(new BasicStroke(1f));
+        
+        String letter = UnitIconProvider.getFallbackLetter(marker.getUnitType());
+        graphics2D.setFont(FALLBACK_LABEL_FONT);
+        int textWidth = graphics2D.getFontMetrics().stringWidth(letter);
+        graphics2D.drawString(letter, (int) (drawX - textWidth / 2.0), (int) (drawY + 5));
+    }
+    
+    private void drawEnemyOwnerBadge(Graphics2D graphics2D,
+                                      civgame.model.game.EnemyUnitMarker marker,
+                                      double drawX,
+                                      double drawY,
+                                      int iconSize) {
+        String ownerText = marker.getOwnerUsername();
+        if (ownerText == null || ownerText.isEmpty()) {
+            return;
+        }
+        
+        graphics2D.setFont(AP_BADGE_FONT);
+        int textWidth = graphics2D.getFontMetrics().stringWidth(ownerText);
+        int badgeY = (int) (drawY - iconSize / 2.0 - 8);
+        
+        graphics2D.setColor(new Color(180, 40, 40, 180));
+        graphics2D.fillRoundRect((int) (drawX - textWidth / 2.0) - 3, badgeY - 11, textWidth + 6, 14, 6, 6);
+        
+        graphics2D.setColor(Color.WHITE);
+        graphics2D.drawString(ownerText, (int) (drawX - textWidth / 2.0), badgeY);
     }
 
     private void drawAllUnits(Graphics2D graphics2D, double hexSize, double centerX, double centerY) {

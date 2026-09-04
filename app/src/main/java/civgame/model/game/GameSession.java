@@ -48,8 +48,9 @@ public class GameSession implements java.io.Serializable {
     private final List<ActiveDisasterEffect> activeDisasterEffects;
     private final Map<HexCoordinate, Integer> temporarilyBlockedHexes;
     private final List<Pirate> pirates;
-    private final List<civgame.model.building.TownHallBuilding> townHallOutposts;
     private boolean bazaarTradedThisTurn;
+    private final List<civgame.model.game.EnemyUnitMarker> visibleEnemyUnits;
+    private final List<civgame.model.building.TownHallBuilding> townHallOutposts;
     private boolean tradingPostTradedThisTurn;
     private boolean pendingDockDiscount;
     private int unitCap;
@@ -78,6 +79,7 @@ public class GameSession implements java.io.Serializable {
         this.activeDisasterEffects = new ArrayList<ActiveDisasterEffect>();
         this.temporarilyBlockedHexes = new HashMap<HexCoordinate, Integer>();
         this.pirates = new ArrayList<Pirate>();
+        this.visibleEnemyUnits = new ArrayList<civgame.model.game.EnemyUnitMarker>();
         this.townHallOutposts = new ArrayList<civgame.model.building.TownHallBuilding>();
         this.bazaarTradedThisTurn = false;
         this.pendingDockDiscount = false;
@@ -478,5 +480,34 @@ public class GameSession implements java.io.Serializable {
         for (int i = 0; i < tilesInRange.size(); i++) {
             claimedBorderTiles.add(tilesInRange.get(i).getCoordinate());
         }
+    }
+        
+    public List<civgame.model.game.EnemyUnitMarker> getVisibleEnemyUnits() {
+        return visibleEnemyUnits;
+    }
+    
+    public void addVisibleEnemyUnit(civgame.model.game.EnemyUnitMarker marker) {
+        visibleEnemyUnits.add(marker);
+    }
+    
+    public void removeVisibleEnemyUnit(String unitId) {
+        for (int i = visibleEnemyUnits.size() - 1; i >= 0; i--) {
+            if (visibleEnemyUnits.get(i).getUnitId().equals(unitId)) {
+                visibleEnemyUnits.remove(i);
+            }
+        }
+    }
+    
+    public void clearVisibleEnemyUnits() {
+        visibleEnemyUnits.clear();
+    }
+    
+    public civgame.model.game.EnemyUnitMarker getEnemyUnitAt(HexCoordinate coordinate) {
+        for (int i = 0; i < visibleEnemyUnits.size(); i++) {
+            if (visibleEnemyUnits.get(i).getCoordinate().equals(coordinate)) {
+                return visibleEnemyUnits.get(i);
+            }
+        }
+        return null;
     }
 }
