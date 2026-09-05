@@ -583,6 +583,8 @@ public class GameServer {
         if (result.getUpdateBroadcast() != null) {
             broadcastToAllInGame(game, result.getUpdateBroadcast(), null);
         }
+        
+        broadcastGameStateUpdate(game);
     }
     
     public void handleOfferPeaceRequest(String clientId, OfferPeaceRequest request) {
@@ -667,6 +669,10 @@ public class GameServer {
         }
         if (result.getUpdateBroadcast() != null) {
             broadcastToAllInGame(game, result.getUpdateBroadcast(), null);
+        }
+        
+        if (result.isSuccess()) {
+            broadcastGameStateUpdate(game);
         }
     }
     
@@ -753,6 +759,10 @@ public class GameServer {
         if (result.getUpdateBroadcast() != null) {
             broadcastToAllInGame(game, result.getUpdateBroadcast(), null);
         }
+        
+        if (result.isSuccess()) {
+            broadcastGameStateUpdate(game);
+        }
     }
     
     public void handleAttackRequest(String clientId, AttackRequest request) {
@@ -812,6 +822,8 @@ public class GameServer {
         if (result.getBroadcast() != null) {
             broadcastToAllInGame(game, result.getBroadcast(), null);
         }
+        
+        broadcastGameStateUpdate(game);
     }
     
     private void sendAttackError(String clientId, String requestId, String message) {
@@ -924,8 +936,8 @@ public class GameServer {
             return;
         }
 
-        java.util.Map<civgame.model.resource.ResourceType, Integer> offered = toResourceMap(request.getOfferedResources());
-        java.util.Map<civgame.model.resource.ResourceType, Integer> requested = toResourceMap(request.getRequestedResources());
+        Map<civgame.model.resource.ResourceType, Integer> offered = toResourceMap(request.getOfferedResources());
+        Map<civgame.model.resource.ResourceType, Integer> requested = toResourceMap(request.getRequestedResources());
 
         if (!sender.getTradeService().validateOffer(sender.getSession().getResourceStorage(), offered, requested)) {
             sendTradeError(clientId, request.getRequestId(), "You do not have enough resources");
@@ -1075,7 +1087,6 @@ public class GameServer {
 
         ClientHandler handler = findClientHandler(clientId);
         sendSuccessResponse(handler, request.getRequestId());
-        broadcastGameStateUpdate(game);
     }
 
     public void handleItemUseRequest(String clientId, civgame.network.message.item.ItemUseRequest request) {
@@ -1164,8 +1175,8 @@ public class GameServer {
         handler.sendMessageObjectIgnoreError(response);
     }
 
-    private java.util.Map<civgame.model.resource.ResourceType, Integer> toResourceMap(java.util.Map<String, Integer> stringMap) {
-        java.util.Map<civgame.model.resource.ResourceType, Integer> result = new java.util.HashMap<>();
+    private Map<civgame.model.resource.ResourceType, Integer> toResourceMap(Map<String, Integer> stringMap) {
+        Map<civgame.model.resource.ResourceType, Integer> result = new java.util.HashMap<>();
         for (String key : stringMap.keySet()) {
             try {
                 civgame.model.resource.ResourceType type = civgame.model.resource.ResourceType.valueOf(key);
@@ -1177,7 +1188,7 @@ public class GameServer {
     }
 
     private civgame.model.unit.Unit findUnitById(PlayerState player, String unitId) {
-        java.util.List<civgame.model.unit.Unit> units = player.getSession().getUnits();
+        List<civgame.model.unit.Unit> units = player.getSession().getUnits();
         for (int i = 0; i < units.size(); i++) {
             if (units.get(i).getId().equals(unitId)) {
                 return units.get(i);
@@ -1187,6 +1198,17 @@ public class GameServer {
     }
 
     private void broadcastGameStateUpdate(MultiplayerGameState game) {
-        // TODO: Implement full game state broadcast with Fog of War
+        for (PlayerState player : game.getAllPlayers()) {
+            GameStartBroadcast snapshot = snapshotBuilder.buildSnapshotForPlayer(game, player);
+            ClientHandler handler = findClientHandler(player.getClientId());
+            if (handler == null) {
+                continue;
+            }
+            try {
+                handler.sendMessageObject(snapshot);
+            } catch (NetworkException e) {
+                System.err.println("Failed to send game state update to " + player.getClientId() + ": " + e.getMessage());
+            }
+        }
     }
 }
