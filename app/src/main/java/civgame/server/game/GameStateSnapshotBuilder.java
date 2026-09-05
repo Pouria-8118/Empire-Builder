@@ -8,6 +8,7 @@ import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexMap;
 import civgame.model.map.HexTile;
+import civgame.model.map.TileVisibility;
 import civgame.model.resource.ResourceStorage;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Unit;
@@ -113,6 +114,9 @@ public class GameStateSnapshotBuilder {
         for (Map.Entry<HexCoordinate, HexTile> entry : map.getAllTiles().entrySet()) {
             HexCoordinate coordinate = entry.getKey();
             HexTile tile = entry.getValue();
+            if (tile.getVisibility() == TileVisibility.UNSEEN) {
+                continue;
+            }
             String key = coordinate.getQ() + "," + coordinate.getR();
             GameStartBroadcast.TileDTO dto = new GameStartBroadcast.TileDTO(
                     coordinate.getQ(),
