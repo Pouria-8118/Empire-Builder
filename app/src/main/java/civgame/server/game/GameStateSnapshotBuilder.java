@@ -1,6 +1,8 @@
 package civgame.server.game;
 
+import civgame.model.building.Building;
 import civgame.model.building.TownHall;
+import civgame.model.diplomacy.PlayerRelation;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
@@ -10,6 +12,7 @@ import civgame.model.resource.ResourceStorage;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Unit;
 import civgame.network.message.game.GameStartBroadcast;
+import civgame.util.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +35,7 @@ public class GameStateSnapshotBuilder {
 
         FogOfWarCalculator calculator = new FogOfWarCalculator();
         calculator.updateVisibility(session);
+        revealAlliedVision(game, targetPlayer, session);
 
         broadcast.setTiles(buildTilesMap(map));
         broadcast.setMySnapshot(buildPlayerSnapshot(session));
@@ -46,7 +50,7 @@ public class GameStateSnapshotBuilder {
                                                                             PlayerState targetPlayer,
                                                                             GameSession targetSession) {
         List<GameStartBroadcast.EnemyUnitDTO> enemyUnits = new ArrayList<>();
-        civgame.model.map.HexMap targetMap = targetSession.getHexMap();
+        HexMap targetMap = targetSession.getHexMap();
         
         for (PlayerState otherPlayer : game.getAllPlayers()) {
             if (otherPlayer.getClientId().equals(targetPlayer.getClientId())) {
@@ -56,10 +60,10 @@ public class GameStateSnapshotBuilder {
             List<Unit> otherUnits = otherPlayer.getSession().getUnits();
             for (int i = 0; i < otherUnits.size(); i++) {
                 Unit enemyUnit = otherUnits.get(i);
-                civgame.model.map.HexCoordinate enemyCoord = enemyUnit.getCoordinate();
+                HexCoordinate enemyCoord = enemyUnit.getCoordinate();
                 
                 if (targetMap.containsCoordinate(enemyCoord)) {
-                    civgame.model.map.HexTile tile = targetMap.getTile(enemyCoord);
+                    HexTile tile = targetMap.getTile(enemyCoord);
                     if (tile != null && tile.getVisibility() != civgame.model.map.TileVisibility.UNSEEN) {
                         GameStartBroadcast.EnemyUnitDTO dto = new GameStartBroadcast.EnemyUnitDTO();
                         dto.setUnitId(enemyUnit.getId());
@@ -91,7 +95,7 @@ public class GameStateSnapshotBuilder {
             for (int j = i + 1; j < players.size(); j++) {
                 PlayerState playerA = players.get(i);
                 PlayerState playerB = players.get(j);
-                civgame.model.diplomacy.PlayerRelation relation = relationMap.getRelation(
+                PlayerRelation relation = relationMap.getRelation(
                         playerA.getClientId(), playerB.getClientId()
                 );
                 relations.add(new GameStartBroadcast.RelationEntryDTO(
@@ -179,5 +183,36 @@ public class GameStateSnapshotBuilder {
             opponents.add(dto);
         }
         return opponents;
+    }
+
+    private void revealAlliedVision(MultiplayerGameState game, PlayerState targetPlayer, GameSession targetSession) {
+        civgame.model.diplomacy.PlayerRelationMap relationMap = game.getRelationMap();
+        if (relationMap == null) {
+            return;
+        }
+        HexMap targetMap = targetSession.getHexMap();
+        FogOfWarCalculator calculator = new FogOfWarCalculator();
+        
+        for (PlayerState otherPlayer : game.getAllPlayers()) {
+            if (otherPlayer.getClientId().equals(targetPlayer.getClientId())) {
+                continue;
+            }
+            PlayerRelation relation = relationMap.getRelation(targetPlayer.getClientId(), otherPlayer.getClientId());
+            if (relation.isAllied()) {
+                GameSession allySession = otherPlayer.getSession();
+                for (Unit allyUnit : allySession.getUnits()) {
+                    calculator.revealAround(targetMap, allyUnit.getCoordinate(), allyUnit.getVisionRadius());
+                }
+                for (Building allyBuilding : allySession.getAllBuildings()) {
+                    if (!allyBuilding.isDestroyed()) {
+                        calculator.revealAround(targetMap, allyBuilding.getCoordinate(), Constants.BUILDING_VISION_RADIUS);
+                    }
+                }
+                TownHall allyTownHall = allySession.getTownHall();
+                if (!allyTownHall.isDestroyedByCombat()) {
+                    calculator.revealAround(targetMap, allyTownHall.getCoordinate(), Constants.TOWN_HALL_VISION_RADIUS);
+                }
+            }
+        }
     }
 }

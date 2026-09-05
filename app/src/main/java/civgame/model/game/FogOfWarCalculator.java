@@ -47,7 +47,7 @@ public class FogOfWarCalculator {
         }
     }
 
-    private void revealAround(HexMap hexMap, HexCoordinate viewerCoordinate, int visionRadius) {
+    public void revealAround(HexMap hexMap, HexCoordinate viewerCoordinate, int visionRadius) {
         for (HexCoordinate coordinate : hexMap.getAllTiles().keySet()) {
             if (viewerCoordinate.distanceTo(coordinate) > visionRadius) {
                 continue;
