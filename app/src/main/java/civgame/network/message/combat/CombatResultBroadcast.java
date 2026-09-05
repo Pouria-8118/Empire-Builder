@@ -20,18 +20,24 @@ public class CombatResultBroadcast extends Broadcast {
     private List<UnitLossDTO> attackerLosses;
     private List<UnitLossDTO> defenderLosses;
     private boolean autoCaptured;
+    private int buildingDamage;
+    private boolean buildingDestroyed;
 
     public CombatResultBroadcast() {
         super();
         setType(MessageType.COMBAT_RESULT_BROADCAST);
         this.attackerLosses = new ArrayList<>();
         this.defenderLosses = new ArrayList<>();
+        this.buildingDamage = 0;
+        this.buildingDestroyed = false;
     }
 
     public CombatResultBroadcast(String broadcasterId) {
         super(MessageType.COMBAT_RESULT_BROADCAST, broadcasterId);
         this.attackerLosses = new ArrayList<>();
         this.defenderLosses = new ArrayList<>();
+        this.buildingDamage = 0;
+        this.buildingDestroyed = false;
     }
 
     public String getAttackerClientId() {
@@ -128,6 +134,22 @@ public class CombatResultBroadcast extends Broadcast {
 
     public void setAutoCaptured(boolean autoCaptured) {
         this.autoCaptured = autoCaptured;
+    }
+
+    public int getBuildingDamage() {
+        return buildingDamage;
+    }
+
+    public void setBuildingDamage(int buildingDamage) {
+        this.buildingDamage = buildingDamage;
+    }
+
+    public boolean isBuildingDestroyed() {
+        return buildingDestroyed;
+    }
+
+    public void setBuildingDestroyed(boolean buildingDestroyed) {
+        this.buildingDestroyed = buildingDestroyed;
     }
 
     public static class CombatResultDTO {

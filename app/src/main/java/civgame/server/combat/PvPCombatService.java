@@ -1,5 +1,7 @@
 package civgame.server.combat;
 
+import civgame.model.building.Building;
+import civgame.model.building.TownHall;
 import civgame.model.game.CombatDamageApplier;
 import civgame.model.game.CombatResolutionService;
 import civgame.model.game.CombatResult;
@@ -43,33 +45,85 @@ public class PvPCombatService {
             return new PvPCombatResult(false, "No military units at attacker position");
         }
 
-        if (defenderUnits.isEmpty()) {
-            return new PvPCombatResult(false, "No military units at defender position");
+        Building targetBuilding = defenderSession.getBuildingAt(defenderCoordinate);
+        TownHall targetTownHall = null;
+        if (defenderSession.getTownHall().getCoordinate().equals(defenderCoordinate)) {
+            targetTownHall = defenderSession.getTownHall();
+        }
+
+        boolean hasDefenderTarget = !defenderUnits.isEmpty() || targetBuilding != null || targetTownHall != null;
+        
+        if (!hasDefenderTarget) {
+            return new PvPCombatResult(false, "No valid target at defender position");
         }
 
         consumeAttackActionPoints(attackerUnits);
 
-        int attackerDiceCount = countDiceParticipantTypes(attackerUnits);
-        int defenderDiceCount = countDiceParticipantTypes(defenderUnits);
-        int wallBonus = defenderSession.getHexMap().hasActiveWall(attackerCoordinate, defenderCoordinate)
-                ? Constants.WALL_DEFENSE_DICE_BONUS : 0;
-        int galleyBonus = (hasUnitType(attackerUnits, UnitType.GALLEY) && hasFloatingUnit(defenderUnits))
-                ? Constants.GALLEY_VS_FLOATING_DIE_BONUS : 0;
+        List<Unit> attackerLosses = new ArrayList<>();
+        List<Unit> defenderLosses = new ArrayList<>();
+        CombatResult combatResult = null;
+        int buildingDamage = 0;
+        boolean buildingDestroyed = false;
 
-        CombatResult combatResult = combatResolutionService.resolveCombat(
-                attackerDiceCount, defenderDiceCount, galleyBonus, wallBonus);
+        if (!defenderUnits.isEmpty()) {
+            int attackerDiceCount = countDiceParticipantTypes(attackerUnits);
+            int defenderDiceCount = countDiceParticipantTypes(defenderUnits);
+            int wallBonus = defenderSession.getHexMap().hasActiveWall(attackerCoordinate, defenderCoordinate)
+                    ? Constants.WALL_DEFENSE_DICE_BONUS : 0;
+            int galleyBonus = (hasUnitType(attackerUnits, UnitType.GALLEY) && hasFloatingUnit(defenderUnits))
+                    ? Constants.GALLEY_VS_FLOATING_DIE_BONUS : 0;
 
-        List<Unit> attackerLosses = combatDamageApplier.applyHitsToUnits(
-                attackerSession, attackerUnits, combatResult.getAttackerHits());
-        List<Unit> defenderLosses = combatDamageApplier.applyHitsToUnits(
-                defenderSession, defenderUnits, combatResult.getDefenderHits());
+            combatResult = combatResolutionService.resolveCombat(
+                    attackerDiceCount, defenderDiceCount, galleyBonus, wallBonus);
+
+            attackerLosses = combatDamageApplier.applyHitsToUnits(
+                    attackerSession, attackerUnits, combatResult.getAttackerHits());
+            defenderLosses = combatDamageApplier.applyHitsToUnits(
+                    defenderSession, defenderUnits, combatResult.getDefenderHits());
+        }
+
+        if (targetBuilding != null && !targetBuilding.isDestroyed()) {
+            int fixedDamage = calculateBuildingDamage(attackerUnits);
+            targetBuilding.applyCombatDamage(fixedDamage);
+            buildingDamage += fixedDamage;
+            if (targetBuilding.isDestroyed()) {
+                buildingDestroyed = true;
+            }
+        }
+
+        if (targetTownHall != null && !targetTownHall.isDestroyedByCombat()) {
+            int fixedDamage = calculateBuildingDamage(attackerUnits);
+            targetTownHall.applyCombatDamage(fixedDamage);
+            buildingDamage += fixedDamage;
+            if (targetTownHall.isDestroyedByCombat()) {
+                buildingDestroyed = true;
+            }
+        }
 
         CombatResultBroadcast broadcast = buildCombatBroadcast(
                 attackerPlayer, defenderPlayer,
                 attackerCoordinate, defenderCoordinate,
-                combatResult, attackerLosses, defenderLosses);
+                combatResult, attackerLosses, defenderLosses,
+                buildingDamage, buildingDestroyed);
 
         return new PvPCombatResult(true, "Combat resolved", broadcast);
+    }
+
+    private int calculateBuildingDamage(List<Unit> attackerUnits) {
+        int totalDamage = 0;
+        for (int i = 0; i < attackerUnits.size(); i++) {
+            UnitType type = attackerUnits.get(i).getUnitType();
+            if (type == UnitType.SWORDSMAN) {
+                totalDamage += 10;
+            } else if (type == UnitType.ARCHER) {
+                totalDamage += 6;
+            } else if (type == UnitType.CAVALRY) {
+                totalDamage += 9;
+            } else if (type == UnitType.CATAPULT) {
+                totalDamage += 20;
+            }
+        }
+        return totalDamage;
     }
 
     private CombatResultBroadcast buildCombatBroadcast(PlayerState attackerPlayer,
@@ -78,7 +132,9 @@ public class PvPCombatService {
                                                         HexCoordinate defenderCoordinate,
                                                         CombatResult combatResult,
                                                         List<Unit> attackerLosses,
-                                                        List<Unit> defenderLosses) {
+                                                        List<Unit> defenderLosses,
+                                                        int buildingDamage,
+                                                        boolean buildingDestroyed) {
         CombatResultBroadcast broadcast = new CombatResultBroadcast("server");
         broadcast.setAttackerClientId(attackerPlayer.getClientId());
         broadcast.setAttackerUsername(attackerPlayer.getUsername());
@@ -89,13 +145,17 @@ public class PvPCombatService {
         broadcast.setDefenderQ(defenderCoordinate.getQ());
         broadcast.setDefenderR(defenderCoordinate.getR());
         broadcast.setAutoCaptured(false);
+        broadcast.setBuildingDamage(buildingDamage);
+        broadcast.setBuildingDestroyed(buildingDestroyed);
 
-        CombatResultBroadcast.CombatResultDTO resultDTO = new CombatResultBroadcast.CombatResultDTO();
-        resultDTO.setAttackerDice(combatResult.getAttackerDice());
-        resultDTO.setDefenderDice(combatResult.getDefenderDice());
-        resultDTO.setAttackerHits(combatResult.getAttackerHits());
-        resultDTO.setDefenderHits(combatResult.getDefenderHits());
-        broadcast.setCombatResult(resultDTO);
+        if (combatResult != null) {
+            CombatResultBroadcast.CombatResultDTO resultDTO = new CombatResultBroadcast.CombatResultDTO();
+            resultDTO.setAttackerDice(combatResult.getAttackerDice());
+            resultDTO.setDefenderDice(combatResult.getDefenderDice());
+            resultDTO.setAttackerHits(combatResult.getAttackerHits());
+            resultDTO.setDefenderHits(combatResult.getDefenderHits());
+            broadcast.setCombatResult(resultDTO);
+        }
 
         List<CombatResultBroadcast.UnitLossDTO> attackerLossDTOs = new ArrayList<>();
         for (int i = 0; i < attackerLosses.size(); i++) {
