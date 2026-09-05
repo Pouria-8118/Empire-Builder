@@ -6,9 +6,11 @@ import civgame.model.resource.ResourceStorage;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Unit;
 import civgame.network.NetworkException;
+import civgame.network.message.combat.CombatResultBroadcast;
 import civgame.network.message.game.EndTurnRequest;
 import civgame.network.message.game.EndTurnResponse;
 import civgame.network.message.game.TurnUpdateBroadcast;
+import civgame.view.combat.CombatReportDialog;
 import civgame.view.game.EndTurnPanel;
 import civgame.view.game.GameFrame;
 import civgame.view.game.MapPanel;
@@ -30,6 +32,7 @@ public class MultiplayerTurnController {
     private final GameFrame gameFrame;
     private final MapPanel mapPanel;
     private String currentTurnClientId;
+    private List<CombatResultBroadcast> pendingCombatReports;
     
     public MultiplayerTurnController(GameFrame gameFrame, 
                                      GameSession gameSession, 
@@ -43,6 +46,7 @@ public class MultiplayerTurnController {
         this.endTurnPanel = gameFrame.getEndTurnPanel();
         this.mapPanel = gameFrame.getMapPanel();
         this.currentTurnClientId = initialTurnClientId;
+        this.pendingCombatReports = new ArrayList<>();
         
         registerListeners();
         updateEndTurnButtonState();
@@ -119,6 +123,7 @@ public class MultiplayerTurnController {
             @Override
             public void run() {
                 processTurnUpdate(broadcast);
+                showPendingCombatReports();
             }
         });
     }
@@ -206,5 +211,28 @@ public class MultiplayerTurnController {
     
     public void setTurnIndicator(String text) {
         gameFrame.getHudPanel().setTurnIndicatorText(text);
+    }
+
+    public void handleCombatReport(CombatResultBroadcast broadcast) {
+        boolean isDefender = myClientId.equals(broadcast.getDefenderClientId());
+        if (myClientId.equals(currentTurnClientId)) {
+            showCombatReportDialog(broadcast, isDefender);
+        } else {
+            pendingCombatReports.add(broadcast);
+        }
+    }
+    
+    private void showPendingCombatReports() {
+        for (int i = 0; i < pendingCombatReports.size(); i++) {
+            CombatResultBroadcast report = pendingCombatReports.get(i);
+            boolean isDefender = myClientId.equals(report.getDefenderClientId());
+            showCombatReportDialog(report, isDefender);
+        }
+        pendingCombatReports.clear();
+    }
+    
+    private void showCombatReportDialog(CombatResultBroadcast broadcast, boolean isDefender) {
+        CombatReportDialog dialog = new CombatReportDialog(gameFrame, broadcast, isDefender);
+        dialog.setVisible(true);
     }
 }
