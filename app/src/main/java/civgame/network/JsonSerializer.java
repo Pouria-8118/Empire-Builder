@@ -3,6 +3,13 @@ package civgame.network;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class JsonSerializer {
 
@@ -10,6 +17,7 @@ public class JsonSerializer {
 
     public JsonSerializer() {
         this.gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeTypeAdapter())
                 .create();
     }
 
@@ -46,6 +54,25 @@ public class JsonSerializer {
             return gson.fromJson(json, type);
         } catch (JsonSyntaxException e) {
             throw new NetworkException("Failed to deserialize JSON: " + e.getMessage(), e);
+        }
+    }
+
+    private static class LocalDateTimeTypeAdapter extends TypeAdapter<LocalDateTime> {
+        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+        @Override
+        public void write(JsonWriter out, LocalDateTime value) throws IOException {
+            if (value == null) {
+                out.nullValue();
+            } else {
+                out.value(value.format(FORMATTER));
+            }
+        }
+
+        @Override
+        public LocalDateTime read(JsonReader in) throws IOException {
+            String value = in.nextString();
+            return LocalDateTime.parse(value, FORMATTER);
         }
     }
 }

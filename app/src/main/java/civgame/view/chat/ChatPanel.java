@@ -102,6 +102,7 @@ public class ChatPanel extends javax.swing.JPanel {
     
     @Override
     protected void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
         Graphics2D graphics2D = (Graphics2D) graphics.create();
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
@@ -110,9 +111,8 @@ public class ChatPanel extends javax.swing.JPanel {
         
         graphics2D.setColor(BORDER_COLOR);
         graphics2D.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 16, 16);
-        
         graphics2D.dispose();
-        super.paintComponent(graphics);
+
     }
     
     private void handleSendMessage() {

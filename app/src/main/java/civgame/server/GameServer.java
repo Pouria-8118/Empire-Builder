@@ -230,53 +230,63 @@ public class GameServer {
     public void handleJoinLobbyRequest(String clientId, JoinLobbyRequest request) {
         String username = request.getUsername() != null ? request.getUsername() : clientId;
         registerClientUsername(clientId, username);
-        
+
         Lobby lobby;
+
         if (request.getLobbyId() != null && !request.getLobbyId().isEmpty()) {
             lobby = lobbyManager.joinLobby(request.getLobbyId(), clientId, username);
         } else {
             lobby = lobbyManager.joinOrCreateLobby(clientId, username, null);
         }
-        
+
         ClientHandler handler = findClientHandler(clientId);
+
         if (handler == null) {
             return;
         }
-        
+
         if (lobby == null) {
             JoinLobbyResponse failResponse = new JoinLobbyResponse(
-                    request.getRequestId(), 
-                    "Failed to join lobby: lobby not found or not accepting players"
+                request.getRequestId(),
+                "Failed to join lobby: lobby not found or not accepting players"
             );
+
             try {
                 handler.sendMessageObject(failResponse);
             } catch (NetworkException e) {
                 System.err.println("Failed to send join lobby response: " + e.getMessage());
             }
+
             return;
         }
-        
+
+        civgame.model.map.prebuilt.PrebuiltMapProvider mapProvider = new civgame.model.map.prebuilt.PrebuiltMapProvider();
+        List<String> availableMaps = mapProvider.getMapNames();
+
         JoinLobbyResponse successResponse = new JoinLobbyResponse(
-                request.getRequestId(),
-                true,
-                clientId,
-                lobby.getLobbyId(),
-                lobby.getHostClientId(),
-                lobby.getPlayerInfos(),
-                lobby.getSelectedMapName()
+            request.getRequestId(),
+            true,
+            clientId,
+            lobby.getLobbyId(),
+            lobby.getHostClientId(),
+            lobby.getPlayerInfos(),
+            lobby.getSelectedMapName(),
+            availableMaps
         );
+
         try {
             handler.sendMessageObject(successResponse);
         } catch (NetworkException e) {
             System.err.println("Failed to send join lobby response: " + e.getMessage());
         }
-        
+
         PlayerJoinedBroadcast joinBroadcast = new PlayerJoinedBroadcast(
-                "server",
-                lobby.getPlayer(clientId).toInfo(),
-                lobby.getPlayerInfos(),
-                lobby.getHostClientId()
+            "server",
+            lobby.getPlayer(clientId).toInfo(),
+            lobby.getPlayerInfos(),
+            lobby.getHostClientId()
         );
+
         broadcastToLobby(lobby, joinBroadcast, clientId);
     }
     
@@ -467,24 +477,35 @@ public class GameServer {
             return;
         }
         
-        Lobby lobby = lobbyManager.getLobbyForClient(clientId);
-        if (lobby == null) {
-            return;
-        }
-        
         String username = getClientUsername(clientId);
         ChatMessageBroadcast broadcast = chatManager.createChatBroadcast(clientId, username, content.trim());
         
-        List<ClientHandler> lobbyHandlers = new ArrayList<>();
-        List<String> playerIds = lobby.getPlayerClientIds();
-        for (int i = 0; i < playerIds.size(); i++) {
-            ClientHandler handler = findClientHandler(playerIds.get(i));
-            if (handler != null) {
-                lobbyHandlers.add(handler);
+        Lobby lobby = lobbyManager.getLobbyForClient(clientId);
+        if (lobby != null) {
+            List<ClientHandler> lobbyHandlers = new ArrayList<>();
+            List<String> playerIds = lobby.getPlayerClientIds();
+            for (int i = 0; i < playerIds.size(); i++) {
+                ClientHandler handler = findClientHandler(playerIds.get(i));
+                if (handler != null) {
+                    lobbyHandlers.add(handler);
+                }
             }
+            chatManager.broadcastToClients(broadcast, lobbyHandlers);
         }
         
-        chatManager.broadcastToClients(broadcast, lobbyHandlers);
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game != null) {
+            for (PlayerState player : game.getAllPlayers()) {
+                ClientHandler handler = findClientHandler(player.getClientId());
+                if (handler != null) {
+                    try {
+                        handler.sendMessageObject(broadcast);
+                    } catch (NetworkException e) {
+                        System.err.println("Failed to send chat to " + player.getClientId() + ": " + e.getMessage());
+                    }
+                }
+            }
+        }
         
         System.out.println("Chat [" + username + "]: " + content);
     }

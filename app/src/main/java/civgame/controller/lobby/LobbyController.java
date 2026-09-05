@@ -76,7 +76,8 @@ public class LobbyController {
     private GameSession currentGameSession;
     private GameFrame currentGameFrame;
     private GameController currentGameController;
-    
+    private ChatController gameChatController;
+
     public LobbyController(LobbyFrame lobbyFrame, String username) {
         this.lobbyFrame = lobbyFrame;
         this.username = username;
@@ -222,6 +223,7 @@ public class LobbyController {
         lobbyFrame.getLobbyPanel().initializeWithClientId(myClientId);
         lobbyFrame.getLobbyPanel().updatePlayerList(response.getCurrentPlayers(), currentHostClientId);
         lobbyFrame.getLobbyPanel().updateMapSelection(response.getSelectedMapName());
+        lobbyFrame.getLobbyPanel().setAvailableMaps(response.getAvailableMaps());
         lobbyFrame.getLobbyPanel().setStatusMessage("Joined lobby: " + currentLobbyId);
     }
     
@@ -343,7 +345,7 @@ public class LobbyController {
                 }
             });
             
-            ChatController gameChatController = new ChatController(gameFrame.getChatPanel());
+            this.gameChatController = new ChatController(gameFrame.getChatPanel());
             gameChatController.setGameClient(gameClient, multiplayerState.getMyClientId());
             
             this.diplomacyController = new DiplomacyController(gameFrame, multiplayerState.getMyClientId());
@@ -367,7 +369,9 @@ public class LobbyController {
         } else if (type.equals(MessageType.TURN_UPDATE_BROADCAST)) {
             turnController.handleTurnUpdate((TurnUpdateBroadcast) message);
         } else if (type.equals(MessageType.CHAT_MESSAGE_BROADCAST)) {
-            // Chat handled by ChatController
+                if (gameChatController != null) {
+                    gameChatController.handleChatBroadcast((ChatMessageBroadcast) message);
+                }
         } else if (type.equals(MessageType.DIPLOMACY_RESPONSE)) {
             if (diplomacyController != null) {
                 diplomacyController.handleDiplomacyResponse((DiplomacyResponse) message);
