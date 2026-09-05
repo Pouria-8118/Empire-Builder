@@ -65,6 +65,8 @@ public class TurnEngine {
         gameSession.getHappinessService().applyPerTurnContributions(gameSession);
         gameSession.resetBazaarTradeFlag();
         gameSession.resetTradingPostTradeFlag();
+        gameSession.clearAffectedUnits();
+        clearCombatBoosts(gameSession);
         resetTribeTradeFlags(gameSession);
         tribeMissionService.checkAllActiveMissionConditions(gameSession);
         tribeBehaviorService.processTribeTurns(gameSession);
@@ -98,6 +100,13 @@ public class TurnEngine {
             if (unit instanceof Worker || MilitaryUnitCapProvider.isMilitaryUnitType(unit.getUnitType())) {
                 unit.applyActionPointPenalty(Constants.REBELLION_ACTION_POINT_PENALTY);
             }
+        }
+    }
+    
+    private void clearCombatBoosts(GameSession gameSession) {
+        List<Unit> units = gameSession.getUnits();
+        for (int i = 0; i < units.size(); i++) {
+            units.get(i).clearCombatBoost();
         }
     }
 
