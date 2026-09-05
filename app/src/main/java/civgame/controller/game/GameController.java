@@ -44,7 +44,6 @@ import civgame.util.TerrainMovementCostProvider;
 import civgame.util.EdgeMovementCostProvider;
 import civgame.util.Constants;
 import java.util.HashSet;
-import java.util.HashMap;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
 import civgame.view.game.ConstructionMenuFactory;
@@ -73,7 +72,6 @@ import civgame.network.message.trade.TradeOfferRequest;
 import civgame.network.message.trade.TradeAcceptRequest;
 import civgame.network.message.trade.TradeRejectRequest;
 import civgame.network.message.item.ItemUseRequest;
-import civgame.network.message.trade.TradeInboxUpdateBroadcast;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
