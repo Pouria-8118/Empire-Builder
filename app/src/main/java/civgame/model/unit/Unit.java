@@ -14,10 +14,12 @@ public abstract class Unit implements Attackable, java.io.Serializable {
     private HexCoordinate coordinate;
     private final int maxActionPoints;
     private int currentActionPoints;
+    private int extraActionPoints;
     private final int visionRadius;
     private boolean floating;
     private int currentHitPoints;
     private int maxHitPoints;
+    private boolean combatBoosted;
 
     public Unit(String id, HexCoordinate coordinate, int maxActionPoints, int visionRadius) {
         this.id = id;
@@ -25,10 +27,12 @@ public abstract class Unit implements Attackable, java.io.Serializable {
         this.coordinate = coordinate;
         this.maxActionPoints = maxActionPoints;
         this.currentActionPoints = maxActionPoints;
+        this.extraActionPoints = 0;
         this.visionRadius = visionRadius;
         this.floating = false;
         this.maxHitPoints = Constants.CIVILIAN_UNIT_MAX_HIT_POINTS;
         this.currentHitPoints = maxHitPoints;
+        this.combatBoosted = false;
     }
 
     public abstract UnitType getUnitType();
@@ -54,7 +58,19 @@ public abstract class Unit implements Attackable, java.io.Serializable {
     }
 
     public int getCurrentActionPoints() {
+        return currentActionPoints + extraActionPoints;
+    }
+
+    public int getBaseActionPoints() {
         return currentActionPoints;
+    }
+
+    public int getExtraActionPoints() {
+        return extraActionPoints;
+    }
+
+    public void addExtraActionPoints(int bonus) {
+        this.extraActionPoints = this.extraActionPoints + bonus;
     }
 
     public int getVisionRadius() {
@@ -62,31 +78,45 @@ public abstract class Unit implements Attackable, java.io.Serializable {
     }
 
     public boolean hasEnoughActionPoints(int amount) {
-        return currentActionPoints >= amount;
+        return (currentActionPoints + extraActionPoints) >= amount;
     }
 
     public boolean consumeActionPoints(int amount) {
         if (!hasEnoughActionPoints(amount)) {
             return false;
         }
-        currentActionPoints = currentActionPoints - amount;
+        int remaining = amount;
+        if (extraActionPoints > 0) {
+            int consumeFromExtra = Math.min(extraActionPoints, remaining);
+            extraActionPoints = extraActionPoints - consumeFromExtra;
+            remaining = remaining - consumeFromExtra;
+        }
+        currentActionPoints = currentActionPoints - remaining;
         return true;
     }
 
     public void zeroRemainingActionPoints() {
         currentActionPoints = 0;
+        extraActionPoints = 0;
     }
 
     public void refreshActionPoints() {
         currentActionPoints = maxActionPoints;
+        extraActionPoints = 0;
     }
 
     public boolean isIdleWithRemainingActionPoints() {
-        return currentActionPoints > 0;
+        return (currentActionPoints + extraActionPoints) > 0;
     }
 
     public void applyActionPointPenalty(int amount) {
-        currentActionPoints = currentActionPoints - amount;
+        int remaining = amount;
+        if (extraActionPoints > 0) {
+            int consumeFromExtra = Math.min(extraActionPoints, remaining);
+            extraActionPoints = extraActionPoints - consumeFromExtra;
+            remaining = remaining - consumeFromExtra;
+        }
+        currentActionPoints = currentActionPoints - remaining;
         if (currentActionPoints < 0) {
             currentActionPoints = 0;
         }
@@ -98,6 +128,18 @@ public abstract class Unit implements Attackable, java.io.Serializable {
 
     public void setFloating(boolean floating) {
         this.floating = floating;
+    }
+
+    public boolean isCombatBoosted() {
+        return combatBoosted;
+    }
+
+    public void setCombatBoosted(boolean combatBoosted) {
+        this.combatBoosted = combatBoosted;
+    }
+
+    public void clearCombatBoost() {
+        this.combatBoosted = false;
     }
 
     protected void setMaxHitPoints(int maxHitPoints) {
@@ -122,7 +164,7 @@ public abstract class Unit implements Attackable, java.io.Serializable {
 
     @Override
     public void applyCombatDamage(int amount) {
-        currentHitPoints = currentHitPoints - amount;
+        currentHitPoints = currentActionPoints - amount;
         if (currentHitPoints < 0) {
             currentHitPoints = 0;
         }
