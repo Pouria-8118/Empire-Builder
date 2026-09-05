@@ -14,7 +14,6 @@ import civgame.network.message.combat.CombatResultBroadcast;
 import civgame.server.game.MultiplayerGameState;
 import civgame.server.game.PlayerState;
 import civgame.util.Constants;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,7 +51,6 @@ public class PvPCombatService {
         }
 
         boolean hasDefenderTarget = !defenderUnits.isEmpty() || targetBuilding != null || targetTownHall != null;
-        
         if (!hasDefenderTarget) {
             return new PvPCombatResult(false, "No valid target at defender position");
         }
@@ -72,9 +70,11 @@ public class PvPCombatService {
                     ? Constants.WALL_DEFENSE_DICE_BONUS : 0;
             int galleyBonus = (hasUnitType(attackerUnits, UnitType.GALLEY) && hasFloatingUnit(defenderUnits))
                     ? Constants.GALLEY_VS_FLOATING_DIE_BONUS : 0;
-
+            
+            int attackerCombatBonus = countCombatBoostedUnits(attackerUnits);
+            
             combatResult = combatResolutionService.resolveCombat(
-                    attackerDiceCount, defenderDiceCount, galleyBonus, wallBonus);
+                    attackerDiceCount, defenderDiceCount, attackerCombatBonus + galleyBonus, wallBonus);
 
             attackerLosses = combatDamageApplier.applyHitsToUnits(
                     attackerSession, attackerUnits, combatResult.getAttackerHits());
@@ -109,19 +109,38 @@ public class PvPCombatService {
         return new PvPCombatResult(true, "Combat resolved", broadcast);
     }
 
+    private int countCombatBoostedUnits(List<Unit> units) {
+        int count = 0;
+        for (int i = 0; i < units.size(); i++) {
+            if (units.get(i).isCombatBoosted()) {
+                count = count + 1;
+            }
+        }
+        return count;
+    }
+
     private int calculateBuildingDamage(List<Unit> attackerUnits) {
         int totalDamage = 0;
         for (int i = 0; i < attackerUnits.size(); i++) {
-            UnitType type = attackerUnits.get(i).getUnitType();
+            Unit unit = attackerUnits.get(i);
+            UnitType type = unit.getUnitType();
+            int baseDamage = 0;
+            
             if (type == UnitType.SWORDSMAN) {
-                totalDamage += 10;
+                baseDamage = 10;
             } else if (type == UnitType.ARCHER) {
-                totalDamage += 6;
+                baseDamage = 6;
             } else if (type == UnitType.CAVALRY) {
-                totalDamage += 9;
+                baseDamage = 9;
             } else if (type == UnitType.CATAPULT) {
-                totalDamage += 20;
+                baseDamage = 20;
             }
+            
+            if (unit.isCombatBoosted()) {
+                baseDamage = baseDamage + 5;
+            }
+            
+            totalDamage += baseDamage;
         }
         return totalDamage;
     }
