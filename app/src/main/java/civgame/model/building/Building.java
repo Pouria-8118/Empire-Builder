@@ -4,6 +4,7 @@ import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Worker;
+import java.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,7 @@ public abstract class Building implements Attackable, java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String id;
+    private final LocalDateTime createdAt;
     private final HexCoordinate coordinate;
     private final int workerCapacity;
     private final List<Worker> stationedWorkers;
@@ -24,6 +26,7 @@ public abstract class Building implements Attackable, java.io.Serializable {
 
     public Building(String id, HexCoordinate coordinate, int workerCapacity) {
         this.id = id;
+        this.createdAt = LocalDateTime.now();
         this.coordinate = coordinate;
         this.workerCapacity = workerCapacity;
         this.stationedWorkers = new ArrayList<Worker>();
@@ -42,6 +45,10 @@ public abstract class Building implements Attackable, java.io.Serializable {
 
     public String getId() {
         return id;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     public HexCoordinate getCoordinate() {

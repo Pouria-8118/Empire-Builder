@@ -5,8 +5,10 @@ import civgame.network.message.chat.ChatMessageBroadcast;
 import civgame.server.ClientHandler;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class ChatManager {
     
@@ -20,7 +22,9 @@ public class ChatManager {
                                                      String senderUsername, 
                                                      String content) {
         long sentAt = System.currentTimeMillis();
-        return new ChatMessageBroadcast("server", senderUsername, content, sentAt);
+        String messageId = UUID.randomUUID().toString();
+        LocalDateTime createdAt = LocalDateTime.now();
+        return new ChatMessageBroadcast("server", messageId, senderUsername, content, sentAt, createdAt);
     }
     
     public void broadcastToClients(ChatMessageBroadcast broadcast, List<ClientHandler> clients) {

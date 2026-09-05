@@ -4,12 +4,13 @@ import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
 import civgame.model.trade.TradeInbox;
 import civgame.server.trade.TradeService;
+import java.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerState {
-
+    private final LocalDateTime createdAt;
     private final String clientId;
     private final String username;
     private final int playerIndex;
@@ -20,11 +21,8 @@ public class PlayerState {
     private boolean eliminated;
     private boolean disconnected;
 
-    public PlayerState(String clientId,
-                       String username,
-                       int playerIndex,
-                       GameSession session,
-                       HexCoordinate spawnCoordinate) {
+    public PlayerState(String clientId, String username, int playerIndex, GameSession session, HexCoordinate spawnCoordinate) {
+        this.createdAt = LocalDateTime.now();
         this.clientId = clientId;
         this.username = username;
         this.playerIndex = playerIndex;
@@ -38,6 +36,10 @@ public class PlayerState {
 
     public String getClientId() {
         return clientId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     public String getUsername() {

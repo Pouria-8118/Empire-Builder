@@ -3,12 +3,14 @@ package civgame.model.unit;
 import civgame.model.combat.Attackable;
 import civgame.model.map.HexCoordinate;
 import civgame.util.Constants;
+import java.time.LocalDateTime;
 
 public abstract class Unit implements Attackable, java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private final String id;
+    private final LocalDateTime createdAt;
     private HexCoordinate coordinate;
     private final int maxActionPoints;
     private int currentActionPoints;
@@ -19,6 +21,7 @@ public abstract class Unit implements Attackable, java.io.Serializable {
 
     public Unit(String id, HexCoordinate coordinate, int maxActionPoints, int visionRadius) {
         this.id = id;
+        this.createdAt = LocalDateTime.now();
         this.coordinate = coordinate;
         this.maxActionPoints = maxActionPoints;
         this.currentActionPoints = maxActionPoints;
@@ -32,6 +35,10 @@ public abstract class Unit implements Attackable, java.io.Serializable {
 
     public String getId() {
         return id;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     public HexCoordinate getCoordinate() {
