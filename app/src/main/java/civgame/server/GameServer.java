@@ -480,19 +480,6 @@ public class GameServer {
         String username = getClientUsername(clientId);
         ChatMessageBroadcast broadcast = chatManager.createChatBroadcast(clientId, username, content.trim());
         
-        Lobby lobby = lobbyManager.getLobbyForClient(clientId);
-        if (lobby != null) {
-            List<ClientHandler> lobbyHandlers = new ArrayList<>();
-            List<String> playerIds = lobby.getPlayerClientIds();
-            for (int i = 0; i < playerIds.size(); i++) {
-                ClientHandler handler = findClientHandler(playerIds.get(i));
-                if (handler != null) {
-                    lobbyHandlers.add(handler);
-                }
-            }
-            chatManager.broadcastToClients(broadcast, lobbyHandlers);
-        }
-        
         MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
         if (game != null) {
             for (PlayerState player : game.getAllPlayers()) {
@@ -504,6 +491,19 @@ public class GameServer {
                         System.err.println("Failed to send chat to " + player.getClientId() + ": " + e.getMessage());
                     }
                 }
+            }
+        } else {
+            Lobby lobby = lobbyManager.getLobbyForClient(clientId);
+            if (lobby != null) {
+                List<ClientHandler> lobbyHandlers = new ArrayList<>();
+                List<String> playerIds = lobby.getPlayerClientIds();
+                for (int i = 0; i < playerIds.size(); i++) {
+                    ClientHandler handler = findClientHandler(playerIds.get(i));
+                    if (handler != null) {
+                        lobbyHandlers.add(handler);
+                    }
+                }
+                chatManager.broadcastToClients(broadcast, lobbyHandlers);
             }
         }
         
