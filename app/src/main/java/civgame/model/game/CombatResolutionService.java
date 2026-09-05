@@ -17,30 +17,31 @@ public class CombatResolutionService {
         return resolveCombat(attackerDiceCount, defenderDiceCount, 0, defenderDieBonus);
     }
 
-    public CombatResult resolveCombat(int attackerDiceCount, int defenderDiceCount, int attackerDieBonus, int defenderDieBonus) {
+    public CombatResult resolveCombat(int attackerDiceCount, int defenderDiceCount, 
+                                       int attackerDieBonus, int defenderDieBonus) {
         List<Integer> attackerDice = rollDice(attackerDiceCount);
         List<Integer> defenderDice = rollDice(defenderDiceCount);
-        applyDieBonus(attackerDice, attackerDieBonus);
-        applyDieBonus(defenderDice, defenderDieBonus);
-
+        
+        applyDieBonus(attackerDice, attackerDieBonus, true);
+        applyDieBonus(defenderDice, defenderDieBonus, false);
+        
         Collections.sort(attackerDice, Collections.reverseOrder());
         Collections.sort(defenderDice, Collections.reverseOrder());
-
+        
         int pairCount = Math.min(attackerDice.size(), defenderDice.size());
         int attackerHits = 0;
         int defenderHits = 0;
-
+        
         for (int i = 0; i < pairCount; i++) {
             int attackerValue = attackerDice.get(i);
             int defenderValue = defenderDice.get(i);
-
             if (attackerValue > defenderValue) {
                 defenderHits = defenderHits + 1;
             } else {
                 attackerHits = attackerHits + 1;
             }
         }
-
+        
         return new CombatResult(attackerDice, defenderDice, attackerHits, defenderHits);
     }
 
@@ -51,14 +52,14 @@ public class CombatResolutionService {
         }
         return values;
     }
-    
-    private void applyDieBonus(List<Integer> dice, int bonus) {
+
+    private void applyDieBonus(List<Integer> dice, int bonus, boolean allowOverSix) {
         if (bonus <= 0) {
             return;
         }
         for (int i = 0; i < dice.size(); i++) {
             int boostedValue = dice.get(i) + bonus;
-            if (boostedValue > 6) {
+            if (!allowOverSix && boostedValue > 6) {
                 boostedValue = 6;
             }
             dice.set(i, boostedValue);
