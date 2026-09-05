@@ -8,6 +8,7 @@ import civgame.network.NetworkException;
 import civgame.network.TCPServer;
 import civgame.network.UDPServer;
 import civgame.network.message.Broadcast;
+import civgame.network.message.DisconnectBroadcast;
 import civgame.network.message.ErrorResponse;
 import civgame.network.message.chat.ChatMessageBroadcast;
 import civgame.network.message.chat.ChatMessageRequest;
@@ -161,6 +162,27 @@ public class GameServer {
     
     public void handleClientDisconnect(String clientId) {
         String username = clientUsernames.remove(clientId);
+        
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        
+        if (game != null) {
+            boolean wasCurrentTurn = clientId.equals(game.getCurrentTurnClientId());
+            
+            DisconnectBroadcast disconnectBroadcast = new DisconnectBroadcast(
+                "server",
+                clientId,
+                username != null ? username : clientId
+            );
+            broadcastToAllInGame(game, disconnectBroadcast, clientId);
+            
+            if (wasCurrentTurn) {
+                TurnManager.EndTurnResult result = turnManager.handleEndTurn(game, clientId);
+                if (result.isSuccess() && result.getBroadcast() != null) {
+                    broadcastTurnUpdateToAllPlayers(game, result.getBroadcast());
+                }
+            }
+        }
+        
         Lobby lobby = lobbyManager.leaveLobby(clientId);
         
         if (lobby != null) {
@@ -556,10 +578,10 @@ public class GameServer {
         }
         
         if (result.getWarBroadcast() != null) {
-            broadcastToAllInGame(game, result.getWarBroadcast());
+            broadcastToAllInGame(game, result.getWarBroadcast(), null);
         }
         if (result.getUpdateBroadcast() != null) {
-            broadcastToAllInGame(game, result.getUpdateBroadcast());
+            broadcastToAllInGame(game, result.getUpdateBroadcast(), null);
         }
     }
     
@@ -641,10 +663,10 @@ public class GameServer {
         }
         
         if (result.getPrimaryBroadcast() != null) {
-            broadcastToAllInGame(game, result.getPrimaryBroadcast());
+            broadcastToAllInGame(game, result.getPrimaryBroadcast(), null);
         }
         if (result.getUpdateBroadcast() != null) {
-            broadcastToAllInGame(game, result.getUpdateBroadcast());
+            broadcastToAllInGame(game, result.getUpdateBroadcast(), null);
         }
     }
     
@@ -726,10 +748,10 @@ public class GameServer {
         }
         
         if (result.getPrimaryBroadcast() != null) {
-            broadcastToAllInGame(game, result.getPrimaryBroadcast());
+            broadcastToAllInGame(game, result.getPrimaryBroadcast(), null);
         }
         if (result.getUpdateBroadcast() != null) {
-            broadcastToAllInGame(game, result.getUpdateBroadcast());
+            broadcastToAllInGame(game, result.getUpdateBroadcast(), null);
         }
     }
     
@@ -788,7 +810,7 @@ public class GameServer {
         handler.sendMessageObjectIgnoreError(successResponse);
         
         if (result.getBroadcast() != null) {
-            broadcastToAllInGame(game, result.getBroadcast());
+            broadcastToAllInGame(game, result.getBroadcast(), null);
         }
     }
     
@@ -801,9 +823,12 @@ public class GameServer {
         handler.sendMessageObjectIgnoreError(errorResponse);
     }
     
-    private void broadcastToAllInGame(MultiplayerGameState game, Broadcast broadcast) {
+    private void broadcastToAllInGame(MultiplayerGameState game, Broadcast broadcast, String excludeClientId) {
         for (int i = 0; i < game.getAllPlayers().size(); i++) {
             PlayerState player = game.getAllPlayers().get(i);
+            if (excludeClientId != null && excludeClientId.equals(player.getClientId())) {
+                continue;
+            }
             ClientHandler handler = findClientHandler(player.getClientId());
             if (handler == null) {
                 continue;
@@ -880,6 +905,7 @@ public class GameServer {
     public NetworkConfig getConfig() {
         return config;
     }
+
     public void handleTradeOfferRequest(String clientId, civgame.network.message.trade.TradeOfferRequest request) {
         MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
         if (game == null) {
@@ -1105,7 +1131,7 @@ public class GameServer {
 
         ClientHandler handler = findClientHandler(clientId);
         sendSuccessResponse(handler, request.getRequestId());
-        broadcastToAllInGame(game, broadcast);
+        broadcastToAllInGame(game, broadcast, null);
         broadcastGameStateUpdate(game);
     }
 
