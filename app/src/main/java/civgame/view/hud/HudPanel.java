@@ -8,17 +8,19 @@ import civgame.model.unit.Unit;
 import civgame.model.unit.UnitType;
 import civgame.util.Constants;
 import civgame.util.IconProvider;
-
+import civgame.view.game.StyledButton;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.Map;
 
@@ -41,13 +43,17 @@ public class HudPanel extends JPanel {
     private final JLabel ironLabel;
     private final JLabel unitCountLabel;
     private final JLabel queueLabel;
+    
+    private final StyledButton tradeButton;
+    private final StyledButton inboxButton;
+    private final StyledButton inventoryButton;
 
     public HudPanel() {
         setOpaque(false);
-        setLayout(new FlowLayout(FlowLayout.CENTER, 18, 10));
+        setLayout(new FlowLayout(FlowLayout.CENTER, 12, 10));
 
         turnLabel = createStyledLabel("Turn: 1", null);
-        townHallLabel = createStyledLabel("Town Hall: BASE_CAMP (200/200 HP)  DEF:10", null);
+        townHallLabel = createStyledLabel("Town Hall: BASE_CAMP (200/200 HP) DEF:10", null);
         happinessLabel = createStyledLabel("Happiness: 0", null);
         tribeNotificationLabel = createStyledLabel("", null);
         foodLabel = createStyledLabel("Food: 0/0", Constants.FOOD_ICON_PATH);
@@ -56,6 +62,10 @@ public class HudPanel extends JPanel {
         ironLabel = createStyledLabel("Iron: 0/0", Constants.IRON_ICON_PATH);
         unitCountLabel = createStyledLabel("Units: 0/0", null);
         queueLabel = createStyledLabel("Queue: Idle", null);
+
+        tradeButton = new StyledButton("Trade", new Dimension(70, 28));
+        inboxButton = new StyledButton("Inbox", new Dimension(70, 28));
+        inventoryButton = new StyledButton("Items", new Dimension(70, 28));
 
         add(turnLabel);
         add(townHallLabel);
@@ -67,13 +77,15 @@ public class HudPanel extends JPanel {
         add(ironLabel);
         add(unitCountLabel);
         add(queueLabel);
+        add(tradeButton);
+        add(inboxButton);
+        add(inventoryButton);
     }
 
     private JLabel createStyledLabel(String text, String iconPath) {
         JLabel label = new JLabel(text);
         label.setFont(LABEL_FONT);
         label.setForeground(NEUTRAL_TEXT_COLOR);
-
         if (iconPath != null) {
             Image icon = IconProvider.loadImage(iconPath);
             if (icon != null) {
@@ -82,7 +94,6 @@ public class HudPanel extends JPanel {
                 label.setIconTextGap(6);
             }
         }
-
         return label;
     }
 
@@ -90,13 +101,10 @@ public class HudPanel extends JPanel {
     protected void paintComponent(Graphics graphics) {
         Graphics2D graphics2D = (Graphics2D) graphics.create();
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
         graphics2D.setColor(BACKGROUND_COLOR);
         graphics2D.fillRoundRect(0, 0, getWidth(), getHeight(), 24, 24);
-
         graphics2D.setColor(BORDER_COLOR);
         graphics2D.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 24, 24);
-
         graphics2D.dispose();
         super.paintComponent(graphics);
     }
@@ -106,12 +114,10 @@ public class HudPanel extends JPanel {
         updateTownHallLabel(gameSession);
         happinessLabel.setText("Happiness: " + gameSession.getHappinessService().getHappinessValue() + " (" + gameSession.getHappinessService().getCurrentLevel().name() + ")");
         updateTribeNotificationLabel(gameSession);
-
         updateResourceLabel(foodLabel, "Food", gameSession.getResourceStorage(), ResourceType.FOOD, netRates);
         updateResourceLabel(woodLabel, "Wood", gameSession.getResourceStorage(), ResourceType.WOOD, netRates);
         updateResourceLabel(stoneLabel, "Stone", gameSession.getResourceStorage(), ResourceType.STONE, netRates);
         updateResourceLabel(ironLabel, "Iron", gameSession.getResourceStorage(), ResourceType.IRON, netRates);
-
         updateUnitCountLabel(gameSession);
         updateQueueLabel(gameSession);
     }
@@ -120,15 +126,12 @@ public class HudPanel extends JPanel {
         int currentAmount = storage.getAmount(resourceType);
         int capacity = storage.getCapacity(resourceType);
         int netRate = netRates.get(resourceType);
-
         String rateSign = "+";
         if (netRate < 0) {
             rateSign = "";
         }
-
         String labelText = displayName + ": " + currentAmount + "/" + capacity + " (" + rateSign + netRate + ")";
         label.setText(labelText);
-
         if (netRate < 0) {
             label.setForeground(NEGATIVE_RATE_COLOR);
         } else {
@@ -138,7 +141,7 @@ public class HudPanel extends JPanel {
 
     private void updateTownHallLabel(GameSession gameSession) {
         TownHall townHall = gameSession.getTownHall();
-        String labelText = "Town Hall: " + townHall.getLevel().name() + " (" + townHall.getCurrentHitPoints() + "/" + townHall.getMaxHitPoints() + " HP)  DEF:" + townHall.getDefense();
+        String labelText = "Town Hall: " + townHall.getLevel().name() + " (" + townHall.getCurrentHitPoints() + "/" + townHall.getMaxHitPoints() + " HP) DEF:" + townHall.getDefense();
         townHallLabel.setText(labelText);
     }
 
@@ -148,7 +151,7 @@ public class HudPanel extends JPanel {
             tribeNotificationLabel.setText("");
             return;
         }
-        tribeNotificationLabel.setText(String.join("  |  ", notifications));
+        tribeNotificationLabel.setText(String.join(" | ", notifications));
     }
 
     private void updateUnitCountLabel(GameSession gameSession) {
@@ -157,7 +160,6 @@ public class HudPanel extends JPanel {
         int builderCount = countUnitsOfType(units, UnitType.BUILDER);
         int workerCount = countUnitsOfType(units, UnitType.WORKER);
         int borderExpanderCount = countUnitsOfType(units, UnitType.BORDER_EXPANDER);
-
         String breakdown = "E:" + explorerCount + " B:" + builderCount + " W:" + workerCount + " BE:" + borderExpanderCount;
         unitCountLabel.setText("Units: " + units.size() + "/" + gameSession.getUnitCap() + " (" + breakdown + ")");
     }
@@ -180,8 +182,20 @@ public class HudPanel extends JPanel {
             queueLabel.setText("Queue: " + currentCommand.describeForHud());
         }
     }
-    
+
     public void setTurnIndicatorText(String text) {
         turnLabel.setText(text);
+    }
+    
+    public void setTradeButtonListener(ActionListener listener) {
+        tradeButton.addActionListener(listener);
+    }
+    
+    public void setInboxButtonListener(ActionListener listener) {
+        inboxButton.addActionListener(listener);
+    }
+    
+    public void setInventoryButtonListener(ActionListener listener) {
+        inventoryButton.addActionListener(listener);
     }
 }
