@@ -17,7 +17,6 @@ import civgame.model.resource.ResourceStorage;
 import civgame.model.resource.ResourceType;
 import civgame.model.unit.Unit;
 import civgame.util.Constants;
-
 import java.util.List;
 
 public class ItemService {
@@ -77,15 +76,21 @@ public class ItemService {
     }
 
     public boolean validateTeleportDestination(GameSession session, Unit unit, HexCoordinate destination) {
-        HexMap hexMap = session.getHexMap();
-        if (!hexMap.containsCoordinate(destination)) {
+        HexMap map = session.getHexMap();
+        if (!map.containsCoordinate(destination)) {
             return false;
         }
-        HexTile tile = hexMap.getTile(destination);
-        if (tile == null) {
+        HexTile tile = map.getTile(destination);
+        if (tile.getVisibility() == TileVisibility.UNSEEN) {
             return false;
         }
-        if (tile.getVisibility() != TileVisibility.VISIBLE) {
+        if (isOccupiedByUnit(session, destination)) {
+            return false;
+        }
+        if (session.getWildAnimalAt(destination) != null) {
+            return false;
+        }
+        if (session.getEnemyUnitAt(destination) != null) {
             return false;
         }
         if (tile.getTerrainType() == TerrainType.MOUNTAIN_RANGE) {
@@ -95,9 +100,6 @@ public class ItemService {
             return false;
         }
         if (tile.getTerrainType() == TerrainType.MOUNTAIN) {
-            return false;
-        }
-        if (isOccupiedByUnit(session, destination)) {
             return false;
         }
         return true;
@@ -125,11 +127,14 @@ public class ItemService {
     }
 
     private void grantExtraAP(Unit unit, int bonus) {
-        // TODO: Add extra AP field to Unit class
+        unit.addExtraActionPoints(bonus);
     }
 
     private void markUnitAsCombatBoosted(GameSession session, String unitId) {
-        // TODO: Combat service will check this flag
+        Unit unit = findUnitById(session, unitId);
+        if (unit != null) {
+            unit.setCombatBoosted(true);
+        }
     }
 
     private Unit findUnitById(GameSession session, String unitId) {
