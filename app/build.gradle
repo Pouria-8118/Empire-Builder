@@ -22,3 +22,18 @@ java {
 dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
 }
+
+task runServer(type: JavaExec) {
+    group = 'application'
+    description = 'Run the game server'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'civgame.Main'
+    args '--server'
+}
+
+task runClient(type: JavaExec) {
+    group = 'application'
+    description = 'Run the game client'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'civgame.Main'
+}
