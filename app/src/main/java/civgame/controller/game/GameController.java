@@ -25,6 +25,7 @@ import civgame.model.game.TribeDiplomacyService;
 import civgame.model.game.TribeGiftService;
 import civgame.model.game.TribeTradeService;
 import civgame.model.game.TribeMissionService;
+import civgame.model.item.Item;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
@@ -43,6 +44,7 @@ import civgame.util.TerrainMovementCostProvider;
 import civgame.util.EdgeMovementCostProvider;
 import civgame.util.Constants;
 import java.util.HashSet;
+import java.util.HashMap;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
 import civgame.view.game.ConstructionMenuFactory;
@@ -61,6 +63,17 @@ import civgame.view.game.CombatResultDialog;
 import civgame.view.game.TradingPostMenuFactory;
 import civgame.view.game.TribeMenuFactory;
 import civgame.view.hud.SelectedUnitPanel;
+import civgame.view.trade.TradeDialog;
+import civgame.view.trade.TradeInboxDialog;
+import civgame.view.item.InventoryPanel;
+import civgame.client.MultiplayerGameClientState;
+import civgame.client.diplomacy.DiplomacyClientState;
+import civgame.client.ClientNetworkManager;
+import civgame.network.message.trade.TradeOfferRequest;
+import civgame.network.message.trade.TradeAcceptRequest;
+import civgame.network.message.trade.TradeRejectRequest;
+import civgame.network.message.item.ItemUseRequest;
+import civgame.network.message.trade.TradeInboxUpdateBroadcast;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -69,8 +82,8 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.JOptionPane;
-
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -78,6 +91,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class GameController {
@@ -111,6 +125,10 @@ public class GameController {
     private int lastDragX;
     private int lastDragY;
     private boolean wasDragged;
+    private MultiplayerGameClientState multiplayerState;
+    private DiplomacyClientState diplomacyState;
+    private ClientNetworkManager networkManager;
+    private String pendingItemIdForUse;
 
     public GameController(GameFrame gameFrame, GameSession gameSession, FogOfWarCalculator fogOfWarCalculator, GameLoadListener gameLoadListener) {
         this.gameLoadListener = gameLoadListener;
@@ -139,8 +157,13 @@ public class GameController {
         registerSaveLoadKeyBinding();
         this.fogOfWarCalculator = fogOfWarCalculator;
         this.gameFrame = gameFrame;
+        this.multiplayerState = null;
+        this.diplomacyState = null;
+        this.networkManager = null;
+        this.pendingItemIdForUse = null;
         registerListeners();
         registerEscapeKeyBinding();
+        registerMultiplayerButtons();
         refreshSelectedUnitDisplay();
     }
 
@@ -163,6 +186,11 @@ public class GameController {
             return;
         }
 
+        if (pendingItemIdForUse != null) {
+            handleItemUseClick(clickedCoordinate);
+            return;
+        }
+
         if (shouldPrioritizeMovingOntoOccupiedTile(clickedCoordinate)) {
             attemptMoveSelectedUnit(clickedCoordinate);
             return;
@@ -177,7 +205,6 @@ public class GameController {
 
         attemptMoveSelectedUnit(clickedCoordinate);
     }
-
 
     private boolean shouldPrioritizeMovingOntoOccupiedTile(HexCoordinate clickedCoordinate) {
         if (!selectionState.hasSelection()) {
@@ -240,6 +267,39 @@ public class GameController {
         mapPanel.repaint();
     }
     
+    private void handleItemUseClick(HexCoordinate clickedCoordinate) {
+        if (pendingItemIdForUse == null) {
+            return;
+        }
+
+        List<Unit> unitsHere = findUnitsAtCoordinate(clickedCoordinate);
+        if (unitsHere.isEmpty()) {
+            JOptionPane.showMessageDialog(gameFrame, "No unit at this location.", "Item Use", JOptionPane.WARNING_MESSAGE);
+            pendingItemIdForUse = null;
+            return;
+        }
+
+        Unit targetUnit = unitsHere.get(0);
+        if (!isMyUnit(targetUnit)) {
+            JOptionPane.showMessageDialog(gameFrame, "You can only use items on your own units.", "Item Use", JOptionPane.WARNING_MESSAGE);
+            pendingItemIdForUse = null;
+            return;
+        }
+
+        sendItemUseRequest(pendingItemIdForUse, targetUnit.getId(), clickedCoordinate);
+        pendingItemIdForUse = null;
+    }
+    
+    private boolean isMyUnit(Unit unit) {
+        List<Unit> myUnits = gameSession.getUnits();
+        for (int i = 0; i < myUnits.size(); i++) {
+            if (myUnits.get(i).getId().equals(unit.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     private void sendPvPAttackRequest(Unit attackerUnit, civgame.model.game.EnemyUnitMarker enemyUnit) {
         if (pvpAttackRequestListener != null) {
             pvpAttackRequestListener.onAttackRequested(attackerUnit, enemyUnit);
@@ -290,7 +350,6 @@ public class GameController {
         refreshSelectedUnitDisplay();
         mapPanel.repaint();
     }
-
 
     private void updateReachableTilesForSelection() {
         Unit selectedUnit = selectionState.getSelectedUnit();
@@ -370,7 +429,6 @@ public class GameController {
             showFishingBoatMenu((FishingBoat) targetUnit, mouseEvent);
         }
     }
-
 
     private Unit resolveRightClickTarget(List<Unit> unitsHere) {
         Unit currentlySelected = selectionState.getSelectedUnit();
@@ -727,16 +785,69 @@ public class GameController {
             }
         });
     }
+    
+    private void registerMultiplayerButtons() {
+        civgame.view.hud.HudPanel hudPanel = gameFrame.getHudPanel();
+        hudPanel.setTradeButtonListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openTradeDialog();
+            }
+        });
+        hudPanel.setInboxButtonListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openTradeInbox();
+            }
+        });
+        hudPanel.setInventoryButtonListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openInventory();
+            }
+        });
+    }
+    
+    public void setMultiplayerState(MultiplayerGameClientState state) {
+        this.multiplayerState = state;
+    }
+    
+    public void setDiplomacyState(DiplomacyClientState state) {
+        this.diplomacyState = state;
+    }
+    
+    public void setNetworkManager(ClientNetworkManager manager) {
+        this.networkManager = manager;
+    }
+    
     public void openTradeDialog() {
-        java.util.List<String> playerNames = new java.util.ArrayList<>();
-        java.util.List<String> playerIds = new java.util.ArrayList<>();
-        // TODO: Get player list from MultiplayerGameClientState
-        civgame.view.trade.TradeDialog dialog = new civgame.view.trade.TradeDialog(gameFrame, playerNames, playerIds);
-        dialog.setSubmitListener(new civgame.view.trade.TradeDialog.TradeSubmitListener() {
+        if (multiplayerState == null) {
+            JOptionPane.showMessageDialog(gameFrame, "Trade is only available in multiplayer mode.", "Trade", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        if (!multiplayerState.isMyTurn()) {
+            JOptionPane.showMessageDialog(gameFrame, "You can only trade during your turn.", "Trade", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        List<String> playerNames = new ArrayList<>();
+        List<String> playerClientIds = new ArrayList<>();
+        if (diplomacyState != null) {
+            List<DiplomacyClientState.OpponentInfo> opponents = diplomacyState.getAllOpponents();
+            for (int i = 0; i < opponents.size(); i++) {
+                playerNames.add(opponents.get(i).getUsername());
+                playerClientIds.add(opponents.get(i).getClientId());
+            }
+        }
+        if (playerNames.isEmpty()) {
+            JOptionPane.showMessageDialog(gameFrame, "No other players available for trade.", "Trade", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        TradeDialog dialog = new TradeDialog(gameFrame, playerNames, playerClientIds);
+        dialog.setSubmitListener(new TradeDialog.TradeSubmitListener() {
             @Override
             public void onTradeSubmitted(String receiverClientId,
-                                         java.util.Map<civgame.model.resource.ResourceType, Integer> offered,
-                                         java.util.Map<civgame.model.resource.ResourceType, Integer> requested) {
+                                         Map<civgame.model.resource.ResourceType, Integer> offered,
+                                         Map<civgame.model.resource.ResourceType, Integer> requested) {
                 sendTradeOffer(receiverClientId, offered, requested);
             }
         });
@@ -744,14 +855,22 @@ public class GameController {
     }
 
     private void sendTradeOffer(String receiverClientId,
-                                java.util.Map<civgame.model.resource.ResourceType, Integer> offered,
-                                java.util.Map<civgame.model.resource.ResourceType, Integer> requested) {
-        // TODO: Get clientId from MultiplayerGameClientState and network manager
+                                Map<civgame.model.resource.ResourceType, Integer> offered,
+                                Map<civgame.model.resource.ResourceType, Integer> requested) {
+        if (networkManager == null || multiplayerState == null) {
+            return;
+        }
+        TradeOfferRequest request = new TradeOfferRequest(multiplayerState.getMyClientId(), receiverClientId, offered, requested);
+        try {
+            networkManager.sendMessageObjectAsync(request);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(gameFrame, "Failed to send trade offer: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public void openTradeInbox() {
-        civgame.view.trade.TradeInboxDialog dialog = new civgame.view.trade.TradeInboxDialog(gameFrame);
-        dialog.setActionListener(new civgame.view.trade.TradeInboxDialog.TradeActionListener() {
+        TradeInboxDialog dialog = new TradeInboxDialog(gameFrame);
+        dialog.setActionListener(new TradeInboxDialog.TradeActionListener() {
             @Override
             public void onAccept(String offerId) {
                 sendTradeAccept(offerId);
@@ -766,22 +885,83 @@ public class GameController {
     }
 
     private void sendTradeAccept(String offerId) {
-        // TODO: Implement with network manager
+        if (networkManager == null || multiplayerState == null) {
+            return;
+        }
+        TradeAcceptRequest request = new TradeAcceptRequest(multiplayerState.getMyClientId(), offerId);
+        try {
+            networkManager.sendMessageObjectAsync(request);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(gameFrame, "Failed to accept trade: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void sendTradeReject(String offerId) {
-        // TODO: Implement with network manager
+        if (networkManager == null || multiplayerState == null) {
+            return;
+        }
+        TradeRejectRequest request = new TradeRejectRequest(multiplayerState.getMyClientId(), offerId);
+        try {
+            networkManager.sendMessageObjectAsync(request);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(gameFrame, "Failed to reject trade: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public void openInventory() {
-        civgame.view.item.InventoryPanel panel = new civgame.view.item.InventoryPanel(gameFrame);
-        // TODO: Get items from client state
-        panel.setUseListener(new civgame.view.item.InventoryPanel.ItemUseListener() {
+        InventoryPanel dialog = new InventoryPanel(gameFrame);
+        List<Item> items = new ArrayList<>();
+        if (gameSession.getInventory() != null) {
+            items = gameSession.getInventory().getAllItems();
+        }
+        dialog.updateItems(items);
+        dialog.setUseListener(new InventoryPanel.ItemUseListener() {
             @Override
             public void onItemUse(String itemId) {
-                // TODO: Implement target selection for item use
+                selectUnitForItemUse(itemId);
             }
         });
-        panel.setVisible(true);
+        dialog.setVisible(true);
+    }
+    
+    private void selectUnitForItemUse(String itemId) {
+        JOptionPane.showMessageDialog(gameFrame, "Click on a unit to use the item.", "Item Use", JOptionPane.INFORMATION_MESSAGE);
+        pendingItemIdForUse = itemId;
+    }
+    
+    private void sendItemUseRequest(String itemId, String targetUnitId, HexCoordinate targetCoordinate) {
+        if (networkManager == null || multiplayerState == null) {
+            return;
+        }
+        ItemUseRequest request = new ItemUseRequest(multiplayerState.getMyClientId(), itemId, targetUnitId, targetCoordinate.getQ(), targetCoordinate.getR());
+        try {
+            networkManager.sendMessageObjectAsync(request);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(gameFrame, "Failed to use item: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    public void handleDiplomacyAction(DiplomacyClientState.OpponentInfo opponent, civgame.view.diplomacy.DiplomacyPanel.DiplomacyAction action) {
+        if (networkManager == null || multiplayerState == null) {
+            return;
+        }
+        if (!multiplayerState.isMyTurn()) {
+            JOptionPane.showMessageDialog(gameFrame, "You can only perform diplomatic actions during your turn.", "Diplomacy", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            if (action == civgame.view.diplomacy.DiplomacyPanel.DiplomacyAction.DECLARE_WAR) {
+                civgame.network.message.diplomacy.DeclareWarRequest request = new civgame.network.message.diplomacy.DeclareWarRequest(multiplayerState.getMyClientId(), opponent.getClientId());
+                networkManager.sendMessageObjectAsync(request);
+            } else if (action == civgame.view.diplomacy.DiplomacyPanel.DiplomacyAction.OFFER_PEACE) {
+                civgame.network.message.diplomacy.OfferPeaceRequest request = new civgame.network.message.diplomacy.OfferPeaceRequest(multiplayerState.getMyClientId(), opponent.getClientId());
+                networkManager.sendMessageObjectAsync(request);
+            } else if (action == civgame.view.diplomacy.DiplomacyPanel.DiplomacyAction.PROPOSE_ALLIANCE) {
+                civgame.network.message.diplomacy.ProposeAllianceRequest request = new civgame.network.message.diplomacy.ProposeAllianceRequest(multiplayerState.getMyClientId(), opponent.getClientId());
+                networkManager.sendMessageObjectAsync(request);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(gameFrame, "Failed to send diplomatic action: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
