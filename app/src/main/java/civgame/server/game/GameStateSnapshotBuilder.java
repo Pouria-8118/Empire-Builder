@@ -194,26 +194,31 @@ public class GameStateSnapshotBuilder {
         if (relationMap == null) {
             return;
         }
+
         HexMap targetMap = targetSession.getHexMap();
         FogOfWarCalculator calculator = new FogOfWarCalculator();
-        
+
         for (PlayerState otherPlayer : game.getAllPlayers()) {
             if (otherPlayer.getClientId().equals(targetPlayer.getClientId())) {
                 continue;
             }
+
             PlayerRelation relation = relationMap.getRelation(targetPlayer.getClientId(), otherPlayer.getClientId());
-            if (relation.isAllied()) {
+            if (relation != null && relation.isAllied()) {
                 GameSession allySession = otherPlayer.getSession();
+                
                 for (Unit allyUnit : allySession.getUnits()) {
                     calculator.revealAround(targetMap, allyUnit.getCoordinate(), allyUnit.getVisionRadius());
                 }
+                
                 for (Building allyBuilding : allySession.getAllBuildings()) {
                     if (!allyBuilding.isDestroyed()) {
                         calculator.revealAround(targetMap, allyBuilding.getCoordinate(), Constants.BUILDING_VISION_RADIUS);
                     }
                 }
+                
                 TownHall allyTownHall = allySession.getTownHall();
-                if (!allyTownHall.isDestroyedByCombat()) {
+                if (allyTownHall != null && !allyTownHall.isDestroyedByCombat()) {
                     calculator.revealAround(targetMap, allyTownHall.getCoordinate(), Constants.TOWN_HALL_VISION_RADIUS);
                 }
             }
