@@ -4,6 +4,8 @@ import civgame.model.building.TownHall;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSession;
 import civgame.model.map.HexCoordinate;
+import civgame.model.map.HexMap;
+import civgame.model.map.HexTile;
 import civgame.model.map.prebuilt.PrebuiltMap;
 import civgame.model.map.prebuilt.PrebuiltMapProvider;
 import civgame.model.resource.ResourceType;
@@ -61,7 +63,6 @@ public class MultiplayerGameSessionManager {
             PlayerSlot slot = lobby.getPlayer(clientId);
             String username = slot != null ? slot.getUsername() : clientId;
             HexCoordinate spawn = prebuiltMap.getSpawnLocation(i);
-
             GameSession playerSession = buildPlayerSession(prebuiltMap, spawn);
             PlayerState playerState = new PlayerState(clientId, username, i, playerSession, spawn);
             gameState.addPlayer(playerState);
@@ -74,15 +75,22 @@ public class MultiplayerGameSessionManager {
     }
 
     private GameSession buildPlayerSession(PrebuiltMap prebuiltMap, HexCoordinate spawnCoordinate) {
-        civgame.model.map.HexMap playerMap = prebuiltMap.getHexMap();
+        HexMap originalMap = prebuiltMap.getHexMap();
+        HexMap playerMap = new HexMap(originalMap.getMapRadius());
+        
+        for (Map.Entry<HexCoordinate, HexTile> entry : originalMap.getAllTiles().entrySet()) {
+            HexCoordinate coord = entry.getKey();
+            HexTile originalTile = entry.getValue();
+            HexTile newTile = new HexTile(coord, originalTile.getTerrainType(), originalTile.getResourceType());
+            playerMap.setTile(coord, newTile);
+        }
+
         TownHall townHall = new TownHall(spawnCoordinate);
         GameSession session = new GameSession(playerMap, townHall, Constants.INITIAL_UNIT_CAP);
-
         session.getResourceStorage().addResource(ResourceType.FOOD, Constants.STARTING_FOOD);
         session.getResourceStorage().addResource(ResourceType.WOOD, Constants.STARTING_WOOD);
         session.getResourceStorage().addResource(ResourceType.STONE, Constants.STARTING_STONE);
         session.getResourceStorage().addResource(ResourceType.IRON, Constants.STARTING_IRON);
-
         spawnInitialUnits(session, spawnCoordinate);
         return session;
     }

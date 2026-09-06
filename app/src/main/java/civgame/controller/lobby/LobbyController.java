@@ -76,8 +76,8 @@ public class LobbyController {
     private GameSession currentGameSession;
     private GameFrame currentGameFrame;
     private GameController currentGameController;
-    private ChatController gameChatController;
-
+    private MultiplayerTurnController turnController;  // ← اضافه شد
+    
     public LobbyController(LobbyFrame lobbyFrame, String username) {
         this.lobbyFrame = lobbyFrame;
         this.username = username;
@@ -88,6 +88,7 @@ public class LobbyController {
         this.gameClient = null;
         this.chatController = new ChatController(lobbyFrame.getChatPanel());
         this.multiplayerState = null;
+        this.turnController = null;  // ← اضافه شد
         
         registerListeners();
     }
@@ -306,7 +307,8 @@ public class LobbyController {
         this.currentGameController = gameController;
         
         if (gameClient != null) {
-            final MultiplayerTurnController turnController = new MultiplayerTurnController(
+            // ← اصلاح: turnController به field اختصاص داده شد
+            this.turnController = new MultiplayerTurnController(
                     gameFrame,
                     localSession,
                     gameClient,
@@ -341,11 +343,11 @@ public class LobbyController {
                 
                 @Override
                 public void onServerMessageObject(Message message) {
-                    handleGameMessage(message, turnController);
+                    handleGameMessage(message);  // ← اصلاح: turnController از field خوانده می‌شود
                 }
             });
             
-            this.gameChatController = new ChatController(gameFrame.getChatPanel());
+            ChatController gameChatController = new ChatController(gameFrame.getChatPanel());
             gameChatController.setGameClient(gameClient, multiplayerState.getMyClientId());
             
             this.diplomacyController = new DiplomacyController(gameFrame, multiplayerState.getMyClientId());
@@ -361,17 +363,22 @@ public class LobbyController {
         lobbyFrame.dispose();
     }
     
-    private void handleGameMessage(Message message, MultiplayerTurnController turnController) {
+    private void handleGameMessage(Message message) {  // ← اصلاح: turnController از field خوانده می‌شود
         String type = message.getType();
         
         if (type.equals(MessageType.END_TURN_RESPONSE)) {
-            turnController.handleEndTurnResponse((EndTurnResponse) message);
+            if (turnController != null) {
+                turnController.handleEndTurnResponse((EndTurnResponse) message);
+            }
         } else if (type.equals(MessageType.TURN_UPDATE_BROADCAST)) {
-            turnController.handleTurnUpdate((TurnUpdateBroadcast) message);
+            if (turnController != null) {
+                turnController.handleTurnUpdate((TurnUpdateBroadcast) message);
+            }
         } else if (type.equals(MessageType.CHAT_MESSAGE_BROADCAST)) {
-                if (gameChatController != null) {
-                    gameChatController.handleChatBroadcast((ChatMessageBroadcast) message);
-                }
+            if (diplomacyController != null) {
+                ChatController gameChatController = new ChatController(currentGameFrame.getChatPanel());
+                gameChatController.handleChatBroadcast((ChatMessageBroadcast) message);
+            }
         } else if (type.equals(MessageType.DIPLOMACY_RESPONSE)) {
             if (diplomacyController != null) {
                 diplomacyController.handleDiplomacyResponse((DiplomacyResponse) message);
