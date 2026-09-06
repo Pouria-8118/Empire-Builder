@@ -129,6 +129,11 @@ public class MultiplayerTurnController {
         currentTurnClientId = broadcast.getCurrentTurnClientId();
         applyResourceSnapshot(broadcast.getResources());
         gameSession.incrementTurnNumber();
+        
+        if (myClientId.equals(currentTurnClientId)) {
+            refreshMyUnitActionPoints();
+        }
+        
         updateEndTurnButtonState();
         endTurnPanel.setStarvationWarningVisible(
                 broadcast.getSummary() != null && broadcast.getSummary().isStarvationTriggered()
@@ -136,6 +141,13 @@ public class MultiplayerTurnController {
         showTurnNotification(broadcast);
         gameFrame.refreshHud(gameSession);
         mapPanel.repaint();
+    }
+
+    private void refreshMyUnitActionPoints() {
+        List<Unit> units = gameSession.getUnits();
+        for (int i = 0; i < units.size(); i++) {
+            units.get(i).refreshActionPoints();
+        }
     }
 
     private void applyResourceSnapshot(TurnUpdateBroadcast.ResourceSnapshotDTO resources) {
