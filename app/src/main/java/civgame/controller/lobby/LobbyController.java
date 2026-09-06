@@ -318,7 +318,6 @@ public class LobbyController {
         this.currentGameController = gameController;
 
         gameController.setMultiplayerState(multiplayerState);
-        gameController.setDiplomacyState(diplomacyController.getState());
         gameController.setNetworkManager(gameClient.getNetworkManager());
 
         if (gameClient != null) {
@@ -368,6 +367,8 @@ public class LobbyController {
             diplomacyController.setGameClient(gameClient);
             diplomacyController.initializeFromOpponents(snapshot.getOpponents());
             diplomacyController.initializeFromRelations(snapshot.getInitialRelations());
+            
+            gameController.setDiplomacyState(diplomacyController.getState());
             
             initializeEnemyUnits(localSession, snapshot.getVisibleEnemyUnits());
             setupPvpAttackListener(gameFrame, localSession, gameClient);
