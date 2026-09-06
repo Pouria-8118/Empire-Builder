@@ -13,6 +13,7 @@ import civgame.view.hud.MinimapPanel;
 import civgame.view.hud.NotificationEntry;
 import civgame.view.hud.SelectedUnitPanel;
 import civgame.view.hud.TurnNotificationPanel;
+import civgame.view.hud.ActionButtonPanel;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -56,6 +57,7 @@ public class GameFrame extends JFrame {
     private final UnitMovementAnimator movementAnimator;
     private final EndTurnPanel endTurnPanel;
     private final HudPanel hudPanel;
+    private final ActionButtonPanel actionButtonPanel;
     private final SelectedUnitPanel selectedUnitPanel;
     private final ControlsHintPanel controlsHintPanel;
     private final TurnNotificationPanel turnNotificationPanel;
@@ -80,6 +82,7 @@ public class GameFrame extends JFrame {
         this.movementAnimator = new UnitMovementAnimator();
         this.mapPanel = new MapPanel(gameSession, cameraState, selectionState, movementAnimator);
         this.hudPanel = new HudPanel(multiplayer);
+        this.actionButtonPanel = new ActionButtonPanel(multiplayer);
         this.selectedUnitPanel = new SelectedUnitPanel();
         this.controlsHintPanel = new ControlsHintPanel();
         this.turnNotificationPanel = new TurnNotificationPanel();
@@ -123,6 +126,7 @@ public class GameFrame extends JFrame {
         layeredPane.setPreferredSize(new Dimension(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT));
         layeredPane.add(mapPanel, JLayeredPane.DEFAULT_LAYER);
         layeredPane.add(hudPanel, JLayeredPane.PALETTE_LAYER);
+        layeredPane.add(actionButtonPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(controlsHintPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(selectedUnitPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(endTurnPanel, JLayeredPane.PALETTE_LAYER);
@@ -192,7 +196,11 @@ public class GameFrame extends JFrame {
         int hintX = MARGIN + (centeredAreaWidth - hintWidth) / 2;
         int hintY = MARGIN + HUD_HEIGHT + CONTROLS_HINT_GAP;
         controlsHintPanel.setBounds(hintX, hintY, hintWidth, CONTROLS_HINT_HEIGHT);
-
+        int actionPanelWidth = 140;
+        int actionPanelX = MARGIN;
+        int actionPanelY = MARGIN + HUD_HEIGHT + CONTROLS_HINT_GAP + CONTROLS_HINT_HEIGHT + CONTROLS_HINT_GAP + 50;
+        actionButtonPanel.setBounds(actionPanelX, actionPanelY, actionPanelWidth, 200);
+    
         if (multiplayer) {
             int diplomacyX = MARGIN;
             int diplomacyY = MARGIN + HUD_HEIGHT + CONTROLS_HINT_GAP + CONTROLS_HINT_HEIGHT + CONTROLS_HINT_GAP;
@@ -276,6 +284,10 @@ public class GameFrame extends JFrame {
 
     public boolean isMultiplayer() {
         return multiplayer;
+    }
+
+    public ActionButtonPanel getActionButtonPanel() {
+        return actionButtonPanel;
     }
 
 }

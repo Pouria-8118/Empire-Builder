@@ -79,18 +79,9 @@ public class HudPanel extends JPanel {
         add(unitCountLabel);
         add(queueLabel);
 
-        if (multiplayer) {
-            tradeButton = new StyledButton("Trade", new Dimension(70, 28));
-            inboxButton = new StyledButton("Inbox", new Dimension(70, 28));
-            inventoryButton = new StyledButton("Items", new Dimension(70, 28));
-            add(tradeButton);
-            add(inboxButton);
-            add(inventoryButton);
-        } else {
-            tradeButton = null;
-            inboxButton = null;
-            inventoryButton = null;
-        }
+        tradeButton = null;
+        inboxButton = null;
+        inventoryButton = null;
     }
 
     private JLabel createStyledLabel(String text, String iconPath) {

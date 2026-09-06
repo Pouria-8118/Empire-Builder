@@ -436,6 +436,8 @@ public class LobbyController {
             handleGameStateUpdate((GameStartBroadcast) message);
         } else if (type.equals(MessageType.FOG_REVEAL_BROADCAST)) {
             handleFogRevealBroadcast((civgame.network.message.game.FogRevealBroadcast) message);
+        } else if (type.equals(MessageType.TRADE_INBOX_UPDATE_BROADCAST)) {
+            handleTradeInboxUpdate((civgame.network.message.trade.TradeInboxUpdateBroadcast) message);
         }
 
         
@@ -908,5 +910,11 @@ public class LobbyController {
 
     private void handleToggleCheatsBroadcast(civgame.network.message.lobby.ToggleCheatsBroadcast broadcast) {
         lobbyFrame.getLobbyPanel().updateCheatsStatus(broadcast.isEnabled());
+    }
+
+    private void handleTradeInboxUpdate(civgame.network.message.trade.TradeInboxUpdateBroadcast broadcast) {
+        if (currentGameController != null) {
+            currentGameController.updateTradeInbox(broadcast.getPendingOffers());
+        }
     }
 }

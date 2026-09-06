@@ -14,6 +14,9 @@ public class ResourceIconProvider {
         if (resourceType == TileResourceType.STONE) {
             return Constants.STONE_ICON_PATH;
         }
+        if (resourceType == TileResourceType.IRON) {
+            return Constants.IRON_ICON_PATH;
+        }
         if (resourceType == TileResourceType.WHEAT) {
             return Constants.WHEAT_ICON_PATH;
         }

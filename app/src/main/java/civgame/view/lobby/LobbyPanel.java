@@ -156,9 +156,9 @@ public class LobbyPanel extends JPanel {
             PlayerSlot.PlayerSlotInfo player = players.get(i);
             String displayName = player.getUsername();
             if (player.isReady()) {
-                displayName += "Ready";
+                displayName += "  :Ready";
             } else {
-                displayName += "Not Ready";
+                displayName += "  :Not Ready";
             }
             if (player.getClientId().equals(hostClientId)) {
                 displayName += " (HOST)";

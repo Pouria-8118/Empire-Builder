@@ -1,51 +1,66 @@
 package civgame.controller.game;
 
+import civgame.client.ClientNetworkManager;
+import civgame.client.MultiplayerGameClientState;
+import civgame.client.diplomacy.DiplomacyClientState;
 import civgame.model.building.Building;
 import civgame.model.building.Dock;
 import civgame.model.building.TownHallUpgradeType;
+import civgame.model.game.AttackExecutionService;
+import civgame.model.game.AttackOutcome;
 import civgame.model.game.BorderExpansionService;
+import civgame.model.game.CombatTargetService;
 import civgame.model.game.ConstructionService;
-import civgame.model.game.RoadConstructionService;
-import civgame.model.game.SeasonType;
-import civgame.model.game.WallConstructionService;
+import civgame.model.game.DemolitionService;
+import civgame.model.game.EnemyUnitMarker;
+import civgame.model.game.FishingService;
 import civgame.model.game.FogOfWarCalculator;
 import civgame.model.game.GameSaveManager;
 import civgame.model.game.GameSession;
 import civgame.model.game.HexPathFinder;
-import civgame.model.game.StationingService;
-import civgame.model.game.DemolitionService;
-import civgame.model.game.FishingService;
-import civgame.model.game.CombatTargetService;
 import civgame.model.game.MilitaryStackingRules;
 import civgame.model.game.NavalMovementService;
-import civgame.model.game.AttackExecutionService;
-import civgame.model.game.AttackOutcome;
+import civgame.model.game.RoadConstructionService;
+import civgame.model.game.SeasonType;
+import civgame.model.game.StationingService;
 import civgame.model.game.TradingPostTradeService;
 import civgame.model.game.TribeDiplomacyService;
 import civgame.model.game.TribeGiftService;
-import civgame.model.game.TribeTradeService;
 import civgame.model.game.TribeMissionService;
+import civgame.model.game.TribeTradeService;
+import civgame.model.game.WallConstructionService;
 import civgame.model.item.Item;
 import civgame.model.map.HexCoordinate;
 import civgame.model.map.HexTile;
 import civgame.model.map.TerrainType;
 import civgame.model.map.TradingPost;
+import civgame.model.resource.ResourceType;
 import civgame.model.tribe.Tribe;
 import civgame.model.unit.BorderExpander;
 import civgame.model.unit.Builder;
 import civgame.model.unit.Explorer;
 import civgame.model.unit.FishingBoat;
+import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitType;
 import civgame.model.unit.Worker;
-import civgame.model.unit.MilitaryUnitCapProvider;
+import civgame.network.message.diplomacy.DeclareWarRequest;
+import civgame.network.message.diplomacy.OfferPeaceRequest;
+import civgame.network.message.diplomacy.ProposeAllianceRequest;
+import civgame.network.message.game.FogRevealBroadcast;
+import civgame.network.message.item.ItemUseRequest;
+import civgame.network.message.trade.TradeAcceptRequest;
+import civgame.network.message.trade.TradeInboxUpdateBroadcast.TradeOfferDTO;
+import civgame.network.message.trade.TradeOfferRequest;
+import civgame.network.message.trade.TradeRejectRequest;
+import civgame.util.Constants;
+import civgame.util.EdgeMovementCostProvider;
 import civgame.util.HexGeometry;
 import civgame.util.TerrainMovementCostProvider;
-import civgame.util.EdgeMovementCostProvider;
-import civgame.util.Constants;
-import java.util.HashSet;
 import civgame.view.game.BorderExpansionMenuFactory;
 import civgame.view.game.CameraState;
+import civgame.view.game.CombatMenuFactory;
+import civgame.view.game.CombatResultDialog;
 import civgame.view.game.ConstructionMenuFactory;
 import civgame.view.game.DockMenuFactory;
 import civgame.view.game.ExplorerMenuFactory;
@@ -56,31 +71,22 @@ import civgame.view.game.SaveLoadDialog;
 import civgame.view.game.SelectionState;
 import civgame.view.game.StationingMenuFactory;
 import civgame.view.game.TownHallMenuFactory;
-import civgame.view.game.UnitMovementAnimator;
-import civgame.view.game.CombatMenuFactory;
-import civgame.view.game.CombatResultDialog;
 import civgame.view.game.TradingPostMenuFactory;
 import civgame.view.game.TribeMenuFactory;
+import civgame.view.game.UnitMovementAnimator;
+import civgame.view.hud.ActionButtonPanel;
 import civgame.view.hud.SelectedUnitPanel;
+import civgame.view.item.InventoryPanel;
 import civgame.view.trade.TradeDialog;
 import civgame.view.trade.TradeInboxDialog;
-import civgame.view.item.InventoryPanel;
-import civgame.client.MultiplayerGameClientState;
-import civgame.client.diplomacy.DiplomacyClientState;
-import civgame.client.ClientNetworkManager;
-import civgame.network.message.trade.TradeOfferRequest;
-import civgame.network.message.trade.TradeAcceptRequest;
-import civgame.network.message.trade.TradeRejectRequest;
-import civgame.network.message.item.ItemUseRequest;
-import civgame.network.message.game.FogRevealBroadcast;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
-import javax.swing.JOptionPane;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -89,6 +95,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -128,6 +135,7 @@ public class GameController {
     private DiplomacyClientState diplomacyState;
     private ClientNetworkManager networkManager;
     private String pendingItemIdForUse;
+    private List<TradeOfferDTO> pendingTradeOffers;
 
     public GameController(GameFrame gameFrame, GameSession gameSession, FogOfWarCalculator fogOfWarCalculator, GameLoadListener gameLoadListener) {
         this.gameLoadListener = gameLoadListener;
@@ -160,6 +168,7 @@ public class GameController {
         this.diplomacyState = null;
         this.networkManager = null;
         this.pendingItemIdForUse = null;
+        this.pendingTradeOffers = new ArrayList<>();
         registerListeners();
         registerEscapeKeyBinding();
         registerMultiplayerButtons();
@@ -239,7 +248,7 @@ public class GameController {
             return;
         }
 
-        civgame.model.game.EnemyUnitMarker enemyUnit = gameSession.getEnemyUnitAt(clickedCoordinate);
+        EnemyUnitMarker enemyUnit = gameSession.getEnemyUnitAt(clickedCoordinate);
         if (enemyUnit != null) {
             sendPvPAttackRequest(selectedUnit, enemyUnit);
             return;
@@ -299,7 +308,7 @@ public class GameController {
         return false;
     }
     
-    private void sendPvPAttackRequest(Unit attackerUnit, civgame.model.game.EnemyUnitMarker enemyUnit) {
+    private void sendPvPAttackRequest(Unit attackerUnit, EnemyUnitMarker enemyUnit) {
         if (pvpAttackRequestListener != null) {
             pvpAttackRequestListener.onAttackRequested(attackerUnit, enemyUnit);
         }
@@ -314,7 +323,7 @@ public class GameController {
     }
     
     public interface PvpAttackRequestListener {
-        void onAttackRequested(Unit attackerUnit, civgame.model.game.EnemyUnitMarker enemyUnit);
+        void onAttackRequested(Unit attackerUnit, EnemyUnitMarker enemyUnit);
     }
 
     private AttackOutcome resolveWallChoiceAndAttack(HexCoordinate attackerCoordinate, HexCoordinate defenderCoordinate) {
@@ -441,7 +450,7 @@ public class GameController {
         return unitsHere.get(nextIndex);
     }
     
-    public boolean canAttackEnemyUnit(civgame.model.game.EnemyUnitMarker enemyUnit) {
+    public boolean canAttackEnemyUnit(EnemyUnitMarker enemyUnit) {
         return enemyUnit != null && enemyUnit.isMilitaryUnit();
     }
 
@@ -814,7 +823,7 @@ public class GameController {
             public void actionPerformed(ActionEvent actionEvent) {
                 SaveLoadDialog dialog = new SaveLoadDialog(saveManager, gameSession, new SaveLoadDialog.LoadCallback() {
                     @Override
-                    public void onGameLoaded(civgame.model.game.GameSession loadedGameSession) {
+                    public void onGameLoaded(GameSession loadedGameSession) {
                         gameLoadListener.onGameLoaded(loadedGameSession);
                     }
                 });
@@ -824,23 +833,26 @@ public class GameController {
     }
     
     private void registerMultiplayerButtons() {
-        civgame.view.hud.HudPanel hudPanel = gameFrame.getHudPanel();
-        hudPanel.setTradeButtonListener(new ActionListener() {
+        ActionButtonPanel actionPanel = gameFrame.getActionButtonPanel();
+        
+        actionPanel.setInventoryButtonListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openInventory();
+            }
+        });
+        
+        actionPanel.setTradeButtonListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 openTradeDialog();
             }
         });
-        hudPanel.setInboxButtonListener(new ActionListener() {
+        
+        actionPanel.setInboxButtonListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 openTradeInbox();
-            }
-        });
-        hudPanel.setInventoryButtonListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openInventory();
             }
         });
     }
@@ -883,8 +895,8 @@ public class GameController {
         dialog.setSubmitListener(new TradeDialog.TradeSubmitListener() {
             @Override
             public void onTradeSubmitted(String receiverClientId,
-                                         Map<civgame.model.resource.ResourceType, Integer> offered,
-                                         Map<civgame.model.resource.ResourceType, Integer> requested) {
+                                         Map<ResourceType, Integer> offered,
+                                         Map<ResourceType, Integer> requested) {
                 sendTradeOffer(receiverClientId, offered, requested);
             }
         });
@@ -892,8 +904,8 @@ public class GameController {
     }
 
     private void sendTradeOffer(String receiverClientId,
-                                Map<civgame.model.resource.ResourceType, Integer> offered,
-                                Map<civgame.model.resource.ResourceType, Integer> requested) {
+                                Map<ResourceType, Integer> offered,
+                                Map<ResourceType, Integer> requested) {
         if (networkManager == null || multiplayerState == null) {
             return;
         }
@@ -907,6 +919,7 @@ public class GameController {
 
     public void openTradeInbox() {
         TradeInboxDialog dialog = new TradeInboxDialog(gameFrame);
+        dialog.updateOffers(pendingTradeOffers);
         dialog.setActionListener(new TradeInboxDialog.TradeActionListener() {
             @Override
             public void onAccept(String offerId) {
@@ -988,17 +1001,21 @@ public class GameController {
         }
         try {
             if (action == civgame.view.diplomacy.DiplomacyPanel.DiplomacyAction.DECLARE_WAR) {
-                civgame.network.message.diplomacy.DeclareWarRequest request = new civgame.network.message.diplomacy.DeclareWarRequest(multiplayerState.getMyClientId(), opponent.getClientId());
+                DeclareWarRequest request = new DeclareWarRequest(multiplayerState.getMyClientId(), opponent.getClientId());
                 networkManager.sendMessageObjectAsync(request);
             } else if (action == civgame.view.diplomacy.DiplomacyPanel.DiplomacyAction.OFFER_PEACE) {
-                civgame.network.message.diplomacy.OfferPeaceRequest request = new civgame.network.message.diplomacy.OfferPeaceRequest(multiplayerState.getMyClientId(), opponent.getClientId());
+                OfferPeaceRequest request = new OfferPeaceRequest(multiplayerState.getMyClientId(), opponent.getClientId());
                 networkManager.sendMessageObjectAsync(request);
             } else if (action == civgame.view.diplomacy.DiplomacyPanel.DiplomacyAction.PROPOSE_ALLIANCE) {
-                civgame.network.message.diplomacy.ProposeAllianceRequest request = new civgame.network.message.diplomacy.ProposeAllianceRequest(multiplayerState.getMyClientId(), opponent.getClientId());
+                ProposeAllianceRequest request = new ProposeAllianceRequest(multiplayerState.getMyClientId(), opponent.getClientId());
                 networkManager.sendMessageObjectAsync(request);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(gameFrame, "Failed to send diplomatic action: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    public void updateTradeInbox(List<TradeOfferDTO> offers) {
+        this.pendingTradeOffers = offers != null ? offers : new ArrayList<>();
     }
 }
