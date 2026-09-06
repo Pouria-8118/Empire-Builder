@@ -10,6 +10,7 @@ import civgame.network.message.combat.CombatResultBroadcast;
 import civgame.network.message.game.EndTurnRequest;
 import civgame.network.message.game.EndTurnResponse;
 import civgame.network.message.game.TurnUpdateBroadcast;
+import civgame.util.Constants;
 import civgame.view.combat.CombatReportDialog;
 import civgame.view.game.EndTurnPanel;
 import civgame.view.game.GameFrame;
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MultiplayerTurnController {
-    
+
     private final GameSession gameSession;
     private final GameClient gameClient;
     private final String myClientId;
@@ -33,9 +34,9 @@ public class MultiplayerTurnController {
     private final MapPanel mapPanel;
     private String currentTurnClientId;
     private List<CombatResultBroadcast> pendingCombatReports;
-    
-    public MultiplayerTurnController(GameFrame gameFrame, 
-                                     GameSession gameSession, 
+
+    public MultiplayerTurnController(GameFrame gameFrame,
+                                     GameSession gameSession,
                                      GameClient gameClient,
                                      String myClientId,
                                      String initialTurnClientId) {
@@ -47,16 +48,15 @@ public class MultiplayerTurnController {
         this.mapPanel = gameFrame.getMapPanel();
         this.currentTurnClientId = initialTurnClientId;
         this.pendingCombatReports = new ArrayList<>();
-        
         registerListeners();
         updateEndTurnButtonState();
         gameFrame.refreshHud(gameSession);
     }
-    
+
     private void registerListeners() {
         endTurnPanel.getEndTurnButton().addActionListener(new EndTurnListener());
     }
-    
+
     public void updateCurrentTurn(String newTurnClientId, String newTurnUsername) {
         this.currentTurnClientId = newTurnClientId;
         SwingUtilities.invokeLater(new Runnable() {
@@ -66,33 +66,30 @@ public class MultiplayerTurnController {
             }
         });
     }
-    
+
     private void updateEndTurnButtonState() {
         boolean isMyTurn = myClientId.equals(currentTurnClientId);
         endTurnPanel.getEndTurnButton().setEnabled(isMyTurn);
-        
         if (isMyTurn) {
             gameFrame.getHudPanel().setTurnIndicatorText("Your Turn!");
         } else {
             gameFrame.getHudPanel().setTurnIndicatorText("Waiting for other players...");
         }
     }
-    
+
     private class EndTurnListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             if (!myClientId.equals(currentTurnClientId)) {
                 return;
             }
-            
             if (hasIdleUnitsWithRemainingActionPoints() && !confirmEndTurnWithIdleUnits()) {
                 return;
             }
-            
             sendEndTurnRequest();
         }
     }
-    
+
     private void sendEndTurnRequest() {
         EndTurnRequest request = new EndTurnRequest(myClientId);
         try {
@@ -106,7 +103,7 @@ public class MultiplayerTurnController {
             );
         }
     }
-    
+
     public void handleEndTurnResponse(EndTurnResponse response) {
         if (!response.isSuccess()) {
             JOptionPane.showMessageDialog(
@@ -117,7 +114,7 @@ public class MultiplayerTurnController {
             );
         }
     }
-    
+
     public void handleTurnUpdate(TurnUpdateBroadcast broadcast) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -127,67 +124,87 @@ public class MultiplayerTurnController {
             }
         });
     }
-    
+
     private void processTurnUpdate(TurnUpdateBroadcast broadcast) {
         currentTurnClientId = broadcast.getCurrentTurnClientId();
-        
         applyResourceSnapshot(broadcast.getResources());
         gameSession.incrementTurnNumber();
-        
         updateEndTurnButtonState();
-        
         endTurnPanel.setStarvationWarningVisible(
                 broadcast.getSummary() != null && broadcast.getSummary().isStarvationTriggered()
         );
-        
         showTurnNotification(broadcast);
-        
         gameFrame.refreshHud(gameSession);
         mapPanel.repaint();
     }
-    
+
     private void applyResourceSnapshot(TurnUpdateBroadcast.ResourceSnapshotDTO resources) {
         if (resources == null) {
             return;
         }
-        
         ResourceStorage storage = gameSession.getResourceStorage();
         storage.setAmount(ResourceType.FOOD, resources.getFood());
         storage.setAmount(ResourceType.WOOD, resources.getWood());
         storage.setAmount(ResourceType.STONE, resources.getStone());
         storage.setAmount(ResourceType.IRON, resources.getIron());
     }
-    
+
     private void showTurnNotification(TurnUpdateBroadcast broadcast) {
         List<NotificationEntry> entries = new ArrayList<>();
+
+        TurnUpdateBroadcast.ResourceSnapshotDTO resourcesBefore = broadcast.getResourcesBeforeTurn();
+        TurnUpdateBroadcast.ResourceSnapshotDTO resourcesAfter = broadcast.getResources();
+
+        if (resourcesBefore != null && resourcesAfter != null) {
+            addResourceDeltaEntry(entries, ResourceType.FOOD, "Food", Constants.FOOD_ICON_PATH,
+                    resourcesBefore.getFood(), resourcesAfter.getFood());
+            addResourceDeltaEntry(entries, ResourceType.WOOD, "Wood", Constants.WOOD_ICON_PATH,
+                    resourcesBefore.getWood(), resourcesAfter.getWood());
+            addResourceDeltaEntry(entries, ResourceType.STONE, "Stone", Constants.STONE_ICON_PATH,
+                    resourcesBefore.getStone(), resourcesAfter.getStone());
+            addResourceDeltaEntry(entries, ResourceType.IRON, "Iron", Constants.IRON_ICON_PATH,
+                    resourcesBefore.getIron(), resourcesAfter.getIron());
+        }
+
         TurnUpdateBroadcast.TurnSummaryDTO summary = broadcast.getSummary();
-        
         if (summary != null) {
             if (summary.getCompletedProductionDescription() != null) {
                 entries.add(new NotificationEntry(null, summary.getCompletedProductionDescription(), null, true));
             }
-            
             if (summary.isStarvationTriggered()) {
                 entries.add(new NotificationEntry(null, "Starvation! Units lost Action Points", null, false));
             }
-            
             if (!summary.getDestroyedBuildingIds().isEmpty()) {
                 entries.add(new NotificationEntry(null, "A building collapsed from unpaid upkeep", null, false));
             }
-            
             List<String> depleted = summary.getDepletedResourceDescriptions();
             for (int i = 0; i < depleted.size(); i++) {
                 entries.add(new NotificationEntry(null, depleted.get(i), null, false));
             }
         }
-        
+
         if (entries.isEmpty()) {
             entries.add(new NotificationEntry(null, "No changes this turn", null, true));
         }
-        
         gameFrame.showTurnNotification("Turn " + broadcast.getNewTurnNumber(), entries);
     }
-    
+
+    private void addResourceDeltaEntry(List<NotificationEntry> entries, ResourceType resourceType,
+                                       String displayName, String iconPath,
+                                       int amountBefore, int amountAfter) {
+        int delta = amountAfter - amountBefore;
+        if (delta == 0) {
+            return;
+        }
+        String deltaText;
+        if (delta > 0) {
+            deltaText = "+" + delta;
+        } else {
+            deltaText = String.valueOf(delta);
+        }
+        entries.add(new NotificationEntry(iconPath, displayName, deltaText, delta > 0));
+    }
+
     private boolean hasIdleUnitsWithRemainingActionPoints() {
         List<Unit> units = gameSession.getUnits();
         for (int i = 0; i < units.size(); i++) {
@@ -197,7 +214,7 @@ public class MultiplayerTurnController {
         }
         return false;
     }
-    
+
     private boolean confirmEndTurnWithIdleUnits() {
         int userChoice = JOptionPane.showConfirmDialog(
                 mapPanel,
@@ -208,7 +225,7 @@ public class MultiplayerTurnController {
         );
         return userChoice == JOptionPane.YES_OPTION;
     }
-    
+
     public void setTurnIndicator(String text) {
         gameFrame.getHudPanel().setTurnIndicatorText(text);
     }
@@ -221,7 +238,7 @@ public class MultiplayerTurnController {
             pendingCombatReports.add(broadcast);
         }
     }
-    
+
     private void showPendingCombatReports() {
         for (int i = 0; i < pendingCombatReports.size(); i++) {
             CombatResultBroadcast report = pendingCombatReports.get(i);
@@ -230,7 +247,7 @@ public class MultiplayerTurnController {
         }
         pendingCombatReports.clear();
     }
-    
+
     private void showCombatReportDialog(CombatResultBroadcast broadcast, boolean isDefender) {
         CombatReportDialog dialog = new CombatReportDialog(gameFrame, broadcast, isDefender);
         dialog.setVisible(true);
