@@ -5,6 +5,7 @@
 ![Java](https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=java&logoColor=white)
 ![Swing](https://img.shields.io/badge/Swing-GUI-6DB33F?style=for-the-badge&logo=java&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-8.x-02303A?style=for-the-badge&logo=gradle&logoColor=white)
+![Multiplayer](https://img.shields.io/badge/Multiplayer-TCP/UDP-FF6B6B?style=for-the-badge&logo=socketdotio&logoColor=white)
 
 ---
 
@@ -15,6 +16,7 @@
 - [Screenshots](#-screenshots)
 - [How to Run](#-how-to-run)
 - [Gameplay Guide](#-gameplay-guide)
+- [Multiplayer Mode](#-multiplayer-mode)
 - [Controls](#-controls)
 - [Technologies Used](#-technologies-used)
 - [Project Structure](#-project-structure)
@@ -24,13 +26,18 @@
 
 ## 🎮 About the Game
 
-**Empire Builder** is a single-player, turn-based strategy game where you take control of a fledgling civilization. Your goal is to **explore the unknown**, **gather resources**, **construct buildings**, **expand your territory**, **engage in diplomacy with neutral tribes**, **build a military**, and **manage trade** — all while keeping your economy stable and your people fed.
+**Empire Builder** is a turn-based strategy game where you take control of a fledgling civilization. Your goal is to **explore the unknown**, **gather resources**, **construct buildings**, **expand your territory**, **engage in diplomacy**, **build a military**, and **manage trade** — all while keeping your economy stable and your people fed.
+
+The game features both **Single-Player** and **Multiplayer** modes, allowing you to compete against AI tribes or challenge your friends in real-time network battles.
 
 This project was developed as the Advanced Programming course project at **Sharif University of Technology**, focusing on:
 - Object-Oriented Programming (OOP)
 - Model-View-Controller (MVC) architecture
 - SOLID principles
 - Advanced Java (Swing, Streams, Generics)
+- **Network Programming (TCP/UDP Sockets)**
+- **Client-Server Architecture**
+- **Concurrency & Thread-Safety**
 - Procedural map generation
 - Event-driven architecture
 - Serialization for save/load
@@ -44,6 +51,7 @@ This project was developed as the Advanced Programming course project at **Shari
 | :--- | :--- |
 | 🗺️ **Map** | Procedurally generated hexagonal grid with forests, mountains, grasslands, and plains. Each tile has unique resources. |
 | 🎨 **Map Editor** | Customize and edit the map manually — change terrain types and place resources. |
+| 🗺️ **Prebuilt Maps** | 3 balanced prebuilt maps (Balanced Plains, Contested Valleys, Archipelago Wars) ready for multiplayer battles. |
 | ⛏️ **Resources** | Manage **Food**, **Wood**, **Stone**, and **Iron**. Each resource has specific production buildings. |
 | 🏛️ **Buildings** | Construct Lumber Mills, Stone Mines, Iron Mines, Farms, Stables, and **Bazaars** (trade buildings with 3 tiers). |
 | 👷 **Units** | Command **Explorers** (scout), **Builders** (construct with limited charges), **Workers** (gather), **Border Expanders** (claim territory), and **Military Units** (Swordsman, Archer, Cavalry). |
@@ -62,6 +70,13 @@ This project was developed as the Advanced Programming course project at **Shari
 | 🌊 **Sea Movement** | Units can move on sea tiles with a movement cost of 2 AP. |
 | 🔍 **Continuous Zoom** | Smooth, continuous zoom instead of discrete zoom levels. |
 | 🎨 **Visual Polish** | Smooth unit animations, custom icons, tooltips on hover, and a sleek dark-themed HUD. |
+| 🌐 **Multiplayer** | Real-time client-server gameplay with TCP/UDP networking. |
+| 🏠 **Lobby System** | Create/join lobbies, ready up, select maps, and start games with friends. |
+| 🤝 **Diplomacy** | Declare war, offer peace, and form alliances with other players. |
+| 💼 **Player Trading** | Exchange resources with other players through a trade inbox system. |
+| 🎒 **Items** | Produce and use special items like Teleport scrolls and combat boosters. |
+| 🎮 **Cheat Codes** | Optional cheat codes for testing (/greedisgood, /marco, /redbull, /gg). |
+| 🏆 **Victory Conditions** | Eliminate all opponents by destroying their Town Halls to win the game. |
 
 ---
 
@@ -79,24 +94,48 @@ This project was developed as the Advanced Programming course project at **Shari
 - **Java 17** or higher installed
 - **Gradle** (wrapped, no manual installation needed)
 
-### Build & Run
+### Single-Player Mode
 
 ```bash
 # Clone the repository
-git clone https://github.com/Pouria-8118/oooi.git
-cd oooi/app
+git clone https://github.com/Pouria-8118/CivGame_AP-Project
+cd CivGame_AP-Project/app
 
-# Build and run the game
+# Build and run the game in single-player mode
 ./gradlew run
 ```
 
-> 💡 **Note:** On Windows, use `gradlew.bat run` instead.
+### Multiplayer Mode
+
+Multiplayer requires running both a **Server** and **Client(s)**:
+
+**Step 1: Start the Server**
+```bash
+cd CivGame_AP-Project/app
+./gradlew runServer
+```
+
+**Step 2: Start Client(s)** (in separate terminals)
+```bash
+cd CivGame_AP-Project/app
+./gradlew runClient
+```
+
+> 💡 **Note:** On Windows, use `gradlew.bat runServer` and `gradlew.bat runClient` instead.
 
 ### Alternative: Build JAR and Run
 
 ```bash
 ./gradlew build
+
+# Single-player
 java -jar build/libs/empire-builder.jar
+
+# Multiplayer Server
+java -jar build/libs/empire-builder.jar --server
+
+# Multiplayer Client
+java -jar build/libs/empire-builder.jar --client
 ```
 
 ---
@@ -177,6 +216,66 @@ Each turn follows this cycle:
 
 ---
 
+## 🌐 Multiplayer Mode
+
+### 🏠 Lobby System
+- **Host** creates a lobby and selects the map
+- **Players** join the lobby and click "Ready"
+- Host clicks "Start Game" when all players are ready
+- **Enable Cheats** toggle (host-only) allows cheat codes during the game
+
+### 🤝 Diplomacy System
+Players can interact through diplomatic actions:
+
+| Action | Description |
+| :--- | :--- |
+| ⚔️ **Declare War** | Attack other players' units and buildings |
+| 🕊️ **Offer Peace** | Propose peace to end hostilities |
+| 🤝 **Propose Alliance** | Form an alliance to share vision and coordinate attacks |
+
+**Alliance Benefits:**
+- **Shared Vision** — Allies can see each other's explored tiles in real-time
+- **No Friendly Fire** — Cannot attack allied units
+- **Coordinated Strategy** — Plan attacks together
+
+### 💼 Player Trading
+- Open the **Trade** menu to send resource offers to other players
+- Recipients receive offers in their **Trade Inbox**
+- Accept or reject offers — resources are exchanged instantly
+- Only available during your turn
+
+### 🎒 Item System
+- Produce items at the Town Hall (requires Iron)
+- Use items on your units for special effects:
+  - **Teleport Scroll** — Instantly move a unit to any visible tile
+  - **Combat Boosters** — Increase unit combat effectiveness
+
+### 🎮 Cheat Codes (Optional)
+If cheats are enabled in the lobby, type these commands in chat:
+
+| Command | Effect |
+| :--- | :--- |
+| `/greedisgood` | +500 Food, Wood, Stone, Iron |
+| `/marco` | Remove Fog of War entirely |
+| `/redbull` | Refill all units' Action Points |
+| `/gg` | Instantly eliminate all opponents (victory) |
+| `/iknowkungfu` | Convert all Workers to Cavalry |
+| `/upgradeth` | Max upgrade Town Hall + full heal |
+
+### 🏆 Victory Conditions
+- **Eliminate all opponents** by destroying their Town Halls
+- When a player's Town Hall is destroyed, they are **eliminated** from the game
+- All their units and buildings are removed from the map
+- Last player standing wins!
+
+### 🌫️ Vision Sharing
+- **Allies share vision** in real-time
+- When an ally's unit moves, you see the newly revealed tiles
+- When alliance breaks, shared vision is immediately revoked
+- Fog of War applies normally to non-allied players
+
+---
+
 ## ⌨️ Controls
 
 | Action | Input |
@@ -191,6 +290,9 @@ Each turn follows this cycle:
 | **Toggle Fullscreen** | Press `F11` |
 | **End Turn** | Click the "End Turn" button |
 | **Open Map Editor** | From main menu |
+| **Open Inventory** | Click "Inventory" button (left panel) |
+| **Open Trade** | Click "Trade" button (multiplayer only) |
+| **Open Trade Inbox** | Click "Inbox" button (multiplayer only) |
 
 ---
 
@@ -201,10 +303,14 @@ Each turn follows this cycle:
 - **Gradle** — Build automation
 - **Java Sound API** — Background music playback
 - **Java Serialization** — Save/Load system
+- **Java Networking (Sockets)** — TCP/UDP client-server communication
+- **ConcurrentHashMap** — Thread-safe game state management
+- **JSON Serialization (Gson)** — Network message protocol
 - **Custom Hex Grid** — Procedural map generation with axial coordinates
 - **MVC Architecture** — Clean separation of concerns
 - **Event-Driven Architecture** — Loose coupling between components
 - **Strategy Pattern** — Trade strategies and tribe behaviors
+- **Observer Pattern** — Real-time state synchronization
 
 ---
 
@@ -217,26 +323,43 @@ empire-builder/
 │   │   └── main/
 │   │       ├── java/civgame/
 │   │       │   ├── audio/          # Music and sound
+│   │       │   ├── client/         # Client-side networking
 │   │       │   ├── controller/     # Game logic & event handling
 │   │       │   │   ├── game/       # In-game controllers
+│   │       │   │   ├── lobby/      # Lobby controllers
 │   │       │   │   └── menu/       # Menu controllers
 │   │       │   ├── model/          # Data & business logic
 │   │       │   │   ├── animal/     # Animal system
 │   │       │   │   ├── building/   # Building definitions
 │   │       │   │   ├── combat/     # Combat & military units
+│   │       │   │   ├── diplomacy/  # Player relations
 │   │       │   │   ├── event/      # Event system
 │   │       │   │   ├── game/       # Core game logic
+│   │       │   │   ├── item/       # Item system
 │   │       │   │   ├── map/        # Map & hex grid
 │   │       │   │   ├── pirate/     # Pirate system
 │   │       │   │   ├── resource/   # Resource management
 │   │       │   │   ├── trade/      # Trade system
 │   │       │   │   └── tribe/      # Tribe & relations
+│   │       │   ├── network/        # Network protocol & messages
+│   │       │   │   └── message/    # Message types (Request/Response/Broadcast)
+│   │       │   ├── server/         # Server-side networking
+│   │       │   │   ├── combat/     # PvP combat service
+│   │       │   │   ├── diplomacy/  # Diplomacy manager
+│   │       │   │   ├── game/       # Multiplayer game state
+│   │       │   │   ├── handler/    # Message handlers
+│   │       │   │   ├── item/       # Item service
+│   │       │   │   ├── lobby/      # Lobby manager
+│   │       │   │   └── trade/      # Trade service
 │   │       │   ├── util/           # Utilities & helpers
 │   │       │   └── view/           # UI components (Swing)
 │   │       │       ├── editor/     # Map editor
 │   │       │       ├── game/       # Game view
 │   │       │       ├── hud/        # HUD components
-│   │       │       └── menu/       # Menu views
+│   │       │       ├── item/       # Item UI
+│   │       │       ├── lobby/      # Lobby UI
+│   │       │       ├── menu/       # Menu views
+│   │       │       └── trade/      # Trade UI
 │   │       └── resources/          # Images, audio, assets
 │   ├── saves/                      # Save game files
 │   └── build.gradle
@@ -248,10 +371,9 @@ empire-builder/
 
 ## 👨‍💻 Credits
 
-**Developed by** — *Pouria AsnaAshari*  
+**Developed by** — *Pouria Asnaashari*  
 **Course** — Advanced Programming, Sharif University of Technology  
-**Semester** — Spring 2026
-
+**Semester** — Spring 2026  
 ---
 
 ## 📜 License
