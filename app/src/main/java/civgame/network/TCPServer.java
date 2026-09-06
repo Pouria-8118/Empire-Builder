@@ -55,6 +55,7 @@ public class TCPServer {
             Socket clientSocket = serverSocket.accept();
             clientSocket.setSoTimeout(NetworkConfig.SO_TIMEOUT_MS);
             clientSocket.setKeepAlive(true);
+            clientSocket.setTcpNoDelay(true);
             ClientConnection connection = new ClientConnection(clientSocket);
             connectedClients.add(connection);
             System.out.println("Client connected: " + clientSocket.getInetAddress());
@@ -91,7 +92,7 @@ public class TCPServer {
             }
         }
 
-        public void sendMessage(String message) throws NetworkException {
+        public synchronized void sendMessage(String message) throws NetworkException {
             try {
                 out.println(message);
                 out.flush();

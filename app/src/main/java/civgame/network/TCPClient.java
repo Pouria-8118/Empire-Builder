@@ -6,8 +6,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class TCPClient {
 
@@ -16,12 +14,10 @@ public class TCPClient {
     private PrintWriter out;
     private BufferedReader in;
     private boolean connected;
-    private Timer keepAliveTimer;
 
     public TCPClient(NetworkConfig config) {
         this.config = config;
         this.connected = false;
-        this.keepAliveTimer = null;
     }
 
     public void connect() throws NetworkException {
@@ -29,38 +25,18 @@ public class TCPClient {
             socket = new Socket(config.getServerIp(), config.getTcpPort());
             socket.setSoTimeout(NetworkConfig.SO_TIMEOUT_MS);
             socket.setKeepAlive(true);
+            socket.setTcpNoDelay(true);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             connected = true;
-            startKeepAlive();
             System.out.println("Connected to server at " + config.getServerIp() + ":" + config.getTcpPort());
         } catch (IOException e) {
             throw new NetworkException("Failed to connect to server: " + e.getMessage(), e);
         }
     }
 
-    private void startKeepAlive() {
-        keepAliveTimer = new Timer("TCPClientKeepAlive", true);
-        keepAliveTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (connected && out != null) {
-                    try {
-                        out.println("{\"type\":\"ping\"}");
-                        out.flush();
-                    } catch (Exception e) {
-                    }
-                }
-            }
-        }, NetworkConfig.KEEPALIVE_INTERVAL_MS, NetworkConfig.KEEPALIVE_INTERVAL_MS);
-    }
-
     public void disconnect() {
         connected = false;
-        if (keepAliveTimer != null) {
-            keepAliveTimer.cancel();
-            keepAliveTimer = null;
-        }
         try {
             if (socket != null && !socket.isClosed()) {
                 socket.close();
@@ -70,7 +46,7 @@ public class TCPClient {
         }
     }
 
-    public void sendMessage(String message) throws NetworkException {
+    public synchronized void sendMessage(String message) throws NetworkException {
         if (!isConnected()) {
             throw new NetworkException("Client is not connected");
         }
