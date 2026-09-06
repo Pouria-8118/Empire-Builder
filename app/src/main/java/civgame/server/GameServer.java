@@ -3,7 +3,6 @@ package civgame.server;
 import civgame.model.diplomacy.PlayerRelation;
 import civgame.model.diplomacy.PlayerRelationMap;
 import civgame.model.map.HexCoordinate;
-import civgame.model.map.HexTile;
 import civgame.network.NetworkConfig;
 import civgame.network.NetworkException;
 import civgame.network.TCPServer;
@@ -1241,21 +1240,33 @@ public class GameServer {
             return;
         }
         PlayerRelationMap relationMap = game.getRelationMap();
-        if (relationMap == null) {
-            return;
-        }
+        
+        // Forward fog reveal to all other players
         for (PlayerState otherPlayer : game.getAllPlayers()) {
             if (otherPlayer.getClientId().equals(clientId)) {
                 continue;
             }
-            if (relationMap.isAllied(clientId, otherPlayer.getClientId())) {
-                ClientHandler handler = findClientHandler(otherPlayer.getClientId());
-                if (handler != null) {
-                    try {
-                        handler.sendMessageObject(broadcast);
-                    } catch (NetworkException e) {
-                        System.err.println("Failed to send fog reveal to ally " + otherPlayer.getClientId() + ": " + e.getMessage());
-                    }
+            ClientHandler handler = findClientHandler(otherPlayer.getClientId());
+            if (handler == null) {
+                continue;
+            }
+            try {
+                handler.sendMessageObject(broadcast);
+            } catch (NetworkException e) {
+                System.err.println("Failed to send fog reveal to " + otherPlayer.getClientId() + ": " + e.getMessage());
+            }
+        }
+        
+        // Send updated snapshot to sender (to see newly visible enemy units)
+        PlayerState sender = game.getPlayer(clientId);
+        if (sender != null) {
+            GameStartBroadcast snapshot = snapshotBuilder.buildSnapshotForPlayer(game, sender);
+            ClientHandler handler = findClientHandler(clientId);
+            if (handler != null) {
+                try {
+                    handler.sendMessageObject(snapshot);
+                } catch (NetworkException e) {
+                    System.err.println("Failed to send updated snapshot to sender: " + e.getMessage());
                 }
             }
         }

@@ -310,7 +310,11 @@ public class LobbyController {
         this.currentGameSession = localSession;
         GameController gameController = new GameController(gameFrame, localSession, fogCalculator, null);
         this.currentGameController = gameController;
-        
+
+        gameController.setMultiplayerState(multiplayerState);
+        gameController.setDiplomacyState(diplomacyController.getState());
+        gameController.setNetworkManager(gameClient.getNetworkManager());
+
         if (gameClient != null) {
             this.turnController = new MultiplayerTurnController(
                     gameFrame,
@@ -437,6 +441,9 @@ public class LobbyController {
             diplomacyController.initializeFromRelations(snapshot.getInitialRelations());
         }
         
+        civgame.model.game.FogOfWarCalculator fogCalculator = new civgame.model.game.FogOfWarCalculator();
+        fogCalculator.updateVisibility(currentGameSession);
+        
         updateMapVisibilityFromSnapshot(snapshot);
         updateTerritory(snapshot.getTerritory());
         
@@ -477,12 +484,23 @@ public class LobbyController {
             HexCoordinate coordinate = new HexCoordinate(dto.getQ(), dto.getR());
             TileVisibility newVisibility = TileVisibility.valueOf(dto.getVisibility());
             HexTile existingTile = localMap.getTile(coordinate);
-            if (existingTile != null && newVisibility.ordinal() >= existingTile.getVisibility().ordinal()) {
+            if (existingTile == null) {
+                continue;
+            }
+            boolean shouldUpdate = false;
+            if (existingTile.getVisibility() == TileVisibility.UNSEEN) {
+                shouldUpdate = true;
+            } else if (newVisibility.ordinal() > existingTile.getVisibility().ordinal()) {
+                shouldUpdate = true;
+            }
+            if (shouldUpdate) {
                 try {
                     TerrainType terrain = TerrainType.valueOf(dto.getTerrainType());
                     TileResourceType resource = TileResourceType.valueOf(dto.getResourceType());
                     HexTile newTile = new HexTile(coordinate, terrain, resource);
-                    newTile.setVisibility(newVisibility);
+                    TileVisibility finalVisibility = newVisibility.ordinal() > existingTile.getVisibility().ordinal() 
+                            ? newVisibility : existingTile.getVisibility();
+                    newTile.setVisibility(finalVisibility);
                     localMap.setTile(coordinate, newTile);
                 } catch (IllegalArgumentException ignored) {
                 }
@@ -793,11 +811,9 @@ public class LobbyController {
         if (currentGameSession == null || currentGameFrame == null) {
             return;
         }
-        if (broadcast.getRevealerClientId().equals(multiplayerState.getMyClientId())) {
-            return;
-        }
         civgame.model.map.HexMap localMap = currentGameSession.getHexMap();
         List<civgame.network.message.game.FogRevealBroadcast.RevealedTileDTO> tiles = broadcast.getRevealedTiles();
+        boolean updated = false;
         for (int i = 0; i < tiles.size(); i++) {
             civgame.network.message.game.FogRevealBroadcast.RevealedTileDTO dto = tiles.get(i);
             HexCoordinate coordinate = new HexCoordinate(dto.getQ(), dto.getR());
@@ -810,10 +826,13 @@ public class LobbyController {
                     HexTile newTile = new HexTile(coordinate, terrain, resource);
                     newTile.setVisibility(newVisibility);
                     localMap.setTile(coordinate, newTile);
+                    updated = true;
                 } catch (IllegalArgumentException ignored) {
                 }
             }
         }
-        currentGameFrame.getMapPanel().repaint();
+        if (updated) {
+            currentGameFrame.getMapPanel().repaint();
+        }
     }
 }
