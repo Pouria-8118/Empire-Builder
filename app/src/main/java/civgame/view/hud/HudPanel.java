@@ -49,6 +49,11 @@ public class HudPanel extends JPanel {
     private final StyledButton inventoryButton;
 
     public HudPanel() {
+        this(false);
+    }
+
+    public HudPanel(boolean multiplayer) {
+
         setOpaque(false);
         setLayout(new FlowLayout(FlowLayout.CENTER, 12, 10));
 
@@ -63,10 +68,6 @@ public class HudPanel extends JPanel {
         unitCountLabel = createStyledLabel("Units: 0/0", null);
         queueLabel = createStyledLabel("Queue: Idle", null);
 
-        tradeButton = new StyledButton("Trade", new Dimension(70, 28));
-        inboxButton = new StyledButton("Inbox", new Dimension(70, 28));
-        inventoryButton = new StyledButton("Items", new Dimension(70, 28));
-
         add(turnLabel);
         add(townHallLabel);
         add(happinessLabel);
@@ -77,9 +78,19 @@ public class HudPanel extends JPanel {
         add(ironLabel);
         add(unitCountLabel);
         add(queueLabel);
-        add(tradeButton);
-        add(inboxButton);
-        add(inventoryButton);
+
+        if (multiplayer) {
+            tradeButton = new StyledButton("Trade", new Dimension(70, 28));
+            inboxButton = new StyledButton("Inbox", new Dimension(70, 28));
+            inventoryButton = new StyledButton("Items", new Dimension(70, 28));
+            add(tradeButton);
+            add(inboxButton);
+            add(inventoryButton);
+        } else {
+            tradeButton = null;
+            inboxButton = null;
+            inventoryButton = null;
+        }
     }
 
     private JLabel createStyledLabel(String text, String iconPath) {
@@ -188,14 +199,20 @@ public class HudPanel extends JPanel {
     }
     
     public void setTradeButtonListener(ActionListener listener) {
-        tradeButton.addActionListener(listener);
+        if (tradeButton != null) {
+            tradeButton.addActionListener(listener);
+        }
     }
-    
+
     public void setInboxButtonListener(ActionListener listener) {
-        inboxButton.addActionListener(listener);
+        if (inboxButton != null) {
+            inboxButton.addActionListener(listener);
+        }
     }
-    
+
     public void setInventoryButtonListener(ActionListener listener) {
-        inventoryButton.addActionListener(listener);
+        if (inventoryButton != null) {
+            inventoryButton.addActionListener(listener);
+        }
     }
 }

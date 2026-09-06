@@ -14,6 +14,7 @@ public class TCPClient {
     private PrintWriter out;
     private BufferedReader in;
     private boolean connected;
+    private final Object writeLock = new Object();
 
     public TCPClient(NetworkConfig config) {
         this.config = config;
@@ -23,7 +24,6 @@ public class TCPClient {
     public void connect() throws NetworkException {
         try {
             socket = new Socket(config.getServerIp(), config.getTcpPort());
-            socket.setSoTimeout(NetworkConfig.SO_TIMEOUT_MS);
             socket.setKeepAlive(true);
             socket.setTcpNoDelay(true);
             out = new PrintWriter(socket.getOutputStream(), true);
@@ -46,15 +46,20 @@ public class TCPClient {
         }
     }
 
-    public synchronized void sendMessage(String message) throws NetworkException {
+    public void sendMessage(String message) throws NetworkException {
         if (!isConnected()) {
             throw new NetworkException("Client is not connected");
         }
-        try {
-            out.println(message);
-            out.flush();
-        } catch (Exception e) {
-            throw new NetworkException("Failed to send message: " + e.getMessage(), e);
+        synchronized (writeLock) {
+            try {
+                out.println(message);
+                out.flush();
+                if (out.checkError()) {
+                    throw new NetworkException("PrintWriter reported an error");
+                }
+            } catch (Exception e) {
+                throw new NetworkException("Failed to send message: " + e.getMessage(), e);
+            }
         }
     }
 
@@ -63,9 +68,11 @@ public class TCPClient {
             throw new NetworkException("Client is not connected");
         }
         try {
-            return in.readLine();
-        } catch (SocketTimeoutException e) {
-            return null;
+            String line = in.readLine();
+            if (line == null) {
+                throw new NetworkException("Connection closed by server");
+            }
+            return line;
         } catch (IOException e) {
             throw new NetworkException("Failed to receive message: " + e.getMessage(), e);
         }

@@ -64,22 +64,29 @@ public class GameFrame extends JFrame {
     private final DiplomacyPanel diplomacyPanel;
     private final FullScreenToggler fullScreenToggler;
     private final ResourceRateCalculator resourceRateCalculator;
+    private final boolean multiplayer;
 
     public GameFrame(GameSession gameSession) {
+        this(gameSession, false);
+    }
+
+    public GameFrame(GameSession gameSession, boolean multiplayer) {
+
         super(Constants.WINDOW_TITLE + " - Game");
+        this.multiplayer = multiplayer;
 
         this.cameraState = new CameraState();
         this.selectionState = new SelectionState();
         this.movementAnimator = new UnitMovementAnimator();
         this.mapPanel = new MapPanel(gameSession, cameraState, selectionState, movementAnimator);
-        this.hudPanel = new HudPanel();
+        this.hudPanel = new HudPanel(multiplayer);
         this.selectedUnitPanel = new SelectedUnitPanel();
         this.controlsHintPanel = new ControlsHintPanel();
         this.turnNotificationPanel = new TurnNotificationPanel();
         this.endTurnPanel = new EndTurnPanel();
         this.minimapPanel = new MinimapPanel(gameSession, cameraState);
-        this.chatPanel = new ChatPanel();
-        this.diplomacyPanel = new DiplomacyPanel();
+        this.chatPanel = multiplayer ? new ChatPanel() : null;
+        this.diplomacyPanel = multiplayer ? new DiplomacyPanel() : null;
         this.layeredPane = new JLayeredPane();
         this.fullScreenToggler = new FullScreenToggler(this);
         this.resourceRateCalculator = new ResourceRateCalculator();
@@ -112,18 +119,19 @@ public class GameFrame extends JFrame {
     }
 
     private void setupLayeredPane() {
-        layeredPane.setPreferredSize(new Dimension(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT));
 
+        layeredPane.setPreferredSize(new Dimension(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT));
         layeredPane.add(mapPanel, JLayeredPane.DEFAULT_LAYER);
         layeredPane.add(hudPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(controlsHintPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(selectedUnitPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(endTurnPanel, JLayeredPane.PALETTE_LAYER);
         layeredPane.add(minimapPanel, JLayeredPane.PALETTE_LAYER);
-        layeredPane.add(chatPanel, JLayeredPane.PALETTE_LAYER);
-        layeredPane.add(diplomacyPanel, JLayeredPane.PALETTE_LAYER);
+        if (multiplayer) {
+            layeredPane.add(chatPanel, JLayeredPane.PALETTE_LAYER);
+            layeredPane.add(diplomacyPanel, JLayeredPane.PALETTE_LAYER);
+        }
         layeredPane.add(turnNotificationPanel, JLayeredPane.DRAG_LAYER);
-
         setContentPane(layeredPane);
         relayoutComponents();
     }
@@ -151,6 +159,7 @@ public class GameFrame extends JFrame {
     }
 
     private void relayoutComponents() {
+
         int frameWidth = layeredPane.getWidth();
         int frameHeight = layeredPane.getHeight();
 
@@ -162,27 +171,34 @@ public class GameFrame extends JFrame {
 
         int minimapX = frameWidth - MINIMAP_WIDTH - MARGIN;
         minimapPanel.setBounds(minimapX, MARGIN, MINIMAP_WIDTH, MINIMAP_HEIGHT);
-        
-        int chatX = frameWidth - CHAT_WIDTH - MARGIN;
-        int chatY = MARGIN + MINIMAP_HEIGHT + MARGIN;
-        chatPanel.setBounds(chatX, chatY, CHAT_WIDTH, CHAT_HEIGHT);
 
-        int reservedRightWidth = Math.max(MINIMAP_WIDTH, CHAT_WIDTH) + MARGIN * 2;
+        int reservedRightWidth;
+        if (multiplayer) {
+            int chatX = frameWidth - CHAT_WIDTH - MARGIN;
+            int chatY = MARGIN + MINIMAP_HEIGHT + MARGIN;
+            chatPanel.setBounds(chatX, chatY, CHAT_WIDTH, CHAT_HEIGHT);
+            reservedRightWidth = Math.max(MINIMAP_WIDTH, CHAT_WIDTH) + MARGIN * 2;
+        } else {
+            reservedRightWidth = MINIMAP_WIDTH + MARGIN * 2;
+        }
+
         int centeredAreaWidth = Math.max(MINIMUM_CENTERED_AREA_WIDTH, frameWidth - reservedRightWidth - MARGIN);
 
         int hudWidth = Math.min(HUD_MAX_WIDTH, centeredAreaWidth);
         int hudX = MARGIN + (centeredAreaWidth - hudWidth) / 2;
         hudPanel.setBounds(hudX, MARGIN, hudWidth, HUD_HEIGHT);
 
-        int diplomacyX = MARGIN;
-        int diplomacyY = MARGIN + HUD_HEIGHT + CONTROLS_HINT_GAP + CONTROLS_HINT_HEIGHT + CONTROLS_HINT_GAP;
-        int diplomacyWidth = hudWidth;
-        diplomacyPanel.setBounds(diplomacyX, diplomacyY, diplomacyWidth, DIPLOMACY_HEIGHT);
-
         int hintWidth = Math.min(CONTROLS_HINT_MAX_WIDTH, centeredAreaWidth);
         int hintX = MARGIN + (centeredAreaWidth - hintWidth) / 2;
         int hintY = MARGIN + HUD_HEIGHT + CONTROLS_HINT_GAP;
         controlsHintPanel.setBounds(hintX, hintY, hintWidth, CONTROLS_HINT_HEIGHT);
+
+        if (multiplayer) {
+            int diplomacyX = MARGIN;
+            int diplomacyY = MARGIN + HUD_HEIGHT + CONTROLS_HINT_GAP + CONTROLS_HINT_HEIGHT + CONTROLS_HINT_GAP;
+            int diplomacyWidth = hudWidth;
+            diplomacyPanel.setBounds(diplomacyX, diplomacyY, diplomacyWidth, DIPLOMACY_HEIGHT);
+        }
 
         int bottomY = frameHeight - BOTTOM_PANEL_HEIGHT - MARGIN;
         selectedUnitPanel.setBounds(MARGIN, bottomY, SELECTED_UNIT_PANEL_WIDTH, BOTTOM_PANEL_HEIGHT);
@@ -253,8 +269,13 @@ public class GameFrame extends JFrame {
     public ChatPanel getChatPanel() {
         return chatPanel;
     }
-    
+
     public DiplomacyPanel getDiplomacyPanel() {
         return diplomacyPanel;
     }
+
+    public boolean isMultiplayer() {
+        return multiplayer;
+    }
+
 }

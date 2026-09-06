@@ -7,7 +7,6 @@ public class NetworkConfig {
     public static final int DEFAULT_UDP_PORT = 9998;
     public static final int CONNECTION_TIMEOUT_MS = 5000;
     public static final int READ_TIMEOUT_MS = 30000;
-    public static final int SO_TIMEOUT_MS = 0;
     public static final int MAX_MESSAGE_SIZE = 65536;
 
     private String serverIp;

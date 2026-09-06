@@ -53,7 +53,6 @@ public class TCPServer {
     public ClientConnection acceptClient() throws NetworkException {
         try {
             Socket clientSocket = serverSocket.accept();
-            clientSocket.setSoTimeout(NetworkConfig.SO_TIMEOUT_MS);
             clientSocket.setKeepAlive(true);
             clientSocket.setTcpNoDelay(true);
             ClientConnection connection = new ClientConnection(clientSocket);
@@ -81,6 +80,7 @@ public class TCPServer {
         private final Socket socket;
         private final PrintWriter out;
         private final BufferedReader in;
+        private final Object writeLock = new Object();
 
         public ClientConnection(Socket socket) throws NetworkException {
             this.socket = socket;
@@ -92,20 +92,33 @@ public class TCPServer {
             }
         }
 
-        public synchronized void sendMessage(String message) throws NetworkException {
-            try {
-                out.println(message);
-                out.flush();
-            } catch (Exception e) {
-                throw new NetworkException("Failed to send message: " + e.getMessage(), e);
+        public void sendMessage(String message) throws NetworkException {
+            synchronized (writeLock) {
+                try {
+                    out.println(message);
+                    out.flush();
+                    if (out.checkError()) {
+                        throw new NetworkException("PrintWriter reported an error");
+                    }
+                } catch (Exception e) {
+                    throw new NetworkException("Failed to send message: " + e.getMessage(), e);
+                }
             }
         }
 
         public String receiveMessage() throws NetworkException {
             try {
-                return in.readLine();
-            } catch (SocketTimeoutException e) {
-                return null;
+                while (true) {
+                    try {
+                        String line = in.readLine();
+                        if (line == null) {
+                            throw new NetworkException("Connection closed by client");
+                        }
+                        return line;
+                    } catch (SocketTimeoutException e) {
+                        continue;
+                    }
+                }
             } catch (IOException e) {
                 throw new NetworkException("Failed to receive message: " + e.getMessage(), e);
             }

@@ -76,7 +76,7 @@ public class LobbyController {
     private GameSession currentGameSession;
     private GameFrame currentGameFrame;
     private GameController currentGameController;
-    private MultiplayerTurnController turnController;  // ← اضافه شد
+    private MultiplayerTurnController turnController;
     
     public LobbyController(LobbyFrame lobbyFrame, String username) {
         this.lobbyFrame = lobbyFrame;
@@ -88,7 +88,7 @@ public class LobbyController {
         this.gameClient = null;
         this.chatController = new ChatController(lobbyFrame.getChatPanel());
         this.multiplayerState = null;
-        this.turnController = null;  // ← اضافه شد
+        this.turnController = null;
         
         registerListeners();
     }
@@ -300,14 +300,13 @@ public class LobbyController {
         FogOfWarCalculator fogCalculator = new FogOfWarCalculator();
         fogCalculator.updateVisibility(localSession);
         
-        GameFrame gameFrame = new GameFrame(localSession);
+        GameFrame gameFrame = new GameFrame(localSession, true);
         this.currentGameFrame = gameFrame;
         this.currentGameSession = localSession;
         GameController gameController = new GameController(gameFrame, localSession, fogCalculator, null);
         this.currentGameController = gameController;
         
         if (gameClient != null) {
-            // ← اصلاح: turnController به field اختصاص داده شد
             this.turnController = new MultiplayerTurnController(
                     gameFrame,
                     localSession,
@@ -343,7 +342,7 @@ public class LobbyController {
                 
                 @Override
                 public void onServerMessageObject(Message message) {
-                    handleGameMessage(message);  // ← اصلاح: turnController از field خوانده می‌شود
+                    handleGameMessage(message);
                 }
             });
             
@@ -363,7 +362,7 @@ public class LobbyController {
         lobbyFrame.dispose();
     }
     
-    private void handleGameMessage(Message message) {  // ← اصلاح: turnController از field خوانده می‌شود
+    private void handleGameMessage(Message message) {
         String type = message.getType();
         
         if (type.equals(MessageType.END_TURN_RESPONSE)) {
