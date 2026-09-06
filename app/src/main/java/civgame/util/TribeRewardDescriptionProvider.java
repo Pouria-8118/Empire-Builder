@@ -2,7 +2,6 @@ package civgame.util;
 
 import civgame.model.tribe.TribeType;
 
-// Text-only for now
 public class TribeRewardDescriptionProvider {
 
     private TribeRewardDescriptionProvider() {
