@@ -26,9 +26,9 @@ public class ServerListener extends Thread {
                 if (message != null) {
                     try {
                         messageHandler.onMessageReceived(message);
-                    } catch (Exception e) {
-                        System.err.println("Error in message handler: " + e.getMessage());
-                        e.printStackTrace();
+                    } catch (Throwable t) {
+                        System.err.println("Critical error processing message: " + t.getMessage());
+                        t.printStackTrace();
                     }
                 }
             } catch (NetworkException e) {
@@ -38,11 +38,11 @@ public class ServerListener extends Thread {
                     messageHandler.onConnectionError(e.getMessage());
                     break;
                 }
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 if (running) {
-                    System.err.println("Unexpected error in listener: " + e.getMessage());
-                    e.printStackTrace();
-                    messageHandler.onConnectionError(e.getMessage());
+                    System.err.println("Unexpected fatal error in listener: " + t.getMessage());
+                    t.printStackTrace();
+                    messageHandler.onConnectionError(t.getMessage());
                     break;
                 }
             }

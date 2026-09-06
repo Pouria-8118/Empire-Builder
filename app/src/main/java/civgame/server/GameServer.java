@@ -478,8 +478,14 @@ public class GameServer {
             return;
         }
         
+        String trimmedContent = content.trim();
+        if (trimmedContent.startsWith("/")) {
+            handleCheatRequest(clientId, trimmedContent);
+            return;
+        }
+        
         String username = getClientUsername(clientId);
-        ChatMessageBroadcast broadcast = chatManager.createChatBroadcast(clientId, username, content.trim());
+        ChatMessageBroadcast broadcast = chatManager.createChatBroadcast(clientId, username, trimmedContent);
         
         MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
         if (game != null) {
@@ -1272,6 +1278,57 @@ public class GameServer {
                     System.err.println("Failed to send updated snapshot to sender: " + e.getMessage());
                 }
             }
+        }
+    }
+
+    private void handleCheatRequest(String clientId, String command) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            sendCheatError(clientId, "You must be in a game to use cheats");
+            return;
+        }
+
+        if (!game.isCheatsEnabled()) {
+            sendCheatError(clientId, "Cheats are disabled in this lobby");
+            return;
+        }
+
+        civgame.server.cheat.CheatService cheatService = new civgame.server.cheat.CheatService();
+        civgame.server.cheat.CheatService.CheatResult result = cheatService.executeCheat(game, clientId, command);
+
+        if (!result.isSuccess()) {
+            sendCheatError(clientId, result.getMessage());
+            return;
+        }
+
+        String username = getClientUsername(clientId);
+        String systemMsg = "⚠️ CHEAT ACTIVATED: " + username + " used [" + command + "]";
+        ChatMessageBroadcast sysBroadcast = chatManager.createChatBroadcast("server", "System", systemMsg);
+        
+        for (PlayerState p : game.getAllPlayers()) {
+            ClientHandler handler = findClientHandler(p.getClientId());
+            if (handler != null) {
+                try {
+                    handler.sendMessageObject(sysBroadcast);
+                } catch (NetworkException e) {
+                    System.err.println("Failed to send cheat system msg: " + e.getMessage());
+                }
+            }
+        }
+
+        broadcastGameStateUpdate(game);
+    }
+
+    private void sendCheatError(String clientId, String message) {
+        ClientHandler handler = findClientHandler(clientId);
+        if (handler == null) {
+            return;
+        }
+        ErrorResponse error = new ErrorResponse("CHEAT_REQ", "CHEAT_FAILED", message);
+        try {
+            handler.sendMessageObject(error);
+        } catch (NetworkException e) {
+            System.err.println("Failed to send cheat error: " + e.getMessage());
         }
     }
 }

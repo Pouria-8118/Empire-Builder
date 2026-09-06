@@ -19,11 +19,13 @@ public class MultiplayerGameState {
     private int currentTurnIndex;
     private int turnNumber;
     private boolean finished;
+    private boolean cheatsEnabled;
 
     public MultiplayerGameState(String gameId,
                                 String lobbyId,
                                 PrebuiltMap prebuiltMap,
-                                List<String> orderedClientIds) {
+                                List<String> orderedClientIds,
+                                boolean cheatsEnabled) {
         this.gameId = gameId;
         this.lobbyId = lobbyId;
         this.sharedMap = prebuiltMap.getHexMap();
@@ -36,6 +38,7 @@ public class MultiplayerGameState {
         this.currentTurnIndex = 0;
         this.turnNumber = 1;
         this.finished = false;
+        this.cheatsEnabled = cheatsEnabled;
     }
 
     public String getGameId() {
@@ -153,5 +156,9 @@ public class MultiplayerGameState {
             }
         }
         return null;
+    }
+
+    public boolean isCheatsEnabled() {
+        return cheatsEnabled;
     }
 }

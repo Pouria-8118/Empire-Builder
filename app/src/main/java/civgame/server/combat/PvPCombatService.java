@@ -285,18 +285,18 @@ public class PvPCombatService {
         private final List<Broadcast> additionalBroadcasts;
 
         public PvPCombatResult(boolean success, String message) {
-            this(success, message, null, null);
+            this(success, message, null, new ArrayList<>());
         }
 
         public PvPCombatResult(boolean success, String message, CombatResultBroadcast broadcast) {
-            this(success, message, broadcast, null);
+            this(success, message, broadcast, new ArrayList<>());
         }
 
         public PvPCombatResult(boolean success, String message, CombatResultBroadcast broadcast, List<Broadcast> additionalBroadcasts) {
             this.success = success;
             this.message = message;
             this.broadcast = broadcast;
-            this.additionalBroadcasts = additionalBroadcasts;
+            this.additionalBroadcasts = additionalBroadcasts != null ? additionalBroadcasts : new ArrayList<>();
         }
 
         public boolean isSuccess() {

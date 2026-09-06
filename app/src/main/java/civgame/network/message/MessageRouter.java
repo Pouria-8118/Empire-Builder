@@ -41,6 +41,8 @@ public class MessageRouter {
         registerMessageType(MessageType.CHAT_MESSAGE_REQUEST, civgame.network.message.chat.ChatMessageRequest.class);
         registerMessageType(MessageType.CHAT_MESSAGE_BROADCAST, civgame.network.message.chat.ChatMessageBroadcast.class);
         registerMessageType(MessageType.GAME_START_BROADCAST, civgame.network.message.game.GameStartBroadcast.class);
+        registerMessageType(MessageType.PLAYER_ELIMINATED_BROADCAST, civgame.network.message.game.PlayerEliminatedBroadcast.class);
+        registerMessageType(MessageType.GAME_OVER_BROADCAST, civgame.network.message.game.GameOverBroadcast.class);
         registerMessageType(MessageType.END_TURN_REQUEST, civgame.network.message.game.EndTurnRequest.class);
         registerMessageType(MessageType.END_TURN_RESPONSE, civgame.network.message.game.EndTurnResponse.class);
         registerMessageType(MessageType.TURN_UPDATE_BROADCAST, civgame.network.message.game.TurnUpdateBroadcast.class);

@@ -51,11 +51,13 @@ public class MultiplayerGameSessionManager {
         }
 
         String gameId = generateGameId();
+        boolean cheatsEnabled = lobby.isCheatsEnabled();
         MultiplayerGameState gameState = new MultiplayerGameState(
                 gameId,
                 lobby.getLobbyId(),
                 prebuiltMap,
-                orderedClientIds
+                orderedClientIds,
+                cheatsEnabled
         );
 
         for (int i = 0; i < orderedClientIds.size(); i++) {
