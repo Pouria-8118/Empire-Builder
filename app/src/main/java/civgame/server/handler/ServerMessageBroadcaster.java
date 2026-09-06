@@ -62,6 +62,13 @@ public class ServerMessageBroadcaster implements MessageBroadcaster {
 
     @Override
     public void broadcastGameStateUpdate(MultiplayerGameState game) {
-        // TODO: Implement full game state broadcast with Fog of War
+        civgame.server.game.GameStateSnapshotBuilder snapshotBuilder = new civgame.server.game.GameStateSnapshotBuilder();
+        for (PlayerState player : game.getAllPlayers()) {
+            if (!player.isActive()) {
+                continue;
+            }
+            civgame.network.message.game.GameStartBroadcast snapshot = snapshotBuilder.buildSnapshotForPlayer(game, player);
+            sendToClient(player.getClientId(), snapshot);
+        }
     }
 }

@@ -58,7 +58,6 @@ public class Main {
     }
 
     private static void launchApplication() {
-        // TODO: Add client connection UI
         MainMenuFrame mainMenuFrame = new MainMenuFrame();
         MusicPlayer musicPlayer = new MusicPlayer();
         MainMenuController mainMenuController = new MainMenuController(mainMenuFrame, musicPlayer);
