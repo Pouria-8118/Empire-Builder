@@ -10,7 +10,10 @@ import civgame.model.map.HexCoordinate;
 import civgame.model.unit.MilitaryUnitCapProvider;
 import civgame.model.unit.Unit;
 import civgame.model.unit.UnitType;
+import civgame.network.message.Broadcast;
 import civgame.network.message.combat.CombatResultBroadcast;
+import civgame.network.message.game.GameOverBroadcast;
+import civgame.network.message.game.PlayerEliminatedBroadcast;
 import civgame.server.game.MultiplayerGameState;
 import civgame.server.game.PlayerState;
 import civgame.util.Constants;
@@ -91,12 +94,42 @@ public class PvPCombatService {
             }
         }
 
+        List<Broadcast> additionalBroadcasts = new ArrayList<>();
+
         if (targetTownHall != null && !targetTownHall.isDestroyedByCombat()) {
             int fixedDamage = calculateBuildingDamage(attackerUnits);
             targetTownHall.applyCombatDamage(fixedDamage);
             buildingDamage += fixedDamage;
             if (targetTownHall.isDestroyedByCombat()) {
                 buildingDestroyed = true;
+                
+                if (defenderPlayer.countActiveTownHalls() == 0) {
+                    game.eliminatePlayer(defenderPlayer.getClientId());
+                    
+                    defenderSession.clearAllUnits();
+                    defenderSession.clearAllBuildings();
+                    
+                    PlayerEliminatedBroadcast elimBroadcast = new PlayerEliminatedBroadcast(
+                            "server",
+                            defenderPlayer.getClientId(),
+                            defenderPlayer.getUsername(),
+                            attackerPlayer.getClientId(),
+                            attackerPlayer.getUsername()
+                    );
+                    additionalBroadcasts.add(elimBroadcast);
+                    
+                    if (game.isFinished()) {
+                        PlayerState winner = game.getWinner();
+                        if (winner != null) {
+                            GameOverBroadcast gameOver = new GameOverBroadcast(
+                                    "server",
+                                    winner.getClientId(),
+                                    winner.getUsername()
+                            );
+                            additionalBroadcasts.add(gameOver);
+                        }
+                    }
+                }
             }
         }
 
@@ -106,7 +139,7 @@ public class PvPCombatService {
                 combatResult, attackerLosses, defenderLosses,
                 buildingDamage, buildingDestroyed);
 
-        return new PvPCombatResult(true, "Combat resolved", broadcast);
+        return new PvPCombatResult(true, "Combat resolved", broadcast, additionalBroadcasts);
     }
 
     private int countCombatBoostedUnits(List<Unit> units) {
@@ -249,15 +282,21 @@ public class PvPCombatService {
         private final boolean success;
         private final String message;
         private final CombatResultBroadcast broadcast;
+        private final List<Broadcast> additionalBroadcasts;
 
         public PvPCombatResult(boolean success, String message) {
-            this(success, message, null);
+            this(success, message, null, null);
         }
 
         public PvPCombatResult(boolean success, String message, CombatResultBroadcast broadcast) {
+            this(success, message, broadcast, null);
+        }
+
+        public PvPCombatResult(boolean success, String message, CombatResultBroadcast broadcast, List<Broadcast> additionalBroadcasts) {
             this.success = success;
             this.message = message;
             this.broadcast = broadcast;
+            this.additionalBroadcasts = additionalBroadcasts;
         }
 
         public boolean isSuccess() {
@@ -270,6 +309,10 @@ public class PvPCombatService {
 
         public CombatResultBroadcast getBroadcast() {
             return broadcast;
+        }
+
+        public List<Broadcast> getAdditionalBroadcasts() {
+            return additionalBroadcasts;
         }
     }
 }

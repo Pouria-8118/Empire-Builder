@@ -845,6 +845,12 @@ public class GameServer {
             broadcastToAllInGame(game, result.getBroadcast(), null);
         }
         
+        if (result.getAdditionalBroadcasts() != null) {
+            for (civgame.network.message.Broadcast extraBroadcast : result.getAdditionalBroadcasts()) {
+                broadcastToAllInGame(game, extraBroadcast, null);
+            }
+        }
+        
         broadcastGameStateUpdate(game);
     }
     

@@ -154,6 +154,12 @@ public class GameSession implements java.io.Serializable {
         units.remove(unit);
     }
 
+    
+    public void clearAllUnits() {
+        units.clear();
+    }
+
+
     public void increaseUnitCap(int extraCapacity) {
         unitCap = unitCap + extraCapacity;
     }
@@ -168,6 +174,10 @@ public class GameSession implements java.io.Serializable {
 
     public void removeBuildingAt(HexCoordinate coordinate) {
         buildings.remove(coordinate);
+    }
+
+    public void clearAllBuildings() {
+        buildings.clear();
     }
 
     public List<Building> getAllBuildings() {
