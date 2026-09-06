@@ -115,6 +115,18 @@ public class LobbyManager {
         }
         return lobby.setPlayerReady(clientId, ready);
     }
+
+    public synchronized boolean setCheatsEnabled(String clientId, boolean enabled) {
+        Lobby lobby = getLobbyForClient(clientId);
+        if (lobby == null) {
+            return false;
+        }
+        if (!lobby.isHost(clientId)) {
+            return false;
+        }
+        lobby.setCheatsEnabled(enabled);
+        return true;
+    }
     
     public synchronized Lobby prepareToStartGame(String clientId) {
         Lobby lobby = getLobbyForClient(clientId);

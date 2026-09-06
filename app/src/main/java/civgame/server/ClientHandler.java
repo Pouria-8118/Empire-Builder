@@ -138,6 +138,8 @@ public class ClientHandler extends Thread {
             gameServer.handleTradeAcceptRequest(clientId, (TradeAcceptRequest) request);
         } else if (type.equals(civgame.network.message.MessageType.TRADE_REJECT_REQUEST)) {
             gameServer.handleTradeRejectRequest(clientId, (TradeRejectRequest) request);
+        } else if (type.equals(civgame.network.message.MessageType.TOGGLE_CHEATS_REQUEST)) {
+            gameServer.handleToggleCheatsRequest(clientId, (civgame.network.message.lobby.ToggleCheatsRequest) request);
         } else if (type.equals(civgame.network.message.MessageType.TRADE_CANCEL_REQUEST)) {
             gameServer.handleTradeCancelRequest(clientId, (TradeCancelRequest) request);
         } else if (type.equals(civgame.network.message.MessageType.ITEM_PRODUCE_REQUEST)) {

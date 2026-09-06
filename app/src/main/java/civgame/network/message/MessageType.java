@@ -58,6 +58,8 @@ public final class MessageType {
     public static final String ITEM_USE_REQUEST = "ITEM_USE_REQUEST";
     public static final String ITEM_ACTION_RESPONSE = "ITEM_ACTION_RESPONSE";
     public static final String ITEM_ACTION_BROADCAST = "ITEM_ACTION_BROADCAST";
+    public static final String TOGGLE_CHEATS_REQUEST = "TOGGLE_CHEATS_REQUEST";
+    public static final String TOGGLE_CHEATS_BROADCAST = "TOGGLE_CHEATS_BROADCAST";
     
     private MessageType() {
     }

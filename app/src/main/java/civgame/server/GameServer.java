@@ -1302,7 +1302,7 @@ public class GameServer {
         }
 
         String username = getClientUsername(clientId);
-        String systemMsg = "⚠️ CHEAT ACTIVATED: " + username + " used [" + command + "]";
+        String systemMsg = "! CHEAT ACTIVATED: " + username + " used [" + command + "]";
         ChatMessageBroadcast sysBroadcast = chatManager.createChatBroadcast("server", "System", systemMsg);
         
         for (PlayerState p : game.getAllPlayers()) {
@@ -1330,5 +1330,36 @@ public class GameServer {
         } catch (NetworkException e) {
             System.err.println("Failed to send cheat error: " + e.getMessage());
         }
+    }
+
+    public void handleToggleCheatsRequest(String clientId, civgame.network.message.lobby.ToggleCheatsRequest request) {
+        Lobby lobby = lobbyManager.getLobbyForClient(clientId);
+        if (lobby == null) {
+            return;
+        }
+        if (!lobby.isHost(clientId)) {
+            ClientHandler handler = findClientHandler(clientId);
+            if (handler != null) {
+                ErrorResponse error = new ErrorResponse(
+                        request.getRequestId(),
+                        "NOT_HOST",
+                        "Only the host can toggle cheats"
+                );
+                try {
+                    handler.sendMessageObject(error);
+                } catch (NetworkException e) {
+                    System.err.println("Failed to send error response: " + e.getMessage());
+                }
+            }
+            return;
+        }
+        
+        lobbyManager.setCheatsEnabled(clientId, request.isEnabled());
+        
+        civgame.network.message.lobby.ToggleCheatsBroadcast broadcast = new civgame.network.message.lobby.ToggleCheatsBroadcast(
+                "server",
+                request.isEnabled()
+        );
+        broadcastToLobby(lobby, broadcast, null);
     }
 }

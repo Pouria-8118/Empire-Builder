@@ -231,6 +231,9 @@ public class LobbyPanel extends JPanel {
     public JCheckBox getCheatsCheckBox() {
         return cheatsCheckBox;
     }
+    public void updateCheatsStatus(boolean enabled) {
+        cheatsCheckBox.setSelected(enabled);
+    }
     
     private static class PlayerListCellRenderer extends JLabel implements ListCellRenderer<String> {
         

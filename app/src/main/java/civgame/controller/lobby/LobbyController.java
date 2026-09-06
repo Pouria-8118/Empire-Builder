@@ -101,6 +101,7 @@ public class LobbyController {
         lobbyFrame.getLobbyPanel().getStartButton().addActionListener(new StartButtonListener());
         lobbyFrame.getLobbyPanel().getLeaveButton().addActionListener(new LeaveButtonListener());
         lobbyFrame.getLobbyPanel().getMapComboBox().addActionListener(new MapComboBoxListener());
+        lobbyFrame.getLobbyPanel().getCheatsCheckBox().addActionListener(new CheatsCheckBoxListener());
     }
     
     public void connectAndJoin() {
@@ -203,8 +204,9 @@ public class LobbyController {
                 chatController.handleChatBroadcast((ChatMessageBroadcast) message);
             } else if (type.equals(MessageType.ERROR_RESPONSE)) {
                 handleErrorResponse((ErrorResponse) message);
-            }
-        } catch (Exception e) {
+            } else if (type.equals(MessageType.TOGGLE_CHEATS_BROADCAST)) {
+                handleToggleCheatsBroadcast((civgame.network.message.lobby.ToggleCheatsBroadcast) message);
+        }} catch (Exception e) {
             System.err.println("Error processing lobby message: " + e.getMessage());
             e.printStackTrace();
         }
@@ -685,6 +687,39 @@ public class LobbyController {
             }
         }
     }
+    private class CheatsCheckBoxListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            if (gameClient == null || !gameClient.isConnected()) {
+                return;
+            }
+            if (!myClientId.equals(currentHostClientId)) {
+                JOptionPane.showMessageDialog(
+                        lobbyFrame,
+                        "Only the host can enable/disable cheats.",
+                        "Permission Denied",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                lobbyFrame.getLobbyPanel().getCheatsCheckBox().setSelected(
+                        !lobbyFrame.getLobbyPanel().getCheatsCheckBox().isSelected()
+                );
+                return;
+            }
+            boolean isEnabled = lobbyFrame.getLobbyPanel().getCheatsCheckBox().isSelected();
+            civgame.network.message.lobby.ToggleCheatsRequest request = 
+                    new civgame.network.message.lobby.ToggleCheatsRequest(myClientId, isEnabled);
+            try {
+                gameClient.sendMessageObject(request);
+            } catch (NetworkException e) {
+                JOptionPane.showMessageDialog(
+                        lobbyFrame,
+                        "Failed to toggle cheats: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+    }
     
     private void initializeEnemyUnits(GameSession session,
                                        List<GameStartBroadcast.EnemyUnitDTO> enemyUnits) {
@@ -842,5 +877,9 @@ public class LobbyController {
         if (updated) {
             currentGameFrame.getMapPanel().repaint();
         }
+    }
+
+    private void handleToggleCheatsBroadcast(civgame.network.message.lobby.ToggleCheatsBroadcast broadcast) {
+        lobbyFrame.getLobbyPanel().updateCheatsStatus(broadcast.isEnabled());
     }
 }

@@ -72,6 +72,8 @@ public class MessageRouter {
         registerMessageType(MessageType.ITEM_USE_REQUEST, civgame.network.message.item.ItemUseRequest.class);
         registerMessageType(MessageType.ITEM_ACTION_RESPONSE, civgame.network.message.item.ItemActionResponse.class);
         registerMessageType(MessageType.ITEM_ACTION_BROADCAST, civgame.network.message.item.ItemActionBroadcast.class);
+        registerMessageType(MessageType.TOGGLE_CHEATS_REQUEST, civgame.network.message.lobby.ToggleCheatsRequest.class);
+        registerMessageType(MessageType.TOGGLE_CHEATS_BROADCAST, civgame.network.message.lobby.ToggleCheatsBroadcast.class);
     }
 
     public void registerMessageType(String type, Class<? extends Message> messageClass) {
