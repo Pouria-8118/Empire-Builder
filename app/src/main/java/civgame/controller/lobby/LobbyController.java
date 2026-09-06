@@ -71,6 +71,7 @@ public class LobbyController {
     private String currentLobbyId;
     private String currentHostClientId;
     private boolean isReady;
+    private boolean suppressMapChange;
     private MultiplayerGameClientState multiplayerState;
     private DiplomacyController diplomacyController;
     private GameClient currentGameClient;
@@ -86,6 +87,7 @@ public class LobbyController {
         this.currentLobbyId = null;
         this.currentHostClientId = null;
         this.isReady = false;
+        this.suppressMapChange = true;
         this.gameClient = null;
         this.chatController = new ChatController(lobbyFrame.getChatPanel());
         this.multiplayerState = null;
@@ -228,8 +230,10 @@ public class LobbyController {
         
         lobbyFrame.getLobbyPanel().initializeWithClientId(myClientId);
         lobbyFrame.getLobbyPanel().updatePlayerList(response.getCurrentPlayers(), currentHostClientId);
-        lobbyFrame.getLobbyPanel().updateMapSelection(response.getSelectedMapName());
         lobbyFrame.getLobbyPanel().setAvailableMaps(response.getAvailableMaps());
+        suppressMapChange = true;
+        lobbyFrame.getLobbyPanel().updateMapSelection(response.getSelectedMapName());
+        suppressMapChange = false;
         lobbyFrame.getLobbyPanel().setStatusMessage("Joined lobby: " + currentLobbyId);
     }
     
@@ -268,7 +272,9 @@ public class LobbyController {
     }
     
     private void handleMapSelectedBroadcast(MapSelectedBroadcast broadcast) {
+        suppressMapChange = true;
         lobbyFrame.getLobbyPanel().updateMapSelection(broadcast.getMapName());
+        suppressMapChange = false;
         lobbyFrame.getLobbyPanel().setStatusMessage(
                 broadcast.getSelectedByUsername() + " selected map: " + broadcast.getMapName()
         );
@@ -655,15 +661,16 @@ public class LobbyController {
     private class MapComboBoxListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
+            if (suppressMapChange) {
+                return;
+            }
             if (gameClient == null || !gameClient.isConnected()) {
                 return;
             }
-            
             String selectedMap = lobbyFrame.getLobbyPanel().getSelectedMapName();
             if (selectedMap == null) {
                 return;
             }
-            
             SelectMapRequest request = new SelectMapRequest(myClientId, selectedMap);
             try {
                 gameClient.sendMessageObject(request);

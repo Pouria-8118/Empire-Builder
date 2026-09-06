@@ -1239,9 +1239,7 @@ public class GameServer {
         if (game == null) {
             return;
         }
-        PlayerRelationMap relationMap = game.getRelationMap();
         
-        // Forward fog reveal to all other players
         for (PlayerState otherPlayer : game.getAllPlayers()) {
             if (otherPlayer.getClientId().equals(clientId)) {
                 continue;
@@ -1257,7 +1255,6 @@ public class GameServer {
             }
         }
         
-        // Send updated snapshot to sender (to see newly visible enemy units)
         PlayerState sender = game.getPlayer(clientId);
         if (sender != null) {
             GameStartBroadcast snapshot = snapshotBuilder.buildSnapshotForPlayer(game, sender);
