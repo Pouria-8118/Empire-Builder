@@ -441,6 +441,32 @@ public class LobbyController {
         
     }
 
+    private void updateMyUnitsFromSnapshot(GameStartBroadcast snapshot) {
+        if (currentGameSession == null) {
+            return;
+        }
+        
+        GameStartBroadcast.PlayerSnapshotDTO mySnapshot = snapshot.getMySnapshot();
+        if (mySnapshot == null || mySnapshot.getUnits() == null) {
+            return;
+        }
+        
+        currentGameSession.getUnits().clear();
+        
+        UnitFactory unitFactory = new UnitFactory();
+        for (int i = 0; i < mySnapshot.getUnits().size(); i++) {
+            GameStartBroadcast.UnitDTO unitDTO = mySnapshot.getUnits().get(i);
+            try {
+                UnitType unitType = UnitType.valueOf(unitDTO.getUnitType());
+                HexCoordinate unitCoord = new HexCoordinate(unitDTO.getQ(), unitDTO.getR());
+                Unit unit = unitFactory.createUnit(unitType, unitCoord);
+                currentGameSession.addUnit(unit);
+            } catch (IllegalArgumentException e) {
+                System.err.println("Failed to rebuild unit: " + e.getMessage());
+            }
+        }
+    }
+
     private void handleGameStateUpdate(GameStartBroadcast snapshot) {
         if (currentGameSession == null || currentGameFrame == null) {
             return;
@@ -455,6 +481,7 @@ public class LobbyController {
         
         updateMapVisibilityFromSnapshot(snapshot);
         updateTerritory(snapshot.getTerritory());
+        updateMyUnitsFromSnapshot(snapshot);
         
         initializeEnemyUnits(currentGameSession, snapshot.getVisibleEnemyUnits());
         
