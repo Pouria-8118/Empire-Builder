@@ -11,18 +11,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TCPServer {
-    
+
     private final NetworkConfig config;
     private ServerSocket serverSocket;
     private boolean running;
     private final List<ClientConnection> connectedClients;
-    
+
     public TCPServer(NetworkConfig config) {
         this.config = config;
         this.running = false;
         this.connectedClients = new ArrayList<>();
     }
-    
+
     public void start() throws NetworkException {
         try {
             serverSocket = new ServerSocket(config.getTcpPort());
@@ -33,7 +33,7 @@ public class TCPServer {
             throw new NetworkException("Failed to start TCP server: " + e.getMessage(), e);
         }
     }
-    
+
     public void stop() {
         running = false;
         try {
@@ -45,14 +45,16 @@ public class TCPServer {
         }
         System.out.println("TCP Server stopped");
     }
-    
+
     public boolean isRunning() {
         return running;
     }
-    
+
     public ClientConnection acceptClient() throws NetworkException {
         try {
             Socket clientSocket = serverSocket.accept();
+            clientSocket.setSoTimeout(NetworkConfig.SO_TIMEOUT_MS);
+            clientSocket.setKeepAlive(true);
             ClientConnection connection = new ClientConnection(clientSocket);
             connectedClients.add(connection);
             System.out.println("Client connected: " + clientSocket.getInetAddress());
@@ -63,22 +65,22 @@ public class TCPServer {
             throw new NetworkException("Failed to accept client: " + e.getMessage(), e);
         }
     }
-    
+
     public void removeClient(ClientConnection connection) {
         connectedClients.remove(connection);
         connection.close();
     }
-    
+
     public List<ClientConnection> getConnectedClients() {
         return new ArrayList<>(connectedClients);
     }
-    
+
     public static class ClientConnection {
-        
+
         private final Socket socket;
         private final PrintWriter out;
         private final BufferedReader in;
-        
+
         public ClientConnection(Socket socket) throws NetworkException {
             this.socket = socket;
             try {
@@ -88,7 +90,7 @@ public class TCPServer {
                 throw new NetworkException("Failed to initialize client connection: " + e.getMessage(), e);
             }
         }
-        
+
         public void sendMessage(String message) throws NetworkException {
             try {
                 out.println(message);
@@ -97,15 +99,17 @@ public class TCPServer {
                 throw new NetworkException("Failed to send message: " + e.getMessage(), e);
             }
         }
-        
+
         public String receiveMessage() throws NetworkException {
             try {
                 return in.readLine();
+            } catch (SocketTimeoutException e) {
+                return null;
             } catch (IOException e) {
                 throw new NetworkException("Failed to receive message: " + e.getMessage(), e);
             }
         }
-        
+
         public void close() {
             try {
                 if (socket != null && !socket.isClosed()) {
@@ -115,11 +119,11 @@ public class TCPServer {
                 System.err.println("Error closing client socket: " + e.getMessage());
             }
         }
-        
+
         public boolean isConnected() {
             return socket != null && !socket.isClosed() && socket.isConnected();
         }
-        
+
         public Socket getSocket() {
             return socket;
         }
