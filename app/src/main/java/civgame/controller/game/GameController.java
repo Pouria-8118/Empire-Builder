@@ -1018,4 +1018,11 @@ public class GameController {
     public void updateTradeInbox(List<TradeOfferDTO> offers) {
         this.pendingTradeOffers = offers != null ? offers : new ArrayList<>();
     }
+
+    public void addTradeOffer(TradeOfferDTO offer) {
+        if (this.pendingTradeOffers == null) {
+            this.pendingTradeOffers = new ArrayList<>();
+        }
+        this.pendingTradeOffers.add(offer);
+    }
 }

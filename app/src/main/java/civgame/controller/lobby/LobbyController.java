@@ -47,6 +47,7 @@ import civgame.network.message.lobby.SelectMapRequest;
 import civgame.network.message.lobby.SetReadyRequest;
 import civgame.network.message.lobby.StartGameRequest;
 import civgame.network.message.lobby.StartGameResponse;
+import civgame.network.message.trade.TradeOfferBroadcast;
 import civgame.server.lobby.PlayerSlot;
 import civgame.util.Constants;
 import civgame.view.game.CombatResultDialog;
@@ -432,6 +433,8 @@ public class LobbyController {
             handleAttackResponse((AttackResponse) message);
         } else if (type.equals(MessageType.COMBAT_RESULT_BROADCAST)) {
             handleCombatResultBroadcast((CombatResultBroadcast) message);
+        } else if (type.equals(MessageType.TRADE_OFFER_BROADCAST)) {
+            handleTradeOfferBroadcast((TradeOfferBroadcast) message);
         } else if (type.equals(MessageType.GAME_START_BROADCAST)) {
             handleGameStateUpdate((GameStartBroadcast) message);
         } else if (type.equals(MessageType.FOG_REVEAL_BROADCAST)) {
@@ -525,23 +528,14 @@ public class LobbyController {
             if (existingTile == null) {
                 continue;
             }
-            boolean shouldUpdate = false;
-            if (existingTile.getVisibility() == TileVisibility.UNSEEN) {
-                shouldUpdate = true;
-            } else if (newVisibility.ordinal() > existingTile.getVisibility().ordinal()) {
-                shouldUpdate = true;
-            }
-            if (shouldUpdate) {
-                try {
-                    TerrainType terrain = TerrainType.valueOf(dto.getTerrainType());
-                    TileResourceType resource = TileResourceType.valueOf(dto.getResourceType());
-                    HexTile newTile = new HexTile(coordinate, terrain, resource);
-                    TileVisibility finalVisibility = newVisibility.ordinal() > existingTile.getVisibility().ordinal() 
-                            ? newVisibility : existingTile.getVisibility();
-                    newTile.setVisibility(finalVisibility);
-                    localMap.setTile(coordinate, newTile);
-                } catch (IllegalArgumentException ignored) {
-                }
+            
+            try {
+                TerrainType terrain = TerrainType.valueOf(dto.getTerrainType());
+                TileResourceType resource = TileResourceType.valueOf(dto.getResourceType());
+                HexTile newTile = new HexTile(coordinate, terrain, resource);
+                newTile.setVisibility(newVisibility);
+                localMap.setTile(coordinate, newTile);
+            } catch (IllegalArgumentException ignored) {
             }
         }
     }
@@ -883,6 +877,12 @@ public class LobbyController {
         if (currentGameSession == null || currentGameFrame == null) {
             return;
         }
+        
+        String revealerClientId = broadcast.getRevealerClientId();
+        if (revealerClientId == null || revealerClientId.equals(myClientId)) {
+            return;
+        }
+        
         civgame.model.map.HexMap localMap = currentGameSession.getHexMap();
         List<civgame.network.message.game.FogRevealBroadcast.RevealedTileDTO> tiles = broadcast.getRevealedTiles();
         boolean updated = false;
@@ -891,7 +891,7 @@ public class LobbyController {
             HexCoordinate coordinate = new HexCoordinate(dto.getQ(), dto.getR());
             civgame.model.map.TileVisibility newVisibility = civgame.model.map.TileVisibility.valueOf(dto.getVisibility());
             HexTile existingTile = localMap.getTile(coordinate);
-            if (existingTile != null && newVisibility.ordinal() >= existingTile.getVisibility().ordinal()) {
+            if (existingTile != null) {
                 try {
                     TerrainType terrain = TerrainType.valueOf(dto.getTerrainType());
                     civgame.model.map.TileResourceType resource = civgame.model.map.TileResourceType.valueOf(dto.getResourceType());
@@ -916,5 +916,30 @@ public class LobbyController {
         if (currentGameController != null) {
             currentGameController.updateTradeInbox(broadcast.getPendingOffers());
         }
+    }
+
+    private void handleTradeOfferBroadcast(TradeOfferBroadcast broadcast) {
+        if (!broadcast.getReceiverClientId().equals(myClientId)) {
+            return;
+        }
+        
+        if (currentGameController == null) {
+            return;
+        }
+        
+        civgame.network.message.trade.TradeInboxUpdateBroadcast.TradeOfferDTO dto = 
+            new civgame.network.message.trade.TradeInboxUpdateBroadcast.TradeOfferDTO();
+        dto.setOfferId(broadcast.getOfferId());
+        dto.setSenderClientId(broadcast.getSenderClientId());
+        dto.setSenderUsername(broadcast.getSenderUsername());
+        dto.setOfferedResources(broadcast.getOfferedResources());
+        dto.setRequestedResources(broadcast.getRequestedResources());
+        dto.setCreatedAt(broadcast.getCreatedAt());
+        
+        java.util.List<civgame.network.message.trade.TradeInboxUpdateBroadcast.TradeOfferDTO> currentOffers = 
+            new java.util.ArrayList<>();
+        currentOffers.add(dto);
+        
+        currentGameController.addTradeOffer(dto);
     }
 }

@@ -1252,10 +1252,17 @@ public class GameServer {
             return;
         }
         
+        civgame.model.diplomacy.PlayerRelationMap relationMap = game.getRelationMap();
+        
         for (PlayerState otherPlayer : game.getAllPlayers()) {
             if (otherPlayer.getClientId().equals(clientId)) {
                 continue;
             }
+            
+            if (relationMap != null && !relationMap.isAllied(clientId, otherPlayer.getClientId())) {
+                continue;
+            }
+            
             ClientHandler handler = findClientHandler(otherPlayer.getClientId());
             if (handler == null) {
                 continue;
