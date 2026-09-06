@@ -20,24 +20,33 @@ public class ServerListener extends Thread {
     public void run() {
         running = true;
         System.out.println("ServerListener started");
-        
         while (running && tcpClient.isConnected()) {
             try {
                 String message = tcpClient.receiveMessageBlocking();
-                
                 if (message != null) {
-                    messageHandler.onMessageReceived(message);
+                    try {
+                        messageHandler.onMessageReceived(message);
+                    } catch (Exception e) {
+                        System.err.println("Error in message handler: " + e.getMessage());
+                        e.printStackTrace();
+                    }
                 }
-                
             } catch (NetworkException e) {
                 if (running) {
                     System.err.println("Listener error: " + e.getMessage());
+                    e.printStackTrace();
+                    messageHandler.onConnectionError(e.getMessage());
+                    break;
+                }
+            } catch (Exception e) {
+                if (running) {
+                    System.err.println("Unexpected error in listener: " + e.getMessage());
+                    e.printStackTrace();
                     messageHandler.onConnectionError(e.getMessage());
                     break;
                 }
             }
         }
-        
         System.out.println("ServerListener stopped");
     }
     

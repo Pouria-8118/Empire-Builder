@@ -87,16 +87,24 @@ public class TCPClient {
                 try {
                     String message = in.readLine();
                     if (message == null) {
+                        connected = false;
                         throw new NetworkException("Connection closed by server");
                     }
                     return message;
                 } catch (SocketTimeoutException e) {
                     continue;
+                } catch (IOException e) {
+                    connected = false;
+                    throw new NetworkException("Failed to receive message: " + e.getMessage(), e);
                 }
             }
             throw new NetworkException("Client disconnected");
-        } catch (IOException e) {
-            throw new NetworkException("Failed to receive message: " + e.getMessage(), e);
+        } catch (Exception e) {
+            connected = false;
+            if (e instanceof NetworkException) {
+                throw (NetworkException) e;
+            }
+            throw new NetworkException("Unexpected error: " + e.getMessage(), e);
         }
     }
 

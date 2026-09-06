@@ -180,26 +180,30 @@ public class LobbyController {
     }
     
     private void processMessage(Message message) {
-        String type = message.getType();
-        
-        if (type.equals(MessageType.JOIN_LOBBY_RESPONSE)) {
-            handleJoinLobbyResponse((JoinLobbyResponse) message);
-        } else if (type.equals(MessageType.PLAYER_JOINED_BROADCAST)) {
-            handlePlayerJoinedBroadcast((PlayerJoinedBroadcast) message);
-        } else if (type.equals(MessageType.PLAYER_LEFT_BROADCAST)) {
-            handlePlayerLeftBroadcast((PlayerLeftBroadcast) message);
-        } else if (type.equals(MessageType.PLAYER_READY_BROADCAST)) {
-            handlePlayerReadyBroadcast((PlayerReadyBroadcast) message);
-        } else if (type.equals(MessageType.MAP_SELECTED_BROADCAST)) {
-            handleMapSelectedBroadcast((MapSelectedBroadcast) message);
-        } else if (type.equals(MessageType.START_GAME_RESPONSE)) {
-            handleStartGameResponse((StartGameResponse) message);
-        } else if (type.equals(MessageType.GAME_START_BROADCAST)) {
-            handleGameStartBroadcast((GameStartBroadcast) message);
-        } else if (type.equals(MessageType.CHAT_MESSAGE_BROADCAST)) {
-            chatController.handleChatBroadcast((ChatMessageBroadcast) message);
-        } else if (type.equals(MessageType.ERROR_RESPONSE)) {
-            handleErrorResponse((ErrorResponse) message);
+        try {
+            String type = message.getType();
+            if (type.equals(MessageType.JOIN_LOBBY_RESPONSE)) {
+                handleJoinLobbyResponse((JoinLobbyResponse) message);
+            } else if (type.equals(MessageType.PLAYER_JOINED_BROADCAST)) {
+                handlePlayerJoinedBroadcast((PlayerJoinedBroadcast) message);
+            } else if (type.equals(MessageType.PLAYER_LEFT_BROADCAST)) {
+                handlePlayerLeftBroadcast((PlayerLeftBroadcast) message);
+            } else if (type.equals(MessageType.PLAYER_READY_BROADCAST)) {
+                handlePlayerReadyBroadcast((PlayerReadyBroadcast) message);
+            } else if (type.equals(MessageType.MAP_SELECTED_BROADCAST)) {
+                handleMapSelectedBroadcast((MapSelectedBroadcast) message);
+            } else if (type.equals(MessageType.START_GAME_RESPONSE)) {
+                handleStartGameResponse((StartGameResponse) message);
+            } else if (type.equals(MessageType.GAME_START_BROADCAST)) {
+                handleGameStartBroadcast((GameStartBroadcast) message);
+            } else if (type.equals(MessageType.CHAT_MESSAGE_BROADCAST)) {
+                chatController.handleChatBroadcast((ChatMessageBroadcast) message);
+            } else if (type.equals(MessageType.ERROR_RESPONSE)) {
+                handleErrorResponse((ErrorResponse) message);
+            }
+        } catch (Exception e) {
+            System.err.println("Error processing lobby message: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -360,11 +364,34 @@ public class LobbyController {
         
         gameFrame.setVisible(true);
         lobbyFrame.dispose();
+        
+        gameFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                if (gameClient != null && gameClient.isConnected()) {
+                    gameClient.disconnect();
+                }
+                System.out.println("Game frame closed, disconnecting from server");
+            }
+        });
     }
     
     private void handleGameMessage(Message message) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    processGameMessage(message);
+                } catch (Exception e) {
+                    System.err.println("Error processing game message: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private void processGameMessage(Message message) {
         String type = message.getType();
-        
         if (type.equals(MessageType.END_TURN_RESPONSE)) {
             if (turnController != null) {
                 turnController.handleEndTurnResponse((EndTurnResponse) message);
@@ -374,8 +401,9 @@ public class LobbyController {
                 turnController.handleTurnUpdate((TurnUpdateBroadcast) message);
             }
         } else if (type.equals(MessageType.CHAT_MESSAGE_BROADCAST)) {
-            if (diplomacyController != null) {
+            if (currentGameFrame != null && currentGameFrame.getChatPanel() != null) {
                 ChatController gameChatController = new ChatController(currentGameFrame.getChatPanel());
+                gameChatController.setGameClient(gameClient, multiplayerState.getMyClientId());
                 gameChatController.handleChatBroadcast((ChatMessageBroadcast) message);
             }
         } else if (type.equals(MessageType.DIPLOMACY_RESPONSE)) {
