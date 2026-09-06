@@ -418,6 +418,46 @@ public class LobbyController {
             handleAttackResponse((AttackResponse) message);
         } else if (type.equals(MessageType.COMBAT_RESULT_BROADCAST)) {
             handleCombatResultBroadcast((CombatResultBroadcast) message);
+        } else if (type.equals(MessageType.GAME_START_BROADCAST)) {
+            handleGameStateUpdate((GameStartBroadcast) message);
+        }
+    }
+
+    private void handleGameStateUpdate(GameStartBroadcast snapshot) {
+        if (currentGameSession == null || currentGameFrame == null) {
+            return;
+        }
+        
+        // Update diplomacy state
+        if (diplomacyController != null) {
+            diplomacyController.initializeFromRelations(snapshot.getInitialRelations());
+        }
+        
+        // Update map visibility (this handles alliance vision sharing)
+        updateMapVisibilityFromSnapshot(snapshot);
+        
+        // Update enemy units
+        initializeEnemyUnits(currentGameSession, snapshot.getVisibleEnemyUnits());
+        
+        // Refresh UI
+        currentGameFrame.refreshHud(currentGameSession);
+        currentGameFrame.getMapPanel().repaint();
+    }
+
+    private void updateMapVisibilityFromSnapshot(GameStartBroadcast snapshot) {
+        HexMap localMap = currentGameSession.getHexMap();
+        Map<String, GameStartBroadcast.TileDTO> tiles = snapshot.getTiles();
+        for (Map.Entry<String, GameStartBroadcast.TileDTO> entry : tiles.entrySet()) {
+            GameStartBroadcast.TileDTO dto = entry.getValue();
+            HexCoordinate coordinate = new HexCoordinate(dto.getQ(), dto.getR());
+            HexTile tile = localMap.getTile(coordinate);
+            if (tile != null) {
+                TileVisibility newVisibility = TileVisibility.valueOf(dto.getVisibility());
+                // Only upgrade visibility, never downgrade
+                if (newVisibility.ordinal() > tile.getVisibility().ordinal()) {
+                    tile.setVisibility(newVisibility);
+                }
+            }
         }
     }
     
