@@ -46,6 +46,7 @@ public final class MessageType {
     public static final String ATTACK_REQUEST = "ATTACK_REQUEST";
     public static final String ATTACK_RESPONSE = "ATTACK_RESPONSE";
     public static final String COMBAT_RESULT_BROADCAST = "COMBAT_RESULT_BROADCAST";
+    public static final String FOG_REVEAL_BROADCAST = "FOG_REVEAL_BROADCAST";
     public static final String TRADE_OFFER_REQUEST = "TRADE_OFFER_REQUEST";
     public static final String TRADE_ACCEPT_REQUEST = "TRADE_ACCEPT_REQUEST";
     public static final String TRADE_REJECT_REQUEST = "TRADE_REJECT_REQUEST";

@@ -43,6 +43,7 @@ public class GameStateSnapshotBuilder {
         broadcast.setOpponents(buildOpponentsList(game, targetPlayer));
         broadcast.setInitialRelations(buildInitialRelationsList(game));
         broadcast.setVisibleEnemyUnits(buildVisibleEnemyUnits(game, targetPlayer, session));
+        broadcast.setTerritory(buildTerritory(game, targetPlayer, session));
 
         return broadcast;
     }
@@ -210,5 +211,36 @@ public class GameStateSnapshotBuilder {
                 }
             }
         }
+    }
+
+    private GameStartBroadcast.TerritoryDTO buildTerritory(MultiplayerGameState game, PlayerState targetPlayer, GameSession targetSession) {
+        GameStartBroadcast.TerritoryDTO territoryDTO = new GameStartBroadcast.TerritoryDTO();
+        civgame.model.diplomacy.PlayerRelationMap relationMap = game.getRelationMap();
+        
+        for (PlayerState player : game.getAllPlayers()) {
+            if (player.getClientId().equals(targetPlayer.getClientId())) {
+                continue;
+            }
+            GameSession playerSession = player.getSession();
+            TownHall townHall = playerSession.getTownHall();
+            if (townHall == null || townHall.isDestroyedByCombat()) {
+                continue;
+            }
+            HexCoordinate townHallCoord = townHall.getCoordinate();
+            List<String> territoryTiles = new ArrayList<>();
+            for (Map.Entry<HexCoordinate, HexTile> entry : playerSession.getHexMap().getAllTiles().entrySet()) {
+                HexCoordinate coord = entry.getKey();
+                if (townHallCoord.distanceTo(coord) <= 2) {
+                    territoryTiles.add(coord.getQ() + "," + coord.getR());
+                }
+            }
+            
+            if (relationMap != null && relationMap.isAllied(targetPlayer.getClientId(), player.getClientId())) {
+                territoryDTO.getAllyTerritory().addAll(territoryTiles);
+            } else {
+                territoryDTO.getEnemyTerritory().addAll(territoryTiles);
+            }
+        }
+        return territoryDTO;
     }
 }

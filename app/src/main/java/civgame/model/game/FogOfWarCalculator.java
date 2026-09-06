@@ -11,12 +11,15 @@ import civgame.model.unit.Unit;
 import civgame.util.Constants;
 import civgame.util.HexLineTracer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FogOfWarCalculator {
 
     public void updateVisibility(GameSession gameSession) {
+
         HexMap hexMap = gameSession.getHexMap();
+
         downgradeVisibleTilesToExplored(hexMap);
 
         revealAround(hexMap, gameSession.getTownHall().getCoordinate(), Constants.TOWN_HALL_VISION_RADIUS);
@@ -37,6 +40,44 @@ public class FogOfWarCalculator {
         }
 
         updateTribeDiscovery(hexMap, gameSession.getTribes());
+    }
+
+    public List<HexCoordinate> captureNewlyVisibleTiles(GameSession gameSession) {
+        HexMap hexMap = gameSession.getHexMap();
+        List<HexCoordinate> previouslyVisible = new ArrayList<>();
+        for (HexTile tile : hexMap.getAllTiles().values()) {
+            if (tile.getVisibility() == TileVisibility.VISIBLE) {
+                previouslyVisible.add(tile.getCoordinate());
+            }
+        }
+        
+        downgradeVisibleTilesToExplored(hexMap);
+        revealAround(hexMap, gameSession.getTownHall().getCoordinate(), Constants.TOWN_HALL_VISION_RADIUS);
+        
+        List<Building> buildings = gameSession.getAllBuildings();
+        for (int i = 0; i < buildings.size(); i++) {
+            Building building = buildings.get(i);
+            if (building.isDestroyed()) {
+                continue;
+            }
+            revealAround(hexMap, building.getCoordinate(), Constants.BUILDING_VISION_RADIUS);
+        }
+        
+        List<Unit> units = gameSession.getUnits();
+        for (int i = 0; i < units.size(); i++) {
+            Unit unit = units.get(i);
+            revealAround(hexMap, unit.getCoordinate(), unit.getVisionRadius());
+        }
+        
+        updateTribeDiscovery(hexMap, gameSession.getTribes());
+        
+        List<HexCoordinate> newlyVisible = new ArrayList<>();
+        for (HexTile tile : hexMap.getAllTiles().values()) {
+            if (tile.getVisibility() == TileVisibility.VISIBLE && !previouslyVisible.contains(tile.getCoordinate())) {
+                newlyVisible.add(tile.getCoordinate());
+            }
+        }
+        return newlyVisible;
     }
 
     private void downgradeVisibleTilesToExplored(HexMap hexMap) {

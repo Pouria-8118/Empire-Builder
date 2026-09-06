@@ -59,6 +59,8 @@ public class GameSession implements java.io.Serializable {
     private int unitCap;
     private int currentTurnNumber;
     private boolean inStarvation;
+    private Set<HexCoordinate> allyTerritory = new HashSet<>();
+    private Set<HexCoordinate> enemyTerritory = new HashSet<>();
 
     public GameSession(HexMap hexMap, TownHall townHall, int initialUnitCap) {
         this.hexMap = hexMap;
@@ -546,5 +548,20 @@ public class GameSession implements java.io.Serializable {
 
     public void clearAffectedUnits() {
         affectedUnitIdsThisTurn.clear();
+    }
+    public Set<HexCoordinate> getAllyTerritory() {
+        return allyTerritory;
+    }
+
+    public void setAllyTerritory(Set<HexCoordinate> territory) {
+        this.allyTerritory = territory;
+    }
+
+    public Set<HexCoordinate> getEnemyTerritory() {
+        return enemyTerritory;
+    }
+
+    public void setEnemyTerritory(Set<HexCoordinate> territory) {
+        this.enemyTerritory = territory;
     }
 }

@@ -59,6 +59,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class LobbyController {
     
@@ -420,7 +421,11 @@ public class LobbyController {
             handleCombatResultBroadcast((CombatResultBroadcast) message);
         } else if (type.equals(MessageType.GAME_START_BROADCAST)) {
             handleGameStateUpdate((GameStartBroadcast) message);
+        } else if (type.equals(MessageType.FOG_REVEAL_BROADCAST)) {
+            handleFogRevealBroadcast((civgame.network.message.game.FogRevealBroadcast) message);
         }
+
+        
     }
 
     private void handleGameStateUpdate(GameStartBroadcast snapshot) {
@@ -433,11 +438,35 @@ public class LobbyController {
         }
         
         updateMapVisibilityFromSnapshot(snapshot);
+        updateTerritory(snapshot.getTerritory());
         
         initializeEnemyUnits(currentGameSession, snapshot.getVisibleEnemyUnits());
         
         currentGameFrame.refreshHud(currentGameSession);
         currentGameFrame.getMapPanel().repaint();
+    }
+
+    private void updateTerritory(GameStartBroadcast.TerritoryDTO territoryDTO) {
+        if (territoryDTO == null) {
+            return;
+        }
+        Set<HexCoordinate> allyTiles = new java.util.HashSet<>();
+        for (String tileKey : territoryDTO.getAllyTerritory()) {
+            String[] parts = tileKey.split(",");
+            int q = Integer.parseInt(parts[0]);
+            int r = Integer.parseInt(parts[1]);
+            allyTiles.add(new HexCoordinate(q, r));
+        }
+        currentGameSession.setAllyTerritory(allyTiles);
+        
+        Set<HexCoordinate> enemyTiles = new java.util.HashSet<>();
+        for (String tileKey : territoryDTO.getEnemyTerritory()) {
+            String[] parts = tileKey.split(",");
+            int q = Integer.parseInt(parts[0]);
+            int r = Integer.parseInt(parts[1]);
+            enemyTiles.add(new HexCoordinate(q, r));
+        }
+        currentGameSession.setEnemyTerritory(enemyTiles);
     }
 
     private void updateMapVisibilityFromSnapshot(GameStartBroadcast snapshot) {
@@ -446,11 +475,16 @@ public class LobbyController {
         for (Map.Entry<String, GameStartBroadcast.TileDTO> entry : tiles.entrySet()) {
             GameStartBroadcast.TileDTO dto = entry.getValue();
             HexCoordinate coordinate = new HexCoordinate(dto.getQ(), dto.getR());
-            HexTile tile = localMap.getTile(coordinate);
-            if (tile != null) {
-                TileVisibility newVisibility = TileVisibility.valueOf(dto.getVisibility());
-                if (newVisibility.ordinal() > tile.getVisibility().ordinal()) {
-                    tile.setVisibility(newVisibility);
+            TileVisibility newVisibility = TileVisibility.valueOf(dto.getVisibility());
+            HexTile existingTile = localMap.getTile(coordinate);
+            if (existingTile != null && newVisibility.ordinal() >= existingTile.getVisibility().ordinal()) {
+                try {
+                    TerrainType terrain = TerrainType.valueOf(dto.getTerrainType());
+                    TileResourceType resource = TileResourceType.valueOf(dto.getResourceType());
+                    HexTile newTile = new HexTile(coordinate, terrain, resource);
+                    newTile.setVisibility(newVisibility);
+                    localMap.setTile(coordinate, newTile);
+                } catch (IllegalArgumentException ignored) {
                 }
             }
         }
@@ -753,5 +787,33 @@ public class LobbyController {
         CombatResultDialog dialog = new CombatResultDialog(localResult);
         dialog.setTitle("Combat: " + broadcast.getAttackerUsername() + " vs " + broadcast.getDefenderUsername());
         dialog.setVisible(true);
+    }
+
+    private void handleFogRevealBroadcast(civgame.network.message.game.FogRevealBroadcast broadcast) {
+        if (currentGameSession == null || currentGameFrame == null) {
+            return;
+        }
+        if (broadcast.getRevealerClientId().equals(multiplayerState.getMyClientId())) {
+            return;
+        }
+        civgame.model.map.HexMap localMap = currentGameSession.getHexMap();
+        List<civgame.network.message.game.FogRevealBroadcast.RevealedTileDTO> tiles = broadcast.getRevealedTiles();
+        for (int i = 0; i < tiles.size(); i++) {
+            civgame.network.message.game.FogRevealBroadcast.RevealedTileDTO dto = tiles.get(i);
+            HexCoordinate coordinate = new HexCoordinate(dto.getQ(), dto.getR());
+            civgame.model.map.TileVisibility newVisibility = civgame.model.map.TileVisibility.valueOf(dto.getVisibility());
+            HexTile existingTile = localMap.getTile(coordinate);
+            if (existingTile != null && newVisibility.ordinal() >= existingTile.getVisibility().ordinal()) {
+                try {
+                    TerrainType terrain = TerrainType.valueOf(dto.getTerrainType());
+                    civgame.model.map.TileResourceType resource = civgame.model.map.TileResourceType.valueOf(dto.getResourceType());
+                    HexTile newTile = new HexTile(coordinate, terrain, resource);
+                    newTile.setVisibility(newVisibility);
+                    localMap.setTile(coordinate, newTile);
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+        currentGameFrame.getMapPanel().repaint();
     }
 }

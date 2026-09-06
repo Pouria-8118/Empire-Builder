@@ -59,6 +59,7 @@ public class MessageRouter {
         registerMessageType(MessageType.ATTACK_REQUEST, civgame.network.message.combat.AttackRequest.class);
         registerMessageType(MessageType.ATTACK_RESPONSE, civgame.network.message.combat.AttackResponse.class);
         registerMessageType(MessageType.COMBAT_RESULT_BROADCAST, civgame.network.message.combat.CombatResultBroadcast.class);
+        registerMessageType(MessageType.FOG_REVEAL_BROADCAST, civgame.network.message.game.FogRevealBroadcast.class);
         registerMessageType(MessageType.TRADE_OFFER_REQUEST, civgame.network.message.trade.TradeOfferRequest.class);
         registerMessageType(MessageType.TRADE_ACCEPT_REQUEST, civgame.network.message.trade.TradeAcceptRequest.class);
         registerMessageType(MessageType.TRADE_REJECT_REQUEST, civgame.network.message.trade.TradeRejectRequest.class);

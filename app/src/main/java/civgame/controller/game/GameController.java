@@ -72,6 +72,7 @@ import civgame.network.message.trade.TradeOfferRequest;
 import civgame.network.message.trade.TradeAcceptRequest;
 import civgame.network.message.trade.TradeRejectRequest;
 import civgame.network.message.item.ItemUseRequest;
+import civgame.network.message.game.FogRevealBroadcast;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -639,22 +640,26 @@ public class GameController {
     }
 
     private Runnable createMovementFinishedCallback(Unit movedUnit) {
+
         return new Runnable() {
             @Override
             public void run() {
                 HexTile arrivalTile = gameSession.getHexMap().getTile(movedUnit.getCoordinate());
                 boolean nowOnSea = arrivalTile != null && arrivalTile.getTerrainType() == TerrainType.SEA;
                 movedUnit.setFloating(nowOnSea);
+
                 if (nowOnSea) {
                     movedUnit.zeroRemainingActionPoints();
                 }
 
-                if (MilitaryUnitCapProvider.isMilitaryUnitType(movedUnit.getUnitType()) 
-                    && movedUnit.getCoordinate().equals(gameSession.getTownHall().getCoordinate())) {
+                if (MilitaryUnitCapProvider.isMilitaryUnitType(movedUnit.getUnitType())
+                        && movedUnit.getCoordinate().equals(gameSession.getTownHall().getCoordinate())) {
                     gameSession.getHappinessService().applyOneTimeDelta(Constants.TOWN_HALL_GARRISON_HAPPINESS_BONUS);
                 }
 
                 fogOfWarCalculator.updateVisibility(gameSession);
+                sendFogRevealIfNeeded();
+
                 if (selectionState.hasSelection()) {
                     updateReachableTilesForSelection();
                 }
@@ -662,6 +667,40 @@ public class GameController {
                 mapPanel.repaint();
             }
         };
+    }
+
+    private void sendFogRevealIfNeeded() {
+        if (networkManager == null || multiplayerState == null) {
+            return;
+        }
+        List<HexCoordinate> newlyVisible = fogOfWarCalculator.captureNewlyVisibleTiles(gameSession);
+        if (newlyVisible.isEmpty()) {
+            return;
+        }
+        List<FogRevealBroadcast.RevealedTileDTO> tileDTOs = new ArrayList<>();
+        for (int i = 0; i < newlyVisible.size(); i++) {
+            HexCoordinate coord = newlyVisible.get(i);
+            HexTile tile = gameSession.getHexMap().getTile(coord);
+            if (tile != null) {
+                tileDTOs.add(new FogRevealBroadcast.RevealedTileDTO(
+                        coord.getQ(), coord.getR(),
+                        tile.getTerrainType().name(),
+                        tile.getResourceType().name(),
+                        tile.getVisibility().name()
+                ));
+            }
+        }
+        if (tileDTOs.isEmpty()) {
+            return;
+        }
+        FogRevealBroadcast broadcast = new FogRevealBroadcast(multiplayerState.getMyClientId());
+        broadcast.setRevealerClientId(multiplayerState.getMyClientId());
+        broadcast.setRevealedTiles(tileDTOs);
+        try {
+            networkManager.sendMessageObjectAsync(broadcast);
+        } catch (Exception e) {
+            System.err.println("Failed to send fog reveal: " + e.getMessage());
+        }
     }
 
     private List<Unit> findUnitsAtCoordinate(HexCoordinate coordinate) {

@@ -603,4 +603,41 @@ public class GameStartBroadcast extends Broadcast {
             this.relation = relation;
         }
     }
+
+
+    public static class TerritoryDTO {
+        private List<String> allyTerritory;
+        private List<String> enemyTerritory;
+
+        public TerritoryDTO() {
+            this.allyTerritory = new ArrayList<>();
+            this.enemyTerritory = new ArrayList<>();
+        }
+
+        public List<String> getAllyTerritory() {
+            return allyTerritory;
+        }
+
+        public void setAllyTerritory(List<String> allyTerritory) {
+            this.allyTerritory = allyTerritory;
+        }
+
+        public List<String> getEnemyTerritory() {
+            return enemyTerritory;
+        }
+
+        public void setEnemyTerritory(List<String> enemyTerritory) {
+            this.enemyTerritory = enemyTerritory;
+        }
+    }
+
+    private TerritoryDTO territory;
+
+    public TerritoryDTO getTerritory() {
+        return territory;
+    }
+
+    public void setTerritory(TerritoryDTO territory) {
+        this.territory = territory;
+    }
 }

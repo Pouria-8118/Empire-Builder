@@ -18,6 +18,7 @@ import civgame.network.message.trade.TradeCancelRequest;
 import civgame.network.message.trade.TradeOfferRequest;
 import civgame.network.message.trade.TradeRejectRequest;
 import civgame.network.message.game.EndTurnRequest;
+import civgame.network.message.game.FogRevealBroadcast;
 import civgame.network.message.item.ItemProduceRequest;
 import civgame.network.message.item.ItemUseRequest;
 import civgame.network.message.diplomacy.DeclareWarRequest;
@@ -153,7 +154,12 @@ public class ClientHandler extends Thread {
     }
     
     private void processBroadcast(Broadcast broadcast) {
-        System.out.println("Processing broadcast from " + clientId + ": " + broadcast.getType());
+        String type = broadcast.getType();
+        if (type.equals(civgame.network.message.MessageType.FOG_REVEAL_BROADCAST)) {
+            gameServer.handleFogRevealBroadcast(clientId, (FogRevealBroadcast) broadcast);
+        } else {
+            System.out.println("Processing broadcast from " + clientId + ": " + type);
+        }
     }
     
     private void handleDisconnection() {

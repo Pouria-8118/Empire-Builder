@@ -648,10 +648,31 @@ public class MapPanel extends JPanel {
             graphics2D.setColor(OUTSIDE_BORDER_TINT);
             graphics2D.fillPolygon(hexagonPolygon);
         }
-        
+
         if (tile.isResourceDepleted() && tile.getVisibility() != TileVisibility.UNSEEN) {
             graphics2D.setColor(DEPLETED_RESOURCE_TINT);
             graphics2D.fillPolygon(hexagonPolygon);
+        }
+
+        drawTerritoryOverlay(graphics2D, tile, hexagonPolygon);
+
+    }
+
+    private void drawTerritoryOverlay(Graphics2D graphics2D, HexTile tile, Polygon hexagonPolygon) {
+        if (tile.getVisibility() == TileVisibility.UNSEEN) {
+            return;
+        }
+        HexCoordinate coord = tile.getCoordinate();
+        if (gameSession.getAllyTerritory().contains(coord)) {
+            graphics2D.setColor(new Color(80, 220, 80, 130));
+            graphics2D.setStroke(new BasicStroke(3f));
+            graphics2D.drawPolygon(hexagonPolygon);
+            graphics2D.setStroke(new BasicStroke(1f));
+        } else if (gameSession.getEnemyTerritory().contains(coord)) {
+            graphics2D.setColor(new Color(230, 60, 60, 130));
+            graphics2D.setStroke(new BasicStroke(3f));
+            graphics2D.drawPolygon(hexagonPolygon);
+            graphics2D.setStroke(new BasicStroke(1f));
         }
     }
 

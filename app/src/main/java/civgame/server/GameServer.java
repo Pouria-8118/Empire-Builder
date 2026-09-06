@@ -3,6 +3,7 @@ package civgame.server;
 import civgame.model.diplomacy.PlayerRelation;
 import civgame.model.diplomacy.PlayerRelationMap;
 import civgame.model.map.HexCoordinate;
+import civgame.model.map.HexTile;
 import civgame.network.NetworkConfig;
 import civgame.network.NetworkException;
 import civgame.network.TCPServer;
@@ -35,6 +36,7 @@ import civgame.network.message.lobby.SelectMapRequest;
 import civgame.network.message.lobby.SetReadyRequest;
 import civgame.network.message.lobby.StartGameRequest;
 import civgame.network.message.lobby.StartGameResponse;
+import civgame.network.message.game.FogRevealBroadcast;
 import civgame.server.chat.ChatManager;
 import civgame.server.combat.PvPCombatService;
 import civgame.server.diplomacy.DiplomacyManager;
@@ -1229,6 +1231,32 @@ public class GameServer {
                 handler.sendMessageObject(snapshot);
             } catch (NetworkException e) {
                 System.err.println("Failed to send game state update to " + player.getClientId() + ": " + e.getMessage());
+            }
+        }
+    }
+
+    public void handleFogRevealBroadcast(String clientId, FogRevealBroadcast broadcast) {
+        MultiplayerGameState game = gameSessionManager.getGameForClient(clientId);
+        if (game == null) {
+            return;
+        }
+        PlayerRelationMap relationMap = game.getRelationMap();
+        if (relationMap == null) {
+            return;
+        }
+        for (PlayerState otherPlayer : game.getAllPlayers()) {
+            if (otherPlayer.getClientId().equals(clientId)) {
+                continue;
+            }
+            if (relationMap.isAllied(clientId, otherPlayer.getClientId())) {
+                ClientHandler handler = findClientHandler(otherPlayer.getClientId());
+                if (handler != null) {
+                    try {
+                        handler.sendMessageObject(broadcast);
+                    } catch (NetworkException e) {
+                        System.err.println("Failed to send fog reveal to ally " + otherPlayer.getClientId() + ": " + e.getMessage());
+                    }
+                }
             }
         }
     }
