@@ -428,18 +428,14 @@ public class LobbyController {
             return;
         }
         
-        // Update diplomacy state
         if (diplomacyController != null) {
             diplomacyController.initializeFromRelations(snapshot.getInitialRelations());
         }
         
-        // Update map visibility (this handles alliance vision sharing)
         updateMapVisibilityFromSnapshot(snapshot);
         
-        // Update enemy units
         initializeEnemyUnits(currentGameSession, snapshot.getVisibleEnemyUnits());
         
-        // Refresh UI
         currentGameFrame.refreshHud(currentGameSession);
         currentGameFrame.getMapPanel().repaint();
     }
@@ -453,7 +449,6 @@ public class LobbyController {
             HexTile tile = localMap.getTile(coordinate);
             if (tile != null) {
                 TileVisibility newVisibility = TileVisibility.valueOf(dto.getVisibility());
-                // Only upgrade visibility, never downgrade
                 if (newVisibility.ordinal() > tile.getVisibility().ordinal()) {
                     tile.setVisibility(newVisibility);
                 }
