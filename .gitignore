@@ -26,3 +26,8 @@ Thumbs.db
 
 # Local config
 local.properties
+
+bin/
+.settings/
+.classpath
+.project
