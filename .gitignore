@@ -31,3 +31,6 @@ bin/
 .settings/
 .classpath
 .project
+
+saves/
+*.sav
