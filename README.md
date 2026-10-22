@@ -98,11 +98,11 @@ This project was developed as the Advanced Programming course project at **Shari
 
 ```bash
 # Clone the repository
-git clone https://github.com/Pouria-8118/CivGame_AP-Project
-cd CivGame_AP-Project/app
+git clone https://github.com/Pouria-8118/Empire-Builder.git
+cd Empire-Builder
 
 # Build and run the game in single-player mode
-./gradlew run
+./gradlew :app:run
 ```
 
 ### Multiplayer Mode
@@ -111,17 +111,17 @@ Multiplayer requires running both a **Server** and **Client(s)**:
 
 **Step 1: Start the Server**
 ```bash
-cd CivGame_AP-Project/app
-./gradlew runServer
+cd Empire-Builder
+./gradlew :app:runServer
 ```
 
 **Step 2: Start Client(s)** (in separate terminals)
 ```bash
-cd CivGame_AP-Project/app
-./gradlew runClient
+cd Empire-Builder
+./gradlew :app:runClient
 ```
 
-> 💡 **Note:** On Windows, use `gradlew.bat runServer` and `gradlew.bat runClient` instead.
+> 💡 **Note:** On Windows, use `gradlew.bat :app:runServer` and `gradlew.bat :app:runClient` instead.
 
 ### Alternative: Build JAR and Run
 
@@ -129,13 +129,13 @@ cd CivGame_AP-Project/app
 ./gradlew build
 
 # Single-player
-java -jar build/libs/empire-builder.jar
+java -jar app/build/libs/empire-builder.jar
 
 # Multiplayer Server
-java -jar build/libs/empire-builder.jar --server
+java -jar app/build/libs/empire-builder.jar --server
 
 # Multiplayer Client
-java -jar build/libs/empire-builder.jar --client
+java -jar app/build/libs/empire-builder.jar --client
 ```
 
 ---
@@ -144,7 +144,7 @@ java -jar build/libs/empire-builder.jar --client
 
 ### 🏁 Starting Out
 - You begin with a **Town Hall** and **5 units**: 1 Builder, 2 Workers, and 2 Explorers.
-- Your starting resources: **50 Food**, **60 Wood**, **20 Stone**, and **0 Iron**.
+- Your starting resources: **70 Food**, **60 Wood**, **50 Stone**, and **0 Iron**.
 - Only the tiles immediately around your Town Hall are visible — the rest is hidden by the **Fog of War**.
 - Neutral tribes are scattered across the map. Interact with them to gain allies or face enemies.
 
@@ -316,7 +316,7 @@ If cheats are enabled in the lobby, type these commands in chat:
 
 ## 📁 Project Structure
 
-```
+```text
 empire-builder/
 ├── app/
 │   ├── src/
@@ -374,6 +374,7 @@ empire-builder/
 **Developed by** — *Pouria Asnaashari*  
 **Course** — Advanced Programming, Sharif University of Technology  
 **Semester** — Spring 2026  
+
 ---
 
 ## 📜 License
@@ -385,7 +386,7 @@ This project is for educational purposes only. All rights reserved.
 ## 🙏 Acknowledgments
 
 - Hex grid algorithms adapted from [Red Blob Games](https://www.redblobgames.com/grids/hexagons/)
-- Icons designed with ❤️ using open-source assets
+- Icons and images created with ❤️ using AI tools
 
 ---
 
