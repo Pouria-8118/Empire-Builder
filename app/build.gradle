@@ -37,3 +37,10 @@ task runClient(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'civgame.Main'
 }
+
+jar {
+    archiveBaseName = 'empire-builder'
+    manifest { attributes 'Main-Class': 'civgame.Main' }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+}
